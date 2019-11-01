@@ -1,7 +1,9 @@
-package com.killerwhale.memary;
+package com.killerwhale.memary.Activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.killerwhale.memary.R;
 
 public class MainActivity extends AppCompatActivity {
 
