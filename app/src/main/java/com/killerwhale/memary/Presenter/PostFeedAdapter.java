@@ -110,6 +110,8 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         public SimpleDraweeView imgPost;
         public TextView txtUsername;
         public TextView txtPost;
+        public TextView txtTime;
+        public TextView txtDistance;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -117,6 +119,8 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
             imgPost = itemView.findViewById(R.id.imgPost);
             txtUsername = itemView.findViewById(R.id.txtUsername);
             txtPost = itemView.findViewById(R.id.txtPost);
+            txtTime = itemView.findViewById(R.id.txtTime);
+            txtDistance = itemView.findViewById(R.id.txtDistance);
         }
     }
 }
