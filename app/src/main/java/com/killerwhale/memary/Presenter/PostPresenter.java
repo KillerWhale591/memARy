@@ -4,6 +4,10 @@ import com.killerwhale.memary.DataModel.Post;
 
 import java.util.ArrayList;
 
+/**
+ * Presenter of Posts
+ * @author Zeyu Fu
+ */
 public class PostPresenter {
 
     private ArrayList<Post> mPosts = new ArrayList<>();
@@ -14,7 +18,10 @@ public class PostPresenter {
             100003,
             100004,
             100005,
-            100006
+            100006,
+            100007,
+            100008,
+            100009
     };
     private int[] types = new int[] {
             Post.TYPE_TEXT,
@@ -24,15 +31,21 @@ public class PostPresenter {
             Post.TYPE_TEXT,
             Post.TYPE_TEXT,
             Post.TYPE_IMAGE,
+            Post.TYPE_TEXT,
+            Post.TYPE_TEXT,
+            Post.TYPE_TEXT,
     };
     private String[] texts = new String[] {
-            "Good day",
-            "Good day Good day Good day",
-            "Good day Good day",
-            "Good day Good day Good day Good day Good day Good day",
-            "Good day",
-            "Good day Good day",
-            "Good day Good day Good day"
+            "Good day 0",
+            "Good day 1",
+            "Meme 2",
+            "Good day 3",
+            "Good day 4",
+            "Good day 5",
+            "Meme 6",
+            "Good day 7",
+            "Good day 8",
+            "Good day 9"
     };
     private String[] urls = new String[] {
             "",
@@ -41,7 +54,10 @@ public class PostPresenter {
             "",
             "",
             "",
-            "https://i.ytimg.com/vi/tYBk4kLHPkk/maxresdefault.jpg"
+            "https://i.ytimg.com/vi/tYBk4kLHPkk/maxresdefault.jpg",
+            "",
+            "",
+            ""
     };
     private long[] locations = new long[] {
             1000000,
@@ -50,7 +66,10 @@ public class PostPresenter {
             1000003,
             1000004,
             1000005,
-            1000006
+            1000006,
+            1000007,
+            1000008,
+            1000009
     };
 
     public void init() {
@@ -61,5 +80,11 @@ public class PostPresenter {
 
     public ArrayList<Post> getPosts() {
         return mPosts;
+    }
+
+    public void loadMoreData(ArrayList<Post> posts) {
+        for (int i = 0; i < ids.length; i++) {
+            posts.add(new Post(ids[i], types[i], texts[i], urls[i], locations[i]));
+        }
     }
 }

@@ -8,6 +8,10 @@ import android.support.v7.widget.RecyclerView;
 import com.killerwhale.memary.Presenter.PostFeedAdapter;
 import com.killerwhale.memary.R;
 
+/**
+ * Activity for displaying nearby posts
+ * @author Zeyu Fu
+ */
 public class PostFeedActivity extends AppCompatActivity {
 
     RecyclerView postList;
@@ -21,8 +25,8 @@ public class PostFeedActivity extends AppCompatActivity {
 
         postList = findViewById(R.id.postList);
         rvManager = new LinearLayoutManager(this);
-        rvAdapter = new PostFeedAdapter(getBaseContext());
         postList.setLayoutManager(rvManager);
+        rvAdapter = new PostFeedAdapter(getBaseContext(), postList);
         postList.setAdapter(rvAdapter);
     }
 }
