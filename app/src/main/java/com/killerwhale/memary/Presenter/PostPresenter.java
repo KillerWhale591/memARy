@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class PostPresenter {
 
-    private ArrayList<Post> mPosts;
+    private ArrayList<Post> mPosts = new ArrayList<>();
     private long[] ids = new long[] {
             100000,
             100001,
