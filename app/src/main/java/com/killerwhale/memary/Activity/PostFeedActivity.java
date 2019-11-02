@@ -1,10 +1,12 @@
 package com.killerwhale.memary.Activity;
 
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.killerwhale.memary.Presenter.OnRefreshCompleteListener;
 import com.killerwhale.memary.Presenter.PostFeedAdapter;
 import com.killerwhale.memary.R;
 
@@ -12,8 +14,9 @@ import com.killerwhale.memary.R;
  * Activity for displaying nearby posts
  * @author Zeyu Fu
  */
-public class PostFeedActivity extends AppCompatActivity {
+public class PostFeedActivity extends AppCompatActivity implements OnRefreshCompleteListener {
 
+    SwipeRefreshLayout swipeRefreshLayout;
     RecyclerView postList;
     RecyclerView.Adapter rvAdapter;
     RecyclerView.LayoutManager rvManager;
@@ -26,7 +29,19 @@ public class PostFeedActivity extends AppCompatActivity {
         postList = findViewById(R.id.postList);
         rvManager = new LinearLayoutManager(this);
         postList.setLayoutManager(rvManager);
-        rvAdapter = new PostFeedAdapter(getBaseContext(), postList);
+        rvAdapter = new PostFeedAdapter(getBaseContext(), postList, this);
         postList.setAdapter(rvAdapter);
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                ((PostFeedAdapter)rvAdapter).refreshData();
+            }
+        });
+    }
+
+    @Override
+    public void stopRefresh() {
+        swipeRefreshLayout.setRefreshing(false);
     }
 }

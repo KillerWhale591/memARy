@@ -3,14 +3,17 @@ package com.killerwhale.memary.Presenter;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.killerwhale.memary.Activity.PostFeedActivity;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
@@ -26,13 +29,15 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     private static final int VIEW_TYPE_IMAGE = 1;
 
     private Context context;
+    private OnRefreshCompleteListener refreshCompleteListener;
     private LinearLayoutManager llm;
     private RecyclerView recyclerView;
     ArrayList<Post> posts;
     PostPresenter presenter;
 
-    public PostFeedAdapter(Context aContext, RecyclerView rcView) {
+    public PostFeedAdapter(Context aContext, RecyclerView rcView, OnRefreshCompleteListener listener) {
         this.context = aContext;
+        this.refreshCompleteListener = listener;
         llm = (LinearLayoutManager) rcView.getLayoutManager();
         recyclerView = rcView;
         presenter = new PostPresenter();
@@ -95,6 +100,20 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
             @Override
             public void run() {
                 notifyItemRangeInserted(prev, 10);
+            }
+        });
+    }
+
+    public void refreshData() {
+        posts.clear();
+        presenter.init();
+        posts = presenter.getPosts();
+        posts.set(0, new Post(100000, Post.TYPE_TEXT, "Refreshed post 0", "", 1000000));
+        recyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                notifyDataSetChanged();
+                refreshCompleteListener.stopRefresh();
             }
         });
     }
