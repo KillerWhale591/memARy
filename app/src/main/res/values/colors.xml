@@ -6,4 +6,5 @@
     <color name="colorBlack">#000000</color>
     <color name="colorDivider">#DDDDDD</color>
     <color name="colorPostAttr">#BBBBBB</color>
+    <color name="colorFAB">#80DED9</color>
 </resources>

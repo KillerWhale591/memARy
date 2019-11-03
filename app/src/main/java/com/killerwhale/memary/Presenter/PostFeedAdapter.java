@@ -3,17 +3,14 @@ package com.killerwhale.memary.Presenter;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.killerwhale.memary.Activity.PostFeedActivity;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
@@ -32,8 +29,8 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     private OnRefreshCompleteListener refreshCompleteListener;
     private LinearLayoutManager llm;
     private RecyclerView recyclerView;
-    ArrayList<Post> posts;
-    PostPresenter presenter;
+    private ArrayList<Post> posts;
+    private PostPresenter presenter;
 
     public PostFeedAdapter(Context aContext, RecyclerView rcView, OnRefreshCompleteListener listener) {
         this.context = aContext;
@@ -123,16 +120,16 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         return posts.get(position).getImageUrl().isEmpty() ? VIEW_TYPE_PURE_TEXT : VIEW_TYPE_IMAGE;
     }
 
-    public static class PostViewHolder extends RecyclerView.ViewHolder {
+    static class PostViewHolder extends RecyclerView.ViewHolder {
 
-        public SimpleDraweeView imgAvatar;
-        public SimpleDraweeView imgPost;
-        public TextView txtUsername;
-        public TextView txtPost;
-        public TextView txtTime;
-        public TextView txtDistance;
+        SimpleDraweeView imgAvatar;
+        SimpleDraweeView imgPost;
+        TextView txtUsername;
+        TextView txtPost;
+        TextView txtTime;
+        TextView txtDistance;
 
-        public PostViewHolder(@NonNull View itemView) {
+        private PostViewHolder(@NonNull View itemView) {
             super(itemView);
             imgAvatar = itemView.findViewById(R.id.imgAvatar);
             imgPost = itemView.findViewById(R.id.imgPost);
