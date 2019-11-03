@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_username">Username</string>
+    <string name="default_content">Content</string>
+    <string name="default_time">1 min ago</string>
+    <string name="default_distance">0.1 miles away</string>
+    <!-- Post create -->
+    <string name="text_cancel">Cancel</string>
+    <string name="text_post">Post</string>
+    <string name="hint_edit_content">What\'s new?</string>
+</resources>
