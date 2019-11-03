@@ -32,8 +32,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:textSize="20sp"
-            android:textColor="@android:color/holo_blue_light"
-            android:text="Username" />
+            android:textColor="@color/colorPrimary"
+            android:text="@string/default_username" />
 
         <TextView
             android:id="@+id/txtPost"
@@ -42,7 +42,7 @@
             android:layout_marginTop="8dp"
             android:textSize="16sp"
             android:textColor="@color/colorBlack"
-            android:text="Content" />
+            android:text="@string/default_content" />
 
         <com.facebook.drawee.view.SimpleDraweeView
             android:id="@+id/imgPost"
@@ -65,7 +65,7 @@
                 android:layout_weight="1"
                 android:gravity="start"
                 android:textColor="@color/colorPostAttr"
-                android:text="2 min ago" />
+                android:text="@string/default_time" />
 
             <TextView
                 android:id="@+id/txtDistance"
@@ -74,7 +74,7 @@
                 android:layout_weight="1"
                 android:gravity="end"
                 android:textColor="@color/colorPostAttr"
-                android:text="0.2 mile away" />
+                android:text="@string/default_distance" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
