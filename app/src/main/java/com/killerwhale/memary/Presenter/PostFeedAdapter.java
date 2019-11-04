@@ -80,7 +80,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         }
         // Set image
         String imgUrl = posts.get(position).getImageUrl();
-        if (imgUrl != null && !imgUrl.isEmpty()) {
+        if (posts.get(position).getType() == Post.TYPE_IMAGE) {
             postViewHolder.imgPost.setImageURI(Uri.parse(imgUrl));
         }
     }
