@@ -10,4 +10,27 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="PostFeedActivity" />
+
+    <Button
+        android:id="@+id/btnSignOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:text="Sign Out" />
+
+    <Button
+        android:id="@+id/btnSignInActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnSignOut"
+        android:layout_alignParentRight="true"
+        android:text="SignInActivity" />
+
+    <Button
+        android:id="@+id/btnSignUpActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnSignInActivity"
+        android:layout_alignParentRight="true"
+        android:text="SignUpActivity" />
 </RelativeLayout>
