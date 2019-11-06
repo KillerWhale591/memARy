@@ -90,6 +90,14 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         return posts.size();
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return posts.get(position).getImageUrl().isEmpty() ? VIEW_TYPE_PURE_TEXT : VIEW_TYPE_IMAGE;
+    }
+
+    /**
+     * Scroll to the bottom and load 10 more items
+     */
     private void loadMoreData() {
         final int prev = getItemCount();
         presenter.loadMoreData(posts);
@@ -101,6 +109,9 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         });
     }
 
+    /**
+     * Refresh all rows
+     */
     public void refreshData() {
         posts.clear();
         presenter.init();
@@ -115,11 +126,9 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         });
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return posts.get(position).getImageUrl().isEmpty() ? VIEW_TYPE_PURE_TEXT : VIEW_TYPE_IMAGE;
-    }
-
+    /**
+     * Customized ViewHolder for PostList rows
+     */
     static class PostViewHolder extends RecyclerView.ViewHolder {
 
         SimpleDraweeView imgAvatar;

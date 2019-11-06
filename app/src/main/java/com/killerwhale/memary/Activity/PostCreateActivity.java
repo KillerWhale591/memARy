@@ -30,6 +30,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private Button btnSubmit;
     private ImageButton btnAddImg;
     private ImageView imgAttach;
+    private ImageButton btnRemove;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +41,7 @@ public class PostCreateActivity extends AppCompatActivity {
         btnAddImg = findViewById(R.id.btnAddImg);
         btnSubmit = findViewById(R.id.btnSubmit);
         imgAttach = findViewById(R.id.imgAttach);
+        btnRemove = findViewById(R.id.btnRemove);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,6 +75,13 @@ public class PostCreateActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        btnRemove.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
     }
 
     @Override
@@ -92,6 +101,7 @@ public class PostCreateActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
             if (resultCode == RESULT_OK) {
                 imgAttach.setVisibility(View.VISIBLE);
+                btnRemove.setVisibility(View.VISIBLE);
                 btnAddImg.setEnabled(false);
                 assert data != null;
                 Bundle bundleData = data.getExtras();           //images are stored in a bundle wrapped within the intent...
