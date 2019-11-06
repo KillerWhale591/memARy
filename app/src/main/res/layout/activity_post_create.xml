@@ -68,17 +68,32 @@
             fresco:placeholderImage="@drawable/placeholder_avatar"
             fresco:viewAspectRatio="1"/>
 
-        <EditText
-            android:id="@+id/edtContent"
+        <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="10dp"
-            android:layout_weight="6"
-            android:ems="10"
-            android:gravity="top"
-            android:background="@android:color/transparent"
-            android:hint="@string/hint_edit_content"
-            android:textCursorDrawable="@drawable/cursor"
-            android:inputType="textMultiLine" />
+            android:layout_weight="6">
+
+            <EditText
+                android:id="@+id/edtContent"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@android:color/transparent"
+                android:gravity="top"
+                android:hint="@string/hint_edit_content"
+                android:inputType="textMultiLine"
+                android:textCursorDrawable="@drawable/cursor" />
+
+            <ImageView
+                android:id="@+id/imgAttach"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_below="@+id/edtContent"
+                android:layout_marginTop="10dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+        </RelativeLayout>
+
     </LinearLayout>
 </RelativeLayout>
