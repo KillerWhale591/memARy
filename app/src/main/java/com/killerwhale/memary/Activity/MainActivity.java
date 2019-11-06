@@ -16,6 +16,8 @@ import com.killerwhale.memary.R;
 public class MainActivity extends AppCompatActivity {
 
     private Button btnSignOut;
+    private Button btnSignInActivity;
+    private Button btnSignUpActivity;
     private FirebaseAuth mAuth;
 
     @Override
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
+        btnSignUpActivity = (Button) findViewById(R.id.btnSignUpActivity);
+        btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -39,6 +43,22 @@ public class MainActivity extends AppCompatActivity {
                 mAuth.signOut();
                 Toast.makeText(MainActivity.this, "signed out successfully", Toast.LENGTH_LONG).show();
                 Intent intent = new Intent(getBaseContext(), SignInActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnSignInActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), SignInActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnSignUpActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), SignUpActivity.class);
                 startActivity(intent);
             }
         });
