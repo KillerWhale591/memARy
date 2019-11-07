@@ -8,4 +8,5 @@
     <color name="colorDivider">#DDDDDD</color>
     <color name="colorPostAttr">#BBBBBB</color>
     <color name="colorFAB">#BEEDAA</color>
+    <color name="colorDelete">#FF4B5B</color>
 </resources>

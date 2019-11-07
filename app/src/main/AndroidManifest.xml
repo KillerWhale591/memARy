@@ -3,6 +3,7 @@
     package="com.killerwhale.memary">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:name=".MainApp"
@@ -12,6 +13,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".Activity.SignUpActivity">
+        </activity>
+        <activity android:name=".Activity.SignInActivity" />
         <activity
             android:name=".Activity.PostCreateActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"></activity>
