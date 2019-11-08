@@ -1,15 +1,13 @@
 package com.killerwhale.memary.Activity;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,9 +16,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
@@ -40,13 +38,17 @@ public class PostCreateActivity extends AppCompatActivity {
     private static final float ALPHA_HALF = 0.5f;
     private static final float ALPHA_ORIGINAL = 1f;
     private static final int REQUEST_CODE_IMAGE_CAPTURE = 202;
-    private static final int PERMISSION_REQUEST_CAMERA = 1001;
+    private static final int PERMISSION_ALL = 1001;
+    private static final String[] PERMISSIONS = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.CAMERA
+    };
 
-    FirebaseFirestore db;
+    private FirebaseFirestore db;
     private Button btnCancel;
     private Button btnSubmit;
     private ImageButton btnAddImg;
-    private ImageView imgAttach;
+    private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
 
@@ -77,14 +79,11 @@ public class PostCreateActivity extends AppCompatActivity {
         btnAddImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                view.setAlpha(ALPHA_HALF);
-                if (ContextCompat.checkSelfPermission(getBaseContext(), Manifest.permission.CAMERA)
-                        != PackageManager.PERMISSION_GRANTED) {
-
-                    // Permission is not granted
+                if (!hasPermissions(getBaseContext(), PERMISSIONS)) {
+                    // Permission not granted
                     ActivityCompat.requestPermissions(PostCreateActivity.this,
-                                new String[]{Manifest.permission.CAMERA},
-                                PERMISSION_REQUEST_CAMERA);
+                            PERMISSIONS,
+                            PERMISSION_ALL);
                 } else {
                     // Permission has already been granted
                     takePhoto();
@@ -125,23 +124,55 @@ public class PostCreateActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
             if (resultCode == RESULT_OK) {
                 setAddingImageEnabled(false);
-                assert data != null;
-                Bundle bundleData = data.getExtras();           //images are stored in a bundle wrapped within the intent...
-                assert bundleData != null;
-                Bitmap Photo = (Bitmap)bundleData.get("data");  //the bundle key is "data".  Requires some reading of documentation to remember. :)
-                imgAttach.setImageBitmap(Photo);
+                if (data != null) {
+                    imgAttach.setImageURI(data.getData());
+                }
             }
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CAMERA) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == PERMISSION_ALL) {
+            if (hasGrantedAll(grantResults)) {
                 takePhoto();
             }
         }
+    }
+
+    /**
+     * Helper function for checking permissions
+     * @param context activity context
+     * @param permissions required permissions
+     * @return true if all permissions granted
+     */
+    public static boolean hasPermissions(Context context, String[] permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Helper function for checking all permission results
+     * @param grantResults all results
+     * @return true if all results is granted
+     */
+    public static boolean hasGrantedAll(int[] grantResults) {
+        if (grantResults.length > 0) {
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -174,13 +205,14 @@ public class PostCreateActivity extends AppCompatActivity {
      */
     private void setAddingImageEnabled(boolean enabled) {
         if (enabled) {
-            imgAttach.setImageBitmap(null);
+            imgAttach.setImageURI((Uri) null);
             imgAttach.setVisibility(View.INVISIBLE);
             btnRemove.setVisibility(View.INVISIBLE);
             btnAddImg.setAlpha(ALPHA_ORIGINAL);
         } else {
             imgAttach.setVisibility(View.VISIBLE);
             btnRemove.setVisibility(View.VISIBLE);
+            btnAddImg.setAlpha(ALPHA_HALF);
         }
         btnAddImg.setEnabled(enabled);
     }

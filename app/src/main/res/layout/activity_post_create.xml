@@ -85,14 +85,14 @@
                 android:inputType="textMultiLine"
                 android:textCursorDrawable="@drawable/cursor" />
 
-            <ImageView
+            <com.facebook.drawee.view.SimpleDraweeView
                 android:id="@+id/imgAttach"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:layout_below="@+id/edtContent"
                 android:layout_marginTop="10dp"
                 android:visibility="gone"
-                android:scaleType="centerCrop" />
+                fresco:placeholderImage="@android:color/darker_gray"/>
 
             <ImageButton
                 android:id="@+id/btnRemove"
