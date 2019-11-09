@@ -80,7 +80,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String MARKER_SOURCE_CLOSE = "markers-source-close";
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
-    private static final int  ZOOM_THRESHOLD = 11;
+    private static final int  ZOOM_THRESHOLD = 12;
     private static final String SELECTED_MARKER = "selected-marker";
     private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
     private PermissionsManager permissionsManager;
@@ -100,7 +100,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         /* Map: This represents the map in the application. */
         LocationPresenter LP = new LocationPresenter();
         mlocations = LP.getLocations();
-
+        Log.d("TAG", mlocations.length + "");
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -116,10 +116,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         MapActivity.this.getResources(), R.drawable.green_marker));
                 style.addImage(MARKER_IMAGE_CLOSE, BitmapFactory.decodeResource(
                         MapActivity.this.getResources(),R.drawable.green_dot));
-                addMarkers(style);
                 enableLocationComponent(style);
                 addHeatmapLayer(style);
                 addCircleLayer(style);
+                addMarkers(style);
                 mapboxMap.addOnMapClickListener(MapActivity.this);
             }
         });
@@ -169,7 +169,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 @Override
                 public void onStyleLoaded(@NonNull Style style) {
                     enableLocationComponent(style);
-                    addHeatmapLayer(style);
 
                 }
             });
@@ -222,25 +221,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             Log.d("Tag",mlocations[i].getmLatitude() + " " + mlocations[i].getmLongtitude());
         }
         loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
-        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_CLOSE,FeatureCollection.fromFeatures(features)));
         loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER, MARKER_SOURCE)
                 .withProperties(
                         PropertyFactory.iconAllowOverlap(true),
-                        PropertyFactory.iconImage((step(zoom(),literal(MARKER_IMAGE),
-                                stop(ZOOM_THRESHOLD,MARKER_IMAGE_CLOSE)))),
-                        iconSize(0.1f),
+                        PropertyFactory.iconImage((step(zoom(), literal(CIRCLE_LAYER_ID),
+                                stop(ZOOM_THRESHOLD, MARKER_IMAGE)))),
+                        iconOffset(new Float[]{0f, -9f}),
+                        iconSize(0.07f)
+                        ));
 
 // Adjust the second number of the Float array based on the height of your marker image.
-// This is because the bottom of the marker should be anchored to the coordinate point, rather
-// than the middle of the marker being the anchor point on the map.
-                        PropertyFactory.iconOffset(new Float[] {0f, -1f})
-                ));
-
+// This is because the bottom of the marker should be ancon
         loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
         loadedMapStyle.addLayer(new SymbolLayer(SELECTED_MARKER_LAYER, SELECTED_MARKER)
                 .withProperties(PropertyFactory.iconImage(MARKER_IMAGE),
-                        iconAllowOverlap(true),
-                        iconOffset(new Float[]{0f, -9f})));
+                        iconOffset(new Float[]{0f, -70f}),
+                        iconAllowOverlap(true)));
     }
 
     private  void addHeatmapLayer(@NonNull Style loadedMapStyle){
@@ -257,11 +253,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         literal(0.8), rgb(239, 138, 98),
                         literal(1), rgb(178, 24, 43)
                 )),
-                heatmapWeight(interpolate(
-                        linear(), get("mag"),
-                        stop(0, 0),
-                        stop(6, 1)
-                        )),
                 heatmapIntensity(
                         interpolate(
                                 linear(), zoom(),
@@ -277,8 +268,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 heatmapOpacity(
                         interpolate(
                                 linear(), zoom(),
-                                stop(9, 1),
-                                stop(7, 0)
+                                stop(7, 1),
+                                stop(10, 0)
                         )
                 )
         );
@@ -287,55 +278,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void addCircleLayer(@NonNull Style loadedMapStyle) {
         CircleLayer circleLayer = new CircleLayer(CIRCLE_LAYER_ID, MARKER_SOURCE);
         circleLayer.setProperties(
-
-// Size circle radius by earthquake magnitude and zoom level
-                circleRadius(
-                        interpolate(
-                                linear(), zoom(),
-                                literal(100), interpolate(
-                                        linear(), get("mag"),
-                                        stop(1, 1),
-                                        stop(9, 4)
-                                ),
-                                literal(100), interpolate(
-                                        linear(), get("mag"),
-                                        stop(1, 5),
-                                        stop(9, 50)
-                                )
-                        )
-                ),
-
-// Color circle by earthquake magnitude
-                circleColor(
-                        interpolate(
-                                linear(), get("mag"),
-                                literal(1), rgba(33, 102, 172, 0),
-                                literal(2), rgb(103, 169, 207),
-                                literal(3), rgb(209, 229, 240),
-                                literal(4), rgb(253, 219, 199),
-                                literal(5), rgb(239, 138, 98),
-                                literal(6), rgb(178, 24, 43)
-                        )
-                ),
-
+                circleColor(rgba(123, 239, 178, 1)),
 // Transition from heatmap to circle layer by zoom level
+                circleStrokeColor("white"),
+                circleStrokeWidth(0.2f),
                 circleOpacity(
                         interpolate(
                                 linear(), zoom(),
-                                stop(10, 0),
-                                stop(11, 1)
+                                stop(12, 0),
+                                stop( 8, 1)
                         )
                 ),
-                circleStrokeColor("white"),
-                circleStrokeWidth(1.0f)
+                circleRadius(
+                        interpolate(
+                                linear(), zoom(),
+                                stop(12, 2),
+                                stop(8, 6)
+                ))
         );
-
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);
     }
 
     private void selectMarker(final SymbolLayer iconLayer) {
         markerAnimator = new ValueAnimator();
-        markerAnimator.setObjectValues(0.1f, 0.2f);
+        markerAnimator.setObjectValues(0.07f, 0.1f);
         markerAnimator.setDuration(300);
         markerAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
@@ -351,7 +317,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void deselectMarker(final SymbolLayer iconLayer) {
-        markerAnimator.setObjectValues(0.2f, 0.1f);
+        markerAnimator.setObjectValues(0.1f, 0f);
         markerAnimator.setDuration(300);
         markerAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
