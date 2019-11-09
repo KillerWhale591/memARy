@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnSignOut;
     private Button btnSignInActivity;
     private Button btnSignUpActivity;
+    private Button btnMapActivity;
     private FirebaseAuth mAuth;
 
     @Override
@@ -25,10 +26,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mAuth = FirebaseAuth.getInstance();
+//        mAuth = FirebaseAuth.getInstance();
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
         btnSignUpActivity = (Button) findViewById(R.id.btnSignUpActivity);
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
+        btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +62,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getBaseContext(), SignUpActivity.class);
                 startActivity(intent);
+            }
+        });
+        btnMapActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getBaseContext(), MapActivity.class);
+                startActivity(i);
             }
         });
     }
