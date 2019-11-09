@@ -19,14 +19,21 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.R;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Activity for editing and posting new post
@@ -45,12 +52,14 @@ public class PostCreateActivity extends AppCompatActivity {
     };
 
     private FirebaseFirestore db;
+    private StorageReference mImagesRef;
     private Button btnCancel;
     private Button btnSubmit;
     private ImageButton btnAddImg;
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
+    private Uri imgUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +68,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
         // Database init.
         db = FirebaseFirestore.getInstance();
+        mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
 
         // UI init.
         btnCancel = findViewById(R.id.btnCancel);
@@ -95,7 +105,8 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setEditingEnabled(false);
-                submitPost();
+                //submitPost();
+                uploadImage(imgUri);
             }
         });
 
@@ -125,8 +136,9 @@ public class PostCreateActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 setAddingImageEnabled(false);
                 if (data != null) {
-                    imgAttach.setImageURI(data.getData());
+                    imgUri = data.getData();
                 }
+                imgAttach.setImageURI(imgUri);
             }
         }
     }
@@ -258,5 +270,38 @@ public class PostCreateActivity extends AppCompatActivity {
                         }
                     });
         }
+    }
+
+    /**
+     * Upload image to FireBase storage and get url
+     * @param uri image file uri
+     */
+    private void uploadImage(Uri uri) {
+
+        final StorageReference riversRef = mImagesRef.child("rivers.jpg");
+        UploadTask uploadTask = riversRef.putFile(uri);
+
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw Objects.requireNonNull(task.getException());
+                }
+                // Continue with the task to get the download URL
+                return riversRef.getDownloadUrl();
+            }
+        });
+        urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    Log.i(TAG, downloadUri.toString());
+                } else {
+                    // Handle failures
+                    Log.e(TAG, "Upload failed.");
+                }
+            }
+        });
     }
 }
