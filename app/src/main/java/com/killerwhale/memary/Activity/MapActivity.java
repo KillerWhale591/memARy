@@ -45,14 +45,12 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacem
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
 
-import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
 import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
@@ -113,9 +111,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onStyleLoaded(@NonNull Style style) {
                 style.addImage(MARKER_IMAGE, BitmapFactory.decodeResource(
-                        MapActivity.this.getResources(), R.drawable.green_marker));
-                style.addImage(MARKER_IMAGE_CLOSE, BitmapFactory.decodeResource(
-                        MapActivity.this.getResources(),R.drawable.green_dot));
+                        MapActivity.this.getResources(), R.drawable.map_marker));
                 enableLocationComponent(style);
                 addHeatmapLayer(style);
                 addCircleLayer(style);
