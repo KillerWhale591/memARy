@@ -29,11 +29,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Activity for editing and posting new post
@@ -59,7 +61,8 @@ public class PostCreateActivity extends AppCompatActivity {
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
-    private Uri imgUri;
+    private Uri localUri;
+    private String remoteUrl = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,8 +108,13 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setEditingEnabled(false);
-                //submitPost();
-                uploadImage(imgUri);
+                if (imgAttach.getVisibility() == View.VISIBLE) {
+                    if (localUri != null) {
+                        uploadImageAndPost(localUri);
+                    }
+                } else {
+                    submitPost();
+                }
             }
         });
 
@@ -136,9 +144,9 @@ public class PostCreateActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 setAddingImageEnabled(false);
                 if (data != null) {
-                    imgUri = data.getData();
+                    localUri = data.getData();
                 }
-                imgAttach.setImageURI(imgUri);
+                imgAttach.setImageURI(localUri);
             }
         }
     }
@@ -251,8 +259,8 @@ public class PostCreateActivity extends AppCompatActivity {
         // Create a new post
         Map<String, Object> post = new HashMap<>();
         post.put("text", text);
-        post.put("image", "");
-        post.put("type", 0);
+        post.put("image", remoteUrl);
+        post.put("type", remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE);
         if (db != null) {
             db.collection("posts")
                     .add(post)
@@ -260,6 +268,7 @@ public class PostCreateActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(DocumentReference documentReference) {
                             Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
+                            Log.i(TAG, documentReference.getId());
                             finish();
                         }
                     })
@@ -276,10 +285,10 @@ public class PostCreateActivity extends AppCompatActivity {
      * Upload image to FireBase storage and get url
      * @param uri image file uri
      */
-    private void uploadImage(Uri uri) {
+    private void uploadImageAndPost(Uri uri) {
 
-        final StorageReference riversRef = mImagesRef.child("rivers.jpg");
-        UploadTask uploadTask = riversRef.putFile(uri);
+        final StorageReference postImgRef = mImagesRef.child(UUID.randomUUID() + ".jpg");
+        UploadTask uploadTask = postImgRef.putFile(uri);
 
         Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
@@ -288,7 +297,7 @@ public class PostCreateActivity extends AppCompatActivity {
                     throw Objects.requireNonNull(task.getException());
                 }
                 // Continue with the task to get the download URL
-                return riversRef.getDownloadUrl();
+                return postImgRef.getDownloadUrl();
             }
         });
         urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
@@ -296,7 +305,11 @@ public class PostCreateActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<Uri> task) {
                 if (task.isSuccessful()) {
                     Uri downloadUri = task.getResult();
-                    Log.i(TAG, downloadUri.toString());
+                    if (downloadUri != null) {
+                        Log.i(TAG, downloadUri.toString());
+                        remoteUrl = downloadUri.toString();
+                        submitPost();
+                    }
                 } else {
                     // Handle failures
                     Log.e(TAG, "Upload failed.");
