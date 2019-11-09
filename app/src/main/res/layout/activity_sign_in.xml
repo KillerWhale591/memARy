@@ -4,9 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".Activity.SignInActivity">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:background="@color/colorPrimaryDark"
+        app:srcCompat="@drawable/placeholder_logo" />
 
     <EditText
         android:id="@+id/loginEmail"
@@ -28,12 +37,20 @@
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Login" />
+        android:layout_marginTop="15dp"
+        android:background="@android:drawable/btn_default"
+        android:backgroundTint="@color/colorAccent"
+        android:text="Login"
+        android:textStyle="bold"/>
 
     <Button
         android:id="@+id/btnGoToRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Go To Register" />
+        android:layout_marginTop="20dp"
+        android:background="@null"
+        android:text="Go To Register ->"
+        android:textColor="@android:color/holo_red_dark"
+        android:textStyle="bold" />
 
 </LinearLayout>
