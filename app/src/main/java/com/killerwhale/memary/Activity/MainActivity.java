@@ -1,6 +1,7 @@
 package com.killerwhale.memary.Activity;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -9,15 +10,21 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.killerwhale.memary.R;
+import com.mapbox.android.core.permissions.PermissionsListener;
+import com.mapbox.android.core.permissions.PermissionsManager;
+
+import java.util.List;
 
 /**
  * For test only
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PermissionsListener {
 
     private Button btnSignOut;
     private Button btnSignInActivity;
     private Button btnSignUpActivity;
+    private Button btnMapActivity;
+    private PermissionsManager permissionsManager;
     private FirebaseAuth mAuth;
 
     @Override
@@ -27,10 +34,12 @@ public class MainActivity extends AppCompatActivity {
 
         // FireBase init.
         mAuth = FirebaseAuth.getInstance();
+
         // UI init.
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
         btnSignUpActivity = (Button) findViewById(R.id.btnSignUpActivity);
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
+        btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,5 +73,46 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        btnMapActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkPermission();
+
+            }
+        });
+
+
+    }
+    public void checkPermission(){
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            Intent i = new Intent(getBaseContext(), MapActivity.class);
+            startActivity(i);
+        }
+        else {
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+        Toast.makeText(getApplicationContext(),"Explaination invalid for now ", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if (granted) {
+            Intent i = new Intent(getBaseContext(), MapActivity.class);
+            startActivity(i);
+        } else {
+            Toast.makeText(getApplicationContext(),"Permission not Granted yet", Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 }

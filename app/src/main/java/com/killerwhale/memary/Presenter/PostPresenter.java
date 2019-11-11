@@ -72,6 +72,9 @@ public class PostPresenter {
             1000009
     };
 
+
+
+
     public void init() {
         for (int i = 0; i < ids.length; i++) {
             mPosts.add(new Post(ids[i], types[i], texts[i], urls[i], locations[i]));
@@ -87,4 +90,6 @@ public class PostPresenter {
             posts.add(new Post(ids[i], types[i], texts[i], urls[i], locations[i]));
         }
     }
+
+
 }

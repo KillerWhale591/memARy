@@ -34,4 +34,11 @@
         android:layout_below="@id/btnSignInActivity"
         android:layout_alignParentRight="true"
         android:text="SignUpActivity" />
+    <Button
+        android:id="@+id/btnMapActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnSignUpActivity"
+        android:layout_alignParentRight="true"
+        android:text="MapActivity" />
 </RelativeLayout>
