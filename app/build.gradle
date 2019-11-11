@@ -35,6 +35,8 @@ dependencies {
     implementation 'com.android.support:design:28.0.0'
 
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.4.0'
+    compile group: 'com.opencsv', name: 'opencsv', version: '4.1'
+
 
 
 }

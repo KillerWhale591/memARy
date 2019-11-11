@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">memARy</string>
-    <string name="mapbox_access_token">YOUR_KEY_HERE</string>
+    <string name="mapbox_access_token">pk.eyJ1IjoiY2d4eTE5OTUwOSIsImEiOiJjazJzNnV5dm0weHA2M2Vtd3R2Nm4xYWVpIn0.X7gTmqY_A-7sLgyqSBgqIw</string>
 </resources>
