@@ -1,6 +1,5 @@
 package com.killerwhale.memary.Presenter;
 
-import com.killerwhale.memary.DataModel.Locations;
 import com.killerwhale.memary.DataModel.Post;
 
 import java.util.ArrayList;

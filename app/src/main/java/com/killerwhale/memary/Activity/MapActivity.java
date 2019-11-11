@@ -9,16 +9,11 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-
-import com.killerwhale.memary.DataModel.Locations;
-import com.killerwhale.memary.Presenter.LocationPresenter;
 import com.killerwhale.memary.R;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.heatmapDensity;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.interpolate;
 import com.mapbox.mapboxsdk.Mapbox;
-
-
 import static com.mapbox.mapboxsdk.style.expressions.Expression.linear;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.literal;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
@@ -26,15 +21,18 @@ import static com.mapbox.mapboxsdk.style.expressions.Expression.rgba;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.step;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.zoom;
+
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleStrokeColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleStrokeWidth;
+
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapIntensity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapRadius;
+
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
@@ -57,6 +55,10 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.opencsv.CSVReader;
+
+import java.io.InputStreamReader;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,10 +70,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
-    private static final int  ZOOM_THRESHOLD = 12;
+    private static final int  ZOOM_THRESHOLD = 17;
     private static final String SELECTED_MARKER = "selected-marker";
     private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
-    private Locations[] mlocations;
+    private Location[] mlocations;
     private MapboxMap mapboxMap;
     private MapView mapView;
     private ValueAnimator markerAnimator;
@@ -83,11 +85,35 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Mapbox.getInstance(this, getString(R.string.mapbox_access_token));
 
         setContentView(R.layout.activity_map_acitivity);
-
+/**
+ *         Step 1: Read Mapbox android apis
+ */
         /* Map: This represents the map in the application. */
-        LocationPresenter LP = new LocationPresenter();
-        mlocations = LP.getLocations();
-        Log.d("TAG", mlocations.length + "");
+        try {
+            CSVReader reader = new CSVReader(new InputStreamReader(getAssets().open("a.csv")));
+            mlocations = new Location[473];
+            String[] nextLine;
+            int i = 0;
+            while ((nextLine = reader.readNext()) != null && i < 473) {
+                // nextLine[] is an array of values from the line
+                NumberFormat f = NumberFormat.getInstance();
+                String lat = nextLine[3].trim();
+                System.out.println(lat);
+                String long1 =  nextLine[4].trim();
+                System.out.println(long1);
+
+                float lat1 = Float.parseFloat(lat);
+                float longd = Float.parseFloat(long1);
+                mlocations[i] = new Location(Integer.toString(i));
+                mlocations[i].setLatitude(Double.valueOf(lat1));
+                mlocations[i].setLongitude(Double.valueOf(longd));
+                i++;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
@@ -96,6 +122,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
+        //Setting max/min zoom level for camera
+        mapboxMap.setMaxZoomPreference(18);
+        mapboxMap.setMinZoomPreference(7);
+        //Step3: set up sytles, there are bunch of styles for us to choose
         mapboxMap.setStyle(new Style.Builder().fromUri(Style.MAPBOX_STREETS), new Style.OnStyleLoaded() {
             @Override
             public void onStyleLoaded(@NonNull Style style) {
@@ -110,7 +140,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-
+//Step 4: step up location component, where u are basically
     @SuppressWarnings( {"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
 // Check if permissions are enabled and if not request
@@ -130,7 +160,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
 
-
+//Step 5; enable clickable symbol( marker)
     @Override
     public boolean onMapClick(@NonNull LatLng point) {
         Style style = mapboxMap.getStyle();
@@ -166,14 +196,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
         return true;
     }
-
+//add marker layer
     private void addMarkers(@NonNull Style loadedMapStyle) {
         List<Feature> features = new ArrayList<>();
+        /**
+         *         Step 6:get geo information, add to features
+         */
         for (int i = 0; i < mlocations.length; i++) {
-            features.add(Feature.fromGeometry(Point.fromLngLat(mlocations[i].getmLongtitude(),
-                    mlocations[i].getmLatitude())));
-            Log.d("Tag",mlocations[i].getmLatitude() + " " + mlocations[i].getmLongtitude());
+            features.add(Feature.fromGeometry(Point.fromLngLat(mlocations[i].getLongitude(),
+                    mlocations[i].getLatitude())));
+            Log.d("Tag",mlocations[i].getLatitude() + " " + mlocations[i].getLongitude());
         }
+        /**
+         * add the features and assigned an ID to him. Example: MARKER_SOURCE
+         */
         loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
         loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER, MARKER_SOURCE)
                 .withProperties(
@@ -192,7 +228,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         iconOffset(new Float[]{0f, -70f}),
                         iconAllowOverlap(true)));
     }
-
+//Step 7: add heatmap layer
     private  void addHeatmapLayer(@NonNull Style loadedMapStyle){
         HeatmapLayer heatmapLayer = new HeatmapLayer(HEATMAP_LAYER_ID, MARKER_SOURCE);
         heatmapLayer.setMaxZoom(12);
@@ -223,12 +259,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         interpolate(
                                 linear(), zoom(),
                                 stop(7, 1),
-                                stop(10, 0)
+                                stop(12, 0)
                         )
                 )
         );
         loadedMapStyle.addLayerAbove(heatmapLayer, "waterway-label");
     }
+    /*
+     * add circle layer
+     */
     private void addCircleLayer(@NonNull Style loadedMapStyle) {
         CircleLayer circleLayer = new CircleLayer(CIRCLE_LAYER_ID, MARKER_SOURCE);
         circleLayer.setProperties(
@@ -239,15 +278,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 circleOpacity(
                         interpolate(
                                 linear(), zoom(),
-                                stop(12, 0),
-                                stop( 8, 1)
+                                stop(16, 1),
+                                stop( 12, 0)
                         )
                 ),
                 circleRadius(
                         interpolate(
                                 linear(), zoom(),
-                                stop(12, 2),
-                                stop(8, 6)
+                                stop(16, 1),
+                                stop(12, 4)
                 ))
         );
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);

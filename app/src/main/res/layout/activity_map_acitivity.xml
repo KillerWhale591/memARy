@@ -13,6 +13,7 @@
         android:layout_height="match_parent"
         mapbox:mapbox_cameraTargetLat="42.3601"
         mapbox:mapbox_cameraTargetLng="-71.0589"
+
         mapbox:mapbox_cameraZoom="11" />
 
 </FrameLayout>

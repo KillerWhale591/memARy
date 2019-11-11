@@ -16,7 +16,6 @@ public class Post {
     private String mPostText;
     private String mImageUrl;
     private long mLocationId;
-    private Locations location;
 
     public Post(long postId, int type, String postText, String imageUrl, long locationId) {
         mPostId = postId;
