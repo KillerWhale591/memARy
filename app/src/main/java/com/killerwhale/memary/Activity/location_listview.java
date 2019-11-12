@@ -40,7 +40,7 @@ public class location_listview extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mymenu, menu);
+        getMenuInflater().inflate(R.menu.location_list_menu, menu);
         return true;
     }
 
@@ -113,7 +113,7 @@ class ListViewAdapter extends BaseAdapter {
         View row;
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            row = inflater.inflate(R.layout.listview_row, parent, false);
+            row = inflater.inflate(R.layout.location_listview_row, parent, false);
         }
         else row = convertView;
 
