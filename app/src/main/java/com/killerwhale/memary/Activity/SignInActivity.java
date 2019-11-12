@@ -27,7 +27,15 @@ public class SignInActivity extends AppCompatActivity {
     private EditText loginEmail;
     private EditText loginPassword;
     private Button btnLogin;
+    private Button btnGoToReset;
     private Button btnGoToRegister;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        btnGoToReset.setAlpha(1f);
+        btnGoToRegister.setAlpha(1f);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +47,9 @@ public class SignInActivity extends AppCompatActivity {
         loginEmail = (EditText) findViewById(R.id.loginEmail);
         loginPassword = (EditText) findViewById(R.id.loginPassword);
         btnLogin = (Button) findViewById(R.id.btnLogin);
+        btnGoToReset = (Button) findViewById(R.id.btnGoToReset);
         btnGoToRegister= (Button) findViewById(R.id.btnGoToRegister);
+
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,9 +88,21 @@ public class SignInActivity extends AppCompatActivity {
         btnGoToRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                btnGoToRegister.setAlpha(0.5f);
                 Intent intent = new Intent(SignInActivity.this, SignUpActivity.class);
                 startActivity(intent);
             }
         });
+
+        btnGoToReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnGoToReset.setAlpha(0.5f);
+                Intent intent = new Intent(getBaseContext(), ResetPasswordActivity.class);
+                startActivity(intent);
+            }
+        });
     }
+
+
 }

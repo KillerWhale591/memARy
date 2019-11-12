@@ -4,31 +4,48 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimaryDark"
     android:gravity="center"
     android:orientation="vertical"
+    android:padding="20dp"
     tools:context=".Activity.SignInActivity">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/imgLogo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="50dp"
-        android:background="@color/colorPrimaryDark"
         app:srcCompat="@drawable/placeholder_logo" />
+
+    <TextView
+        android:id="@+id/txtEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Email"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/loginEmail"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:backgroundTint="#000000"
         android:ems="10"
         android:hint="Email"
         android:inputType="textPersonName" />
+
+    <TextView
+        android:id="@+id/txtPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Password"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/loginPassword"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:backgroundTint="#000000"
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword" />
@@ -39,9 +56,20 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:background="@android:drawable/btn_default"
-        android:backgroundTint="@color/colorAccent"
+        android:backgroundTint="@color/colorBlack"
         android:text="Login"
-        android:textStyle="bold"/>
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnGoToReset"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@null"
+        android:text="Forget Password?"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/btnGoToRegister"
@@ -49,8 +77,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:background="@null"
-        android:text="Go To Register ->"
-        android:textColor="@android:color/holo_red_dark"
+        android:text="New user? Register now"
+        android:textColor="@android:color/holo_blue_dark"
         android:textStyle="bold" />
 
 </LinearLayout>
