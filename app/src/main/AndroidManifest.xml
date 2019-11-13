@@ -3,6 +3,8 @@
     package="com.killerwhale.memary">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:name=".MainApp"
@@ -15,10 +17,17 @@
         <activity android:name=".Activity.ResetPasswordActivity"></activity>
         <activity android:name=".Activity.SignUpActivity"></activity>
         <activity android:name=".Activity.SignInActivity" />
+        <activity android:name=".Activity.MapActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".Activity.PostCreateActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
-        <activity android:name=".Activity.PostFeedActivity" />
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".Activity.PostFeedActivity"
+            android:screenOrientation="portrait">
+        </activity>
         <activity android:name=".Activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

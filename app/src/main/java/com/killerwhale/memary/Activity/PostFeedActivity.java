@@ -1,7 +1,6 @@
 package com.killerwhale.memary.Activity;
 
 import android.content.Intent;
-import android.support.design.circularreveal.CircularRevealLinearLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
