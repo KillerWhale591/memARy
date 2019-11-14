@@ -116,7 +116,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         posts.clear();
         presenter.init();
         posts = presenter.getPosts();
-        posts.set(0, new Post(100000, Post.TYPE_TEXT, "Refreshed post 0", "", 1000000));
+        posts.set(0, new Post(Post.TYPE_TEXT, "Refreshed post 0", "", null, null));
         recyclerView.post(new Runnable() {
             @Override
             public void run() {

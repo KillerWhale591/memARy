@@ -77,7 +77,7 @@ public class PostPresenter {
 
     public void init() {
         for (int i = 0; i < ids.length; i++) {
-            mPosts.add(new Post(ids[i], types[i], texts[i], urls[i], locations[i]));
+            mPosts.add(new Post(types[i], texts[i], urls[i], null, null));
         }
     }
 
@@ -87,7 +87,7 @@ public class PostPresenter {
 
     public void loadMoreData(ArrayList<Post> posts) {
         for (int i = 0; i < ids.length; i++) {
-            posts.add(new Post(ids[i], types[i], texts[i], urls[i], locations[i]));
+            mPosts.add(new Post(types[i], texts[i], urls[i], null, null));
         }
     }
 

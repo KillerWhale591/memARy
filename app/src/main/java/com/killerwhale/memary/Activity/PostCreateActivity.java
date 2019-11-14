@@ -3,6 +3,7 @@ package com.killerwhale.memary.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -19,20 +20,27 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
-import java.util.HashMap;
+import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -46,6 +54,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private static final String TAG = "NewPostTest";
     private static final float ALPHA_HALF = 0.5f;
     private static final float ALPHA_ORIGINAL = 1f;
+    private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final int REQUEST_CODE_IMAGE_CAPTURE = 202;
     private static final int PERMISSION_ALL = 1001;
     private static final String[] PERMISSIONS = {
@@ -53,14 +62,23 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA
     };
 
+    // Firebase plug-ins
     private FirebaseFirestore db;
     private StorageReference mImagesRef;
+
+    // Location
+    private FusedLocationProviderClient FLPC;
+    private LocationRequest locationRequest;
+
+    // UI widgets
     private Button btnCancel;
     private Button btnSubmit;
     private ImageButton btnAddImg;
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
+
+    // Post variables
     private Uri localUri;
     private String remoteUrl = "";
 
@@ -72,6 +90,12 @@ public class PostCreateActivity extends AppCompatActivity {
         // Database init.
         db = FirebaseFirestore.getInstance();
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
+
+        // Location
+        FLPC = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(INTERVAL_LOC_REQUEST);
 
         // UI init.
         btnCancel = findViewById(R.id.btnCancel);
@@ -255,30 +279,45 @@ public class PostCreateActivity extends AppCompatActivity {
      * Write a new post into database
      */
     private void submitPost() {
-        String text = edtContent.getText().toString();
-        // Create a new post
-        Map<String, Object> post = new HashMap<>();
-        post.put("text", text);
-        post.put("image", remoteUrl);
-        post.put("type", remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE);
-        if (db != null) {
-            db.collection("posts")
-                    .add(post)
-                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                        @Override
-                        public void onSuccess(DocumentReference documentReference) {
-                            Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
-                            Log.i(TAG, documentReference.getId());
-                            finish();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error adding document", e);
-                        }
-                    });
-        }
+        // Get post location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    String text = edtContent.getText().toString();
+                    int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
+                    GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+                    Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+                    // Create a new post
+                    Post newPost = new Post(type, text, remoteUrl, geo, time);
+                    Map<String, Object> post = newPost.getHashMap();
+                    if (db != null) {
+                        db.collection("posts")
+                                .add(post)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
+                                        Log.i(TAG, documentReference.getId());
+                                        finish();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "Error adding document", e);
+                                    }
+                                });
+                    }
+                }
+            }
+        });
     }
 
     /**
