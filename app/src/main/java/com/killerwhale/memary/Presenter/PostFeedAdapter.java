@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
@@ -22,9 +23,6 @@ import java.util.ArrayList;
  */
 public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostViewHolder> {
 
-    private static final int VIEW_TYPE_PURE_TEXT = 0;
-    private static final int VIEW_TYPE_IMAGE = 1;
-
     private Context context;
     private OnRefreshCompleteListener refreshCompleteListener;
     private LinearLayoutManager llm;
@@ -32,15 +30,13 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     private ArrayList<Post> posts;
     private PostPresenter presenter;
 
-    public PostFeedAdapter(Context aContext, RecyclerView rcView, OnRefreshCompleteListener listener) {
+    public PostFeedAdapter(Context aContext, FirebaseFirestore db, RecyclerView rcView, OnRefreshCompleteListener listener) {
         this.context = aContext;
         this.refreshCompleteListener = listener;
-        llm = (LinearLayoutManager) rcView.getLayoutManager();
-        recyclerView = rcView;
-        presenter = new PostPresenter();
-        presenter.init();
-        posts = presenter.getPosts();
-        rcView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        this.presenter = new PostPresenter(db);
+        this.llm = (LinearLayoutManager) rcView.getLayoutManager();
+        this.recyclerView = rcView;
+        this.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
@@ -50,6 +46,11 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                 }
             }
         });
+        this.posts = presenter.getPosts();
+    }
+
+    public void init() {
+        presenter.init(this, false);
     }
 
     @NonNull
@@ -57,7 +58,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.row_post_item, parent, false);
-        if (type == VIEW_TYPE_PURE_TEXT) {
+        if (type == Post.TYPE_TEXT) {
             // For pure text post, hide image view holder
             ViewGroup.LayoutParams params = view.findViewById(R.id.imgPost).getLayoutParams();
             params.height = 0;
@@ -92,21 +93,14 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
 
     @Override
     public int getItemViewType(int position) {
-        return posts.get(position).getImageUrl().isEmpty() ? VIEW_TYPE_PURE_TEXT : VIEW_TYPE_IMAGE;
+        return posts.get(position).getImageUrl().isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
     }
 
     /**
      * Scroll to the bottom and load 10 more items
      */
     private void loadMoreData() {
-        final int prev = getItemCount();
-        presenter.loadMoreData(posts);
-        recyclerView.post(new Runnable() {
-            @Override
-            public void run() {
-                notifyItemRangeInserted(prev, 10);
-            }
-        });
+        presenter.load10Posts(this);
     }
 
     /**
@@ -114,9 +108,21 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
      */
     public void refreshData() {
         posts.clear();
-        presenter.init();
+        presenter.init(this, true);
+    }
+
+    public void updateView() {
         posts = presenter.getPosts();
-        posts.set(0, new Post(Post.TYPE_TEXT, "Refreshed post 0", "", null, null));
+        recyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                notifyDataSetChanged();
+            }
+        });
+    }
+
+    public void updateAndStopRefresh() {
+        posts = presenter.getPosts();
         recyclerView.post(new Runnable() {
             @Override
             public void run() {

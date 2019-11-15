@@ -1,5 +1,7 @@
 package com.killerwhale.memary.DataModel;
 
+import android.location.Location;
+
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
@@ -25,15 +27,32 @@ public class Post {
     private int mType;
     private String mPostText;
     private String mImageUrl;
-    private GeoPoint mLocation;
+    private GeoPoint mGeoPoint;
     private Timestamp mPostTime;
 
+    /**
+     * Constructor of a Post
+     * @param type post type: pure text or image post
+     * @param postText text of post
+     * @param imageUrl image url, default is empty string
+     * @param location post location
+     * @param postTime post time
+     */
     public Post(int type, String postText, String imageUrl, GeoPoint location, Timestamp postTime) {
         mType = type;
         mPostText = postText;
         mImageUrl = imageUrl;
-        mLocation = location;
+        mGeoPoint = location;
         mPostTime = postTime;
+    }
+
+    public Post(Map<String, Object> map) {
+        HashMap postData = (HashMap) map;
+        mType = ((Long) postData.get(FIELD_TYPE)).intValue();
+        mPostText = (String) postData.get(FIELD_TEXT);
+        mImageUrl = (String) postData.get(FIELD_IMAGE);
+        mGeoPoint = (GeoPoint) postData.get(FIELD_LOCATION);
+        mPostTime = (Timestamp) postData.get(FIELD_TIMESTAMP);
     }
 
     public void setPostId(String postId) {
@@ -53,7 +72,7 @@ public class Post {
     }
 
     public void setLocation(GeoPoint location) {
-        this.mLocation = location;
+        this.mGeoPoint = location;
     }
 
     public String getPostId() {
@@ -73,21 +92,46 @@ public class Post {
     }
 
     public GeoPoint getLocation() {
-        return mLocation;
+        return mGeoPoint;
     }
 
     public Timestamp getPostTime() {
         return mPostTime;
     }
 
+    /**
+     * Transfer from Post to HashMap
+     * @return A HashMap format of post that can be directly submit to database
+     */
     public Map<String, Object> getHashMap() {
         Map<String, Object> map = new HashMap<>();
         map.put(FIELD_TYPE, mType);
         map.put(FIELD_TEXT, mPostText);
         map.put(FIELD_IMAGE, mImageUrl);
-        map.put(FIELD_LOCATION, mLocation);
+        map.put(FIELD_LOCATION, mGeoPoint);
         map.put(FIELD_TIMESTAMP, mPostTime);
         return map;
+    }
+
+    /**
+     * Get the distance between a location and the post
+     * @param location current location
+     * @return distance
+     */
+    public double getDistance(Location location) {
+        Location mLocation = new Location("");
+        mLocation.setLatitude(mGeoPoint.getLatitude());
+        mLocation.setLongitude(mGeoPoint.getLongitude());
+        return mLocation.distanceTo(location);
+    }
+
+    /**
+     * Get the post time from now
+     * @param timestamp current timestamp
+     * @return time from now
+     */
+    public long getTimeFromNow(Timestamp timestamp) {
+        return timestamp.getSeconds() - mPostTime.getSeconds();
     }
 
 }

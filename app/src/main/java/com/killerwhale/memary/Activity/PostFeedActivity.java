@@ -9,6 +9,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.killerwhale.memary.Presenter.OnRefreshCompleteListener;
 import com.killerwhale.memary.Presenter.PostFeedAdapter;
 import com.killerwhale.memary.R;
@@ -18,6 +20,8 @@ import com.killerwhale.memary.R;
  * @author Zeyu Fu
  */
 public class PostFeedActivity extends AppCompatActivity implements OnRefreshCompleteListener {
+
+    FirebaseFirestore db;
 
     SwipeRefreshLayout swipeRefreshLayout;
     RecyclerView postList;
@@ -30,11 +34,21 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_feed);
 
+        // Database init.
+        db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
+
+        // UI
         btnCreate = findViewById(R.id.btnCreate);
         postList = findViewById(R.id.postList);
         rvManager = new LinearLayoutManager(this);
         postList.setLayoutManager(rvManager);
-        rvAdapter = new PostFeedAdapter(getBaseContext(), postList, this);
+        rvAdapter = new PostFeedAdapter(getBaseContext(), db, postList, this);
+        ((PostFeedAdapter) rvAdapter).init();
         postList.setAdapter(rvAdapter);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {

@@ -33,6 +33,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -89,6 +90,11 @@ public class PostCreateActivity extends AppCompatActivity {
 
         // Database init.
         db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
 
         // Location
@@ -137,7 +143,7 @@ public class PostCreateActivity extends AppCompatActivity {
                         uploadImageAndPost(localUri);
                     }
                 } else {
-                    submitPost();
+                    getLocationAndPost();
                 }
             }
         });
@@ -276,9 +282,9 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     /**
-     * Write a new post into database
+     * Get the current location and add to a new post
      */
-    private void submitPost() {
+    private void getLocationAndPost() {
         // Get post location
         FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
             @Override
@@ -290,31 +296,7 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Location location) {
                 if (location != null) {
-                    String text = edtContent.getText().toString();
-                    int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
-                    GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
-                    Timestamp time = new Timestamp(Calendar.getInstance().getTime());
-                    // Create a new post
-                    Post newPost = new Post(type, text, remoteUrl, geo, time);
-                    Map<String, Object> post = newPost.getHashMap();
-                    if (db != null) {
-                        db.collection("posts")
-                                .add(post)
-                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                    @Override
-                                    public void onSuccess(DocumentReference documentReference) {
-                                        Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
-                                        Log.i(TAG, documentReference.getId());
-                                        finish();
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "Error adding document", e);
-                                    }
-                                });
-                    }
+                    submitPost(location);
                 }
             }
         });
@@ -347,7 +329,7 @@ public class PostCreateActivity extends AppCompatActivity {
                     if (downloadUri != null) {
                         Log.i(TAG, downloadUri.toString());
                         remoteUrl = downloadUri.toString();
-                        submitPost();
+                        getLocationAndPost();
                     }
                 } else {
                     // Handle failures
@@ -355,5 +337,37 @@ public class PostCreateActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * Submit the post with all the data fields
+     * @param location current location
+     */
+    private void submitPost(Location location) {
+        String text = edtContent.getText().toString();
+        int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
+        GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+        Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+        // Create a new post
+        Post newPost = new Post(type, text, remoteUrl, geo, time);
+        Map<String, Object> post = newPost.getHashMap();
+        if (db != null) {
+            db.collection("posts")
+                    .add(post)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
+                            Log.i(TAG, documentReference.getId());
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error adding document", e);
+                        }
+                    });
+        }
     }
 }
