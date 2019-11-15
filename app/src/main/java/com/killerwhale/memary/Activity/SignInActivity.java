@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -29,6 +30,7 @@ public class SignInActivity extends AppCompatActivity {
     private Button btnLogin;
     private Button btnGoToReset;
     private Button btnGoToRegister;
+    private ProgressBar progressLogin;
 
     @Override
     protected void onStart() {
@@ -48,8 +50,8 @@ public class SignInActivity extends AppCompatActivity {
         loginPassword = (EditText) findViewById(R.id.loginPassword);
         btnLogin = (Button) findViewById(R.id.btnLogin);
         btnGoToReset = (Button) findViewById(R.id.btnGoToReset);
-        btnGoToRegister= (Button) findViewById(R.id.btnGoToRegister);
-
+        btnGoToRegister = (Button) findViewById(R.id.btnGoToRegister);
+        progressLogin = (ProgressBar) findViewById(R.id.progressLogin);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,10 +69,12 @@ public class SignInActivity extends AppCompatActivity {
                     return;
                 }
 
+                progressLogin.setVisibility(View.VISIBLE);
                 mAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(SignInActivity.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
+                                progressLogin.setVisibility(View.INVISIBLE);
                                 if (!task.isSuccessful()) {
                                     // there was an error
                                     Toast.makeText(SignInActivity.this, "sign in failed", Toast.LENGTH_LONG).show();
@@ -79,7 +83,6 @@ public class SignInActivity extends AppCompatActivity {
                                     Intent intent = new Intent(SignInActivity.this, MainActivity.class);
                                     startActivity(intent);
                                 }
-
                             }
                         });
             }

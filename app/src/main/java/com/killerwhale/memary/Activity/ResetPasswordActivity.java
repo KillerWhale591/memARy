@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -25,6 +26,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private EditText resetConfirmPassword;
     private Button btnReset;
     private Button btnBack;
+    private ProgressBar progressReset;
 
     @Override
     protected void onStart() {
@@ -42,6 +44,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
         resetEmail = (EditText) findViewById(R.id.resetEmail);
         btnReset = (Button) findViewById(R.id.btnReset);
         btnBack = (Button) findViewById(R.id.btnBack);
+        progressReset = (ProgressBar) findViewById(R.id.progressReset);
 
         btnReset.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,9 +56,11 @@ public class ResetPasswordActivity extends AppCompatActivity {
                     return;
                 }
 
+                progressReset.setVisibility(View.VISIBLE);
                 mAuth.sendPasswordResetEmail(email).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
+                        progressReset.setVisibility(View.INVISIBLE);
                         if (task.isSuccessful()) {
                             Toast.makeText(ResetPasswordActivity.this, "We have sent you instructions to reset your password!", Toast.LENGTH_SHORT).show();
                         } else {
