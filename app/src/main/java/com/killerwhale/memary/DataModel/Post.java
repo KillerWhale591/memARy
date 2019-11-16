@@ -5,6 +5,7 @@ import android.location.Location;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,11 +128,28 @@ public class Post {
 
     /**
      * Get the post time from now
-     * @param timestamp current timestamp
-     * @return time from now
+     * @param curr current timestamp
+     * @return time from now in String format
      */
-    public long getTimeFromNow(Timestamp timestamp) {
-        return timestamp.getSeconds() - mPostTime.getSeconds();
+    public String getTimeFromNow(Date curr) {
+        long diff = curr.getTime() - mPostTime.toDate().getTime();
+        long seconds = diff / 1000;
+        int days = (int) seconds / 86400;
+        int hours = ((int) seconds % 86400) / 3600;
+        int minutes = ((int) seconds % 3600) / 60;
+        return buildTimeString(days, hours, minutes);
     }
 
+    private String buildTimeString(int days, int hours, int minutes) {
+        if (days > 0) {
+            return days + " days ago";
+        }
+        if (hours > 0) {
+            return hours + " hours ago";
+        }
+        if (minutes > 0) {
+            return minutes + " minutes ago";
+        }
+        return "1 minute ago";
+    }
 }

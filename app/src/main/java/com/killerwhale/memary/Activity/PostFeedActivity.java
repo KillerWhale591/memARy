@@ -25,7 +25,7 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
 
     SwipeRefreshLayout swipeRefreshLayout;
     RecyclerView postList;
-    RecyclerView.Adapter rvAdapter;
+    PostFeedAdapter rvAdapter;
     RecyclerView.LayoutManager rvManager;
     FloatingActionButton btnCreate;
 
@@ -48,13 +48,13 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
         rvManager = new LinearLayoutManager(this);
         postList.setLayoutManager(rvManager);
         rvAdapter = new PostFeedAdapter(getBaseContext(), db, postList, this);
-        ((PostFeedAdapter) rvAdapter).init();
+        rvAdapter.init();
         postList.setAdapter(rvAdapter);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                ((PostFeedAdapter)rvAdapter).refreshData();
+                rvAdapter.refreshData();
             }
         });
         btnCreate.setOnClickListener(new View.OnClickListener() {

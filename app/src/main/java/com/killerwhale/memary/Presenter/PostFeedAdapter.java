@@ -16,6 +16,7 @@ import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Adapter for the post list (RecyclerView)
@@ -84,6 +85,9 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         if (posts.get(position).getType() == Post.TYPE_IMAGE) {
             postViewHolder.imgPost.setImageURI(Uri.parse(imgUrl));
         }
+        // Set time
+        String time = posts.get(position).getTimeFromNow(Calendar.getInstance().getTime());
+        postViewHolder.txtTime.setText(time);
     }
 
     @Override
