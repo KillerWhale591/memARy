@@ -29,6 +29,7 @@
             android:name=".Activity.PostFeedActivity"
             android:screenOrientation="portrait">
         </activity>
+        <activity android:name=".Activity.LocationListActivity" />
         <activity android:name=".Activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
