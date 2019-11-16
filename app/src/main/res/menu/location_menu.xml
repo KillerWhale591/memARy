@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/mnu_distance"
+        android:title="Sort by Distance" />
+    <item
+        android:id="@+id/mnu_posts"
+        android:title="Sort by Posts Number" />
+    <item
+        android:id="@+id/mnu_name"
+        android:title="Sort by Name" />
+</menu>
