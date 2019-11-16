@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         btnLocationList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(getBaseContext(), location_listview.class);
+                Intent i = new Intent(getBaseContext(), LocationListActivity.class);
                 startActivity(i);
             }
         });
