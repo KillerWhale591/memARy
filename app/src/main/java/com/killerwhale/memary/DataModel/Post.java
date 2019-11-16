@@ -24,6 +24,11 @@ public class Post {
     private static final String FIELD_LOCATION = "location";
     private static final String FIELD_TIMESTAMP = "timestamp";
 
+    private static final long MSEC_PER_SEC = 1000L;
+    private static final int SEC_PER_DAY = 86400;
+    private static final int SEC_PER_HOUR = 3600;
+    private static final int SEC_PER_MIN = 60;
+
     private String mPostId;
     private int mType;
     private String mPostText;
@@ -133,10 +138,10 @@ public class Post {
      */
     public String getTimeFromNow(Date curr) {
         long diff = curr.getTime() - mPostTime.toDate().getTime();
-        long seconds = diff / 1000;
-        int days = (int) seconds / 86400;
-        int hours = ((int) seconds % 86400) / 3600;
-        int minutes = ((int) seconds % 3600) / 60;
+        long seconds = diff / MSEC_PER_SEC;
+        int days = (int) seconds / SEC_PER_DAY;
+        int hours = ((int) seconds % SEC_PER_DAY) / SEC_PER_HOUR;
+        int minutes = ((int) seconds % SEC_PER_HOUR) / SEC_PER_MIN;
         return buildTimeString(days, hours, minutes);
     }
 
