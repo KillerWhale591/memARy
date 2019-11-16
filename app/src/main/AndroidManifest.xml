@@ -17,6 +17,8 @@
         <activity android:name=".Activity.SignUpActivity">
         </activity>
         <activity android:name=".Activity.SignInActivity" />
+        <activity android:name=".Activity.MapActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".Activity.PostCreateActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
