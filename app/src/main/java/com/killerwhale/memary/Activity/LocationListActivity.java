@@ -40,7 +40,7 @@ public class location_listview extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mymenu, menu);
+        getMenuInflater().inflate(R.menu.locationMenu, menu);
         return true;
     }
 
@@ -74,7 +74,7 @@ class ListViewAdapter extends BaseAdapter {
     ArrayList<Integer> numPosts;
     ArrayList<Integer> images;
     ArrayList<Float> distance;
-    ListViewItem[] items;
+    LocationListViewItem[] items;
 
 
     public ListViewAdapter(Context aContext) {
@@ -84,7 +84,7 @@ class ListViewAdapter extends BaseAdapter {
         images = new ArrayList<Integer>();
         numPosts = new ArrayList<Integer>();
         distance = new ArrayList<Float>();
-        items = new ListViewItem[this.getCount()];
+        items = new LocationListViewItem[this.getCount()];
         for (int i = 0; i < 7; i++){
             images.add(R.drawable.location_image);
             numPosts.add((int) (Math.random() * 100000));
@@ -133,7 +133,7 @@ class ListViewAdapter extends BaseAdapter {
 
     private void setItems() {
         for (int i = 0; i < this.getCount(); i++) {
-            ListViewItem item = new ListViewItem(location[i], address[i], distance.get(i), 0, numPosts.get(i));
+            LocationListViewItem item = new LocationListViewItem(location[i], address[i], distance.get(i), 0, numPosts.get(i));
             items[i] = item;
         }
     }
@@ -151,9 +151,9 @@ class ListViewAdapter extends BaseAdapter {
 
     public void sortByDistance() {
         setItems();
-        Arrays.sort(items, new Comparator<ListViewItem>() {
+        Arrays.sort(items, new Comparator<LocationListViewItem>() {
             @Override
-            public int compare(ListViewItem o1, ListViewItem o2) {
+            public int compare(LocationListViewItem o1, LocationListViewItem o2) {
                 return Float.compare(o1.distance, o2.distance);
             }
         });
@@ -162,9 +162,9 @@ class ListViewAdapter extends BaseAdapter {
 
     public void sortByName() {
         setItems();
-        Arrays.sort(items, new Comparator<ListViewItem>() {
+        Arrays.sort(items, new Comparator<LocationListViewItem>() {
             @Override
-            public int compare(ListViewItem o1, ListViewItem o2) {
+            public int compare(LocationListViewItem o1, LocationListViewItem o2) {
                 return o1.address.compareTo(o2.address);
             }
         });
@@ -173,9 +173,9 @@ class ListViewAdapter extends BaseAdapter {
 
     public void sortByPost() {
         setItems();
-        Arrays.sort(items, new Comparator<ListViewItem>() {
+        Arrays.sort(items, new Comparator<LocationListViewItem>() {
             @Override
-            public int compare(ListViewItem o1, ListViewItem o2) {
+            public int compare(LocationListViewItem o1, LocationListViewItem o2) {
                 return Integer.compare(o1.numPosts, o2.numPosts);
             }
         });
@@ -183,7 +183,7 @@ class ListViewAdapter extends BaseAdapter {
     }
 }
 
-class ListViewItem {
+class LocationListViewItem {
 
     String location;
     String address;
@@ -191,7 +191,7 @@ class ListViewItem {
     int img;
     int numPosts;
 
-    public ListViewItem(String location, String address, float distance, int img, int numPosts) {
+    public LocationListViewItem(String location, String address, float distance, int img, int numPosts) {
         this.location = location;
         this.address = address;
         this.distance = distance;
