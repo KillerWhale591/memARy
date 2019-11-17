@@ -9,6 +9,10 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+
+import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.killerwhale.memary.R;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.heatmapDensity;
@@ -37,6 +41,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
 
+import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
@@ -73,6 +78,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final int  ZOOM_THRESHOLD = 17;
     private static final String SELECTED_MARKER = "selected-marker";
     private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
+
+    private FloatingActionButton fabCenterCamera;
+    private FloatingActionButton fabTogglePostLocation;
     private Location[] mlocations;
     private MapboxMap mapboxMap;
     private MapView mapView;
@@ -115,6 +123,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
         mapView = findViewById(R.id.mapView);
+        fabCenterCamera = (FloatingActionButton)findViewById(R.id.fabCenterCam);
+        fabTogglePostLocation = (FloatingActionButton)findViewById(R.id.fabTogglePostLocation);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
     }
@@ -136,6 +146,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 addCircleLayer(style);
                 addMarkers(style);
                 mapboxMap.addOnMapClickListener(MapActivity.this);
+                fabCenterCamera.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        double lat1= mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude();
+                        double long1 = mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude();
+                        if(mapboxMap.getLocationComponent()!= null){
+                            mapboxMap.setCameraPosition(new CameraPosition.Builder()
+                                    .zoom(13)
+                                    .target(new LatLng(lat1, long1))
+                                    .bearing(0)
+                                    .build());
+                        }
+                    }
+                });
             }
         });
     }
@@ -196,7 +220,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
         return true;
     }
-//add marker layer
+//add Symbol layer
     private void addMarkers(@NonNull Style loadedMapStyle) {
         List<Feature> features = new ArrayList<>();
         /**
