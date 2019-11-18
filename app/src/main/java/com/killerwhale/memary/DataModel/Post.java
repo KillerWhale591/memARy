@@ -5,6 +5,7 @@ import android.location.Location;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.GeoPoint;
 
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,14 +24,21 @@ public class Post {
     private static final String FIELD_IMAGE = "image";
     private static final String FIELD_LOCATION = "location";
     private static final String FIELD_TIMESTAMP = "timestamp";
+    private static final String SUFFIX_MILES = " miles away";
+    private static final String SUFFIX_DAYS = " days ago";
+    private static final String SUFFIX_HOURS = " hours ago";
+    private static final String SUFFIX_MINUTES = " minutes ago";
+    private static final String ONE_MINUTE_AGO = "1 minute ago";
 
     private static final long MSEC_PER_SEC = 1000L;
     private static final int SEC_PER_DAY = 86400;
     private static final int SEC_PER_HOUR = 3600;
     private static final int SEC_PER_MIN = 60;
+    private static final float METERS_TO_MILES = 1609.3f;
+    private static final float MINIMUM_DISTANCE = 0.1f;
 
-    private String mPostId;
     private int mType;
+    private String mPostId;
     private String mPostText;
     private String mImageUrl;
     private GeoPoint mGeoPoint;
@@ -122,13 +130,18 @@ public class Post {
     /**
      * Get the distance between a location and the post
      * @param location current location
-     * @return distance
+     * @return distance in string format
      */
-    public double getDistance(Location location) {
+    public String getDistance(Location location) {
         Location mLocation = new Location("");
         mLocation.setLatitude(mGeoPoint.getLatitude());
         mLocation.setLongitude(mGeoPoint.getLongitude());
-        return mLocation.distanceTo(location);
+        DecimalFormat f = new DecimalFormat("#.#");
+        float dist = mLocation.distanceTo(location) / METERS_TO_MILES;
+        if (dist < MINIMUM_DISTANCE) {
+            dist = MINIMUM_DISTANCE;
+        }
+        return Float.valueOf(f.format(dist)) + SUFFIX_MILES;
     }
 
     /**
@@ -145,16 +158,23 @@ public class Post {
         return buildTimeString(days, hours, minutes);
     }
 
+    /**
+     * Build the time string for displaying
+     * @param days days
+     * @param hours hours
+     * @param minutes minutes
+     * @return string
+     */
     private String buildTimeString(int days, int hours, int minutes) {
         if (days > 0) {
-            return days + " days ago";
+            return days + SUFFIX_DAYS;
         }
         if (hours > 0) {
-            return hours + " hours ago";
+            return hours + SUFFIX_HOURS;
         }
-        if (minutes > 0) {
-            return minutes + " minutes ago";
+        if (minutes > 1) {
+            return minutes + SUFFIX_MINUTES;
         }
-        return "1 minute ago";
+        return ONE_MINUTE_AGO;
     }
 }

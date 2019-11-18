@@ -1,6 +1,7 @@
 package com.killerwhale.memary.Presenter;
 
 import android.content.Context;
+import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,6 +31,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     private RecyclerView recyclerView;
     private ArrayList<Post> posts;
     private PostPresenter presenter;
+    private Location mLocation;
 
     public PostFeedAdapter(Context aContext, FirebaseFirestore db, RecyclerView rcView, OnRefreshCompleteListener listener) {
         this.context = aContext;
@@ -50,7 +52,8 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         this.posts = presenter.getPosts();
     }
 
-    public void init() {
+    public void init(Location location) {
+        this.mLocation = location;
         presenter.init(this, false);
     }
 
@@ -88,6 +91,9 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         // Set time
         String time = posts.get(position).getTimeFromNow(Calendar.getInstance().getTime());
         postViewHolder.txtTime.setText(time);
+        // Set distance
+        String distance = posts.get(position).getDistance(mLocation);
+        postViewHolder.txtDistance.setText(distance);
     }
 
     @Override

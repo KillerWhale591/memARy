@@ -20,17 +20,13 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
@@ -40,6 +36,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
+
+import org.imperiumlabs.geofirestore.GeoFirestore;
 
 import java.util.Calendar;
 import java.util.Map;
@@ -53,9 +51,10 @@ import java.util.UUID;
 public class PostCreateActivity extends AppCompatActivity {
 
     private static final String TAG = "NewPostTest";
+    private static final String KEY_LATITUDE = "latitude";
+    private static final String KEY_LONGITUDE = "longitude";
     private static final float ALPHA_HALF = 0.5f;
     private static final float ALPHA_ORIGINAL = 1f;
-    private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final int REQUEST_CODE_IMAGE_CAPTURE = 202;
     private static final int PERMISSION_ALL = 1001;
     private static final String[] PERMISSIONS = {
@@ -66,10 +65,11 @@ public class PostCreateActivity extends AppCompatActivity {
     // Firebase plug-ins
     private FirebaseFirestore db;
     private StorageReference mImagesRef;
+    private CollectionReference mPostRef;
+    private GeoFirestore geoFirestore;
 
     // Location
-    private FusedLocationProviderClient FLPC;
-    private LocationRequest locationRequest;
+    private Location mLocation;
 
     // UI widgets
     private Button btnCancel;
@@ -96,12 +96,14 @@ public class PostCreateActivity extends AppCompatActivity {
                 .build();
         db.setFirestoreSettings(settings);
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
+        mPostRef = db.collection("posts");
+        geoFirestore = new GeoFirestore(mPostRef);
 
         // Location
-        FLPC = LocationServices.getFusedLocationProviderClient(this);
-        locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(INTERVAL_LOC_REQUEST);
+        Intent i = getIntent();
+        mLocation = new Location("");
+        mLocation.setLatitude(i.getDoubleExtra(KEY_LATITUDE, 0));
+        mLocation.setLongitude(i.getDoubleExtra(KEY_LONGITUDE, 0));
 
         // UI init.
         btnCancel = findViewById(R.id.btnCancel);
@@ -143,7 +145,9 @@ public class PostCreateActivity extends AppCompatActivity {
                         uploadImageAndPost(localUri);
                     }
                 } else {
-                    getLocationAndPost();
+                    if (mLocation != null) {
+                        submitPost(mLocation);
+                    }
                 }
             }
         });
@@ -282,27 +286,6 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     /**
-     * Get the current location and add to a new post
-     */
-    private void getLocationAndPost() {
-        // Get post location
-        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-            }
-        }, null);
-        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if (location != null) {
-                    submitPost(location);
-                }
-            }
-        });
-    }
-
-    /**
      * Upload image to FireBase storage and get url
      * @param uri image file uri
      */
@@ -329,7 +312,9 @@ public class PostCreateActivity extends AppCompatActivity {
                     if (downloadUri != null) {
                         Log.i(TAG, downloadUri.toString());
                         remoteUrl = downloadUri.toString();
-                        getLocationAndPost();
+                        if (mLocation != null) {
+                            submitPost(mLocation);
+                        }
                     }
                 } else {
                     // Handle failures
@@ -346,7 +331,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private void submitPost(Location location) {
         String text = edtContent.getText().toString();
         int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
-        GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+        final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
         Timestamp time = new Timestamp(Calendar.getInstance().getTime());
         // Create a new post
         Post newPost = new Post(type, text, remoteUrl, geo, time);
@@ -358,7 +343,8 @@ public class PostCreateActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(DocumentReference documentReference) {
                             Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
-                            Log.i(TAG, documentReference.getId());
+                            // Log.i(TAG, documentReference.getId());
+                            geoFirestore.setLocation(documentReference.getId(), geo);
                             finish();
                         }
                     })
