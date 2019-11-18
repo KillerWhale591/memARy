@@ -6,12 +6,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.killerwhale.memary.R;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -24,8 +28,21 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     private Button btnSignInActivity;
     private Button btnSignUpActivity;
     private Button btnMapActivity;
+    private Button btnUserInfoActivity;
+    private TextView txtUser;
     private PermissionsManager permissionsManager;
     private FirebaseAuth mAuth;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if(currentUser == null){
+            txtUser.setText("User: null");
+        } else {
+            txtUser.setText("User: " + currentUser.getUid());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnSignUpActivity = (Button) findViewById(R.id.btnSignUpActivity);
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
         btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
+        btnUserInfoActivity = (Button) findViewById(R.id.btnUserInfoActivity);
+        txtUser = (TextView) findViewById(R.id.txtUser);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,6 +97,14 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             public void onClick(View view) {
                 checkPermission();
 
+            }
+        });
+
+        btnUserInfoActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), UserInfoActivity.class);
+                startActivity(intent);
             }
         });
 
