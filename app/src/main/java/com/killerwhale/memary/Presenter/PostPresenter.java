@@ -35,7 +35,8 @@ public class PostPresenter {
     private GeoFirestore geoFirestore;
     private ArrayList<Query> geoQueries;
     private Query nextTimeQuery;
-    private int nextGeoIndex;
+    private Query allGeoQuery;
+    private Query nextGeoQuery;
     private int mMode;
     private double mRadius;
 
@@ -55,9 +56,9 @@ public class PostPresenter {
      * @param radius searching radius
      */
     public PostPresenter(FirebaseFirestore db, double radius) {
+        this.nextGeoQuery = null;
         this.mPostRef = db.collection("posts");
         this.geoFirestore = new GeoFirestore(mPostRef);
-        this.nextGeoIndex = -1;
         this.mRadius = radius;
         this.mMode = MODE_NEARBY;
     }
@@ -108,7 +109,8 @@ public class PostPresenter {
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                        for (DocumentSnapshot document : documents) {
                             Log.i(TAG, document.getId());
                             mPosts.add(new Post(document.getData()));
                         }
@@ -119,8 +121,7 @@ public class PostPresenter {
                         }
                         // Construct a new query starting at this document,
                         // get the next 10 posts.
-                        DocumentSnapshot lastVisible = queryDocumentSnapshots.getDocuments()
-                                .get(queryDocumentSnapshots.size() - 1);
+                        DocumentSnapshot lastVisible = documents.get(queryDocumentSnapshots.size() - 1);
                         nextTimeQuery = mPostRef
                                 .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
                                 .startAfter(lastVisible)
@@ -138,22 +139,33 @@ public class PostPresenter {
     private void queryByDistance(final PostFeedAdapter adapter, final boolean refresh, double radius) {
         GeoQuery geoQuery = geoFirestore.queryAtLocation(new GeoPoint(42, -71), radius);
         geoQueries = geoQuery.getQueries();
-        for (Query query : geoQueries) {
-            query.get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        @Override
-                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                                Log.i(TAG, document.getId());
-                                mPosts.add(new Post(document.getData()));
+        for (final Query query : geoQueries) {
+            if (query != null) {
+                query.limit(LIMIT_POST).get()
+                        .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                            @Override
+                            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                                if (documents.size() > 0) {
+                                    for (DocumentSnapshot document : documents) {
+                                        if (document != null) {
+                                            Log.i(TAG, document.getId());
+                                            mPosts.add(new Post(document.getData()));
+                                        }
+                                    }
+                                    if (refresh) {
+                                        adapter.updateAndStopRefresh();
+                                    } else {
+                                        adapter.updateView();
+                                    }
+                                    allGeoQuery = query;
+                                    DocumentSnapshot last = documents
+                                            .get(queryDocumentSnapshots.size() - 1);
+                                    nextGeoQuery = allGeoQuery.startAfter(last).limit(LIMIT_POST);
+                                }
                             }
-                            if (refresh) {
-                                adapter.updateAndStopRefresh();
-                            } else {
-                                adapter.updateView();
-                            }
-                        }
-                    });
+                        });
+            }
         }
     }
 
@@ -185,6 +197,24 @@ public class PostPresenter {
     }
 
     private void loadMoreByDistance(final PostFeedAdapter adapter) {
-
+        if (nextGeoQuery != null) {
+            nextGeoQuery.get()
+                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                        @Override
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                            Log.i(TAG, "size: "+documents.size());
+                            if (documents.size() > 0) {
+                                for (DocumentSnapshot document : documents) {
+                                    Log.i(TAG, document.getId());
+                                    mPosts.add(new Post(document.getData()));
+                                }
+                                adapter.updateView();
+                                DocumentSnapshot last = documents.get(queryDocumentSnapshots.size() - 1);
+                                nextGeoQuery = allGeoQuery.startAfter(last).limit(LIMIT_POST);
+                            }
+                        }
+                    });
+        }
     }
 }
