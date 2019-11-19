@@ -36,6 +36,7 @@ dependencies {
 
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.4.0'
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.1'
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
 
 
 }
