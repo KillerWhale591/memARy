@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     private TextView txtUser;
     private PermissionsManager permissionsManager;
     private FirebaseAuth mAuth;
+    private Button btnLocationList;
 
     @Override
     protected void onStart() {
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
         btnSignUpActivity = (Button) findViewById(R.id.btnSignUpActivity);
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
+        btnLocationList = (Button) findViewById(R.id.btnLocationList);
         btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
         btnUserInfoActivity = (Button) findViewById(R.id.btnUserInfoActivity);
         txtUser = (TextView) findViewById(R.id.txtUser);
@@ -90,6 +92,13 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             public void onClick(View v) {
                 Intent intent = new Intent(getBaseContext(), SignUpActivity.class);
                 startActivity(intent);
+            }
+        });
+        btnLocationList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getBaseContext(), LocationListActivity.class);
+                startActivity(i);
             }
         });
         btnMapActivity.setOnClickListener(new View.OnClickListener() {
