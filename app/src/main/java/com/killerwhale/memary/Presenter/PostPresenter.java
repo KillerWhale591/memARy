@@ -1,5 +1,6 @@
 package com.killerwhale.memary.Presenter;
 
+import android.location.Location;
 import android.util.Log;
 
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -39,6 +40,7 @@ public class PostPresenter {
     private Query nextGeoQuery;
     private int mMode;
     private double mRadius;
+    private Location mLocation;
 
     /**
      * Constructor, presenter for showing posts order by recent time
@@ -55,8 +57,9 @@ public class PostPresenter {
      * @param db database ref
      * @param radius searching radius
      */
-    public PostPresenter(FirebaseFirestore db, double radius) {
+    public PostPresenter(FirebaseFirestore db, Location location, double radius) {
         this.nextGeoQuery = null;
+        this.mLocation = location;
         this.mPostRef = db.collection("posts");
         this.geoFirestore = new GeoFirestore(mPostRef);
         this.mRadius = radius;
@@ -137,7 +140,8 @@ public class PostPresenter {
      * @param radius nearby searching radius
      */
     private void queryByDistance(final PostFeedAdapter adapter, final boolean refresh, double radius) {
-        GeoQuery geoQuery = geoFirestore.queryAtLocation(new GeoPoint(42, -71), radius);
+        GeoQuery geoQuery = geoFirestore.queryAtLocation(
+                new GeoPoint(mLocation.getLatitude(), mLocation.getLongitude()), radius);
         geoQueries = geoQuery.getQueries();
         for (final Query query : geoQueries) {
             if (query != null) {

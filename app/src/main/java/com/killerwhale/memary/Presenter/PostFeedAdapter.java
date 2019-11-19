@@ -64,7 +64,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         if (mode == PostPresenter.MODE_RECENT) {
             this.presenter = new PostPresenter(mDatabase);
         } else if (mode == PostPresenter.MODE_NEARBY) {
-            this.presenter = new PostPresenter(mDatabase, 100);
+            this.presenter = new PostPresenter(mDatabase, location, 1);
         }
         this.presenter.init(this, false, mode);
     }
