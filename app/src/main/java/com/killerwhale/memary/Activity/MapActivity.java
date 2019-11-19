@@ -40,6 +40,9 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapRadius;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
+import static com.mapbox.mapboxsdk.style.layers.Property.VISIBLE;
+import static com.mapbox.mapboxsdk.style.layers.Property.NONE;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility;
 
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.location.LocationComponent;
@@ -52,6 +55,7 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
 import com.mapbox.mapboxsdk.style.layers.HeatmapLayer;
+import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
@@ -75,7 +79,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
-    private static final int  ZOOM_THRESHOLD = 12;
+    private static final int  ZOOM_THRESHOLD = 14;
     private static final String SELECTED_MARKER = "selected-marker";
     private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
     private static final String MARKER_SOURCE_LOCATION = "markers-source-location";
@@ -179,7 +183,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 enableLocationComponent(style);
                 addHeatmapLayer(style);
                 addCircleLayer(style);
+                addCircleLayerLocation(style);
                 addPostMarkers(style);
+                addLocationMarkers(style);
                 mapboxMap.addOnMapClickListener(MapActivity.this);
                 fabCenterCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -200,12 +206,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     public void onClick(View view) {
                         if(displayMarkerType == 0){
                             displayMarkerType = 1;
-                            addCircleLayer(style);
-                            addLocationMarkers(style);
+                            toggleLayer(displayMarkerType);
                         }else if(displayMarkerType == 1){
                             displayMarkerType = 0;
-                            addCircleLayerLocation(style);
-                            addPostMarkers(style);
+                            toggleLayer(displayMarkerType);
                         }
 
 
@@ -215,7 +219,34 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-//Step 4: step up location component, where u are basically
+    private void toggleLayer(final int displayMarkerType) {
+        mapboxMap.getStyle(new Style.OnStyleLoaded() {
+            @Override
+            public void onStyleLoaded(@NonNull Style style) {
+                Layer PostLayer = style.getLayer(MARKER_STYLE_LAYER);
+                Layer PostCirCleLayer = style.getLayer(CIRCLE_LAYER_ID);
+                Layer heatmapLayer = style.getLayer(HEATMAP_LAYER_ID);
+                Layer LocationLayer = style.getLayer(MARKER_STYLE_LAYER_LOCATION);
+                if (PostLayer != null) {
+                    if (displayMarkerType == 1) {
+                        PostLayer.setProperties(visibility(NONE));
+                        PostCirCleLayer.setProperties(visibility(NONE));
+                        heatmapLayer.setProperties(visibility(NONE));
+                        LocationLayer.setProperties(visibility(VISIBLE));
+
+                    } else {
+                        PostLayer.setProperties(visibility(VISIBLE));
+                        PostCirCleLayer.setProperties(visibility(VISIBLE));
+                        heatmapLayer.setProperties(visibility(VISIBLE));
+                        LocationLayer.setProperties(visibility(NONE));
+
+                    }
+                }
+            }
+        });
+    }
+
+    //Step 4: step up location component, where u are basically
     @SuppressWarnings( {"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
 // Check if permissions are enabled and if not request
@@ -277,13 +308,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         /**
          * add the features and assigned an ID to him. Example: MARKER_SOURCE
          */
-        try {
-            loadedMapStyle.removeLayer(MARKER_STYLE_LAYER_LOCATION);
-            loadedMapStyle.removeLayer(CIRCLE_LAYER_ID_LOCATION);
-            loadedMapStyle.removeLayer(SELECTED_MARKER_LAYER);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
         loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER_LOCATION, MARKER_SOURCE_LOCATION)
                 .withProperties(
                         PropertyFactory.iconAllowOverlap(true),
@@ -291,7 +315,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                                 stop(ZOOM_THRESHOLD, MARKER_IMAGE)))),
 //                        PropertyFactory.iconImage(MARKER_IMAGE),
                         iconOffset(new Float[]{0f, -9f}),
-                        iconSize(0.7f)
+                        visibility(NONE),
+                        iconSize(0.07f)
                         ));
 
 // Adjust the second number of the Float array based on the height of your marker image.
@@ -300,7 +325,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 .withProperties(PropertyFactory.iconImage(MARKER_IMAGE),
                         iconOffset(new Float[]{0f, -70f}),
                         iconSize(0.10f),
+                        visibility(NONE),
                         iconAllowOverlap(true)));
+
     }
     private void initMarkerPosition(@NonNull Style loadedMapStyle){
         List<Feature> features = new ArrayList<>();
@@ -327,11 +354,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         /**
          * add the features and assigned an ID to him. Example: MARKER_SOURCE
          */
-        try {
-            loadedMapStyle.removeLayer(MARKER_STYLE_LAYER);
-        }catch (Exception e){
-             e.printStackTrace();
-        }
         //should use if statemtn to check if already exist or not
 
         loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER, MARKER_SOURCE)
@@ -387,6 +409,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * add circle layer
      */
     private void addCircleLayer(@NonNull Style loadedMapStyle) {
+
         CircleLayer circleLayer = new CircleLayer(CIRCLE_LAYER_ID, MARKER_SOURCE);
         circleLayer.setProperties(
                 circleColor(rgba(123, 239, 178, 1)),
