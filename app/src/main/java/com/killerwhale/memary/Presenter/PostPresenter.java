@@ -113,22 +113,24 @@ public class PostPresenter {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-                        for (DocumentSnapshot document : documents) {
-                            Log.i(TAG, document.getId());
-                            mPosts.add(new Post(document.getData()));
+                        if (documents.size() > 0) {
+                            for (DocumentSnapshot document : documents) {
+                                Log.i(TAG, document.getId());
+                                mPosts.add(new Post(document.getData()));
+                            }
+                            if (refresh) {
+                                adapter.updateAndStopRefresh();
+                            } else {
+                                adapter.updateView();
+                            }
+                            // Construct a new query starting at this document,
+                            // get the next 10 posts.
+                            DocumentSnapshot lastVisible = documents.get(queryDocumentSnapshots.size() - 1);
+                            nextTimeQuery = mPostRef
+                                    .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
+                                    .startAfter(lastVisible)
+                                    .limit(LIMIT_POST);
                         }
-                        if (refresh) {
-                            adapter.updateAndStopRefresh();
-                        } else {
-                            adapter.updateView();
-                        }
-                        // Construct a new query starting at this document,
-                        // get the next 10 posts.
-                        DocumentSnapshot lastVisible = documents.get(queryDocumentSnapshots.size() - 1);
-                        nextTimeQuery = mPostRef
-                                .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
-                                .startAfter(lastVisible)
-                                .limit(LIMIT_POST);
                     }
                 });
     }
