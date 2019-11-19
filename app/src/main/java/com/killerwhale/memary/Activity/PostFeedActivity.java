@@ -3,6 +3,8 @@ package com.killerwhale.memary.Activity;
 import android.content.Intent;
 import android.location.Location;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TabItem;
+import android.support.design.widget.TabLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.killerwhale.memary.Presenter.OnRefreshCompleteListener;
 import com.killerwhale.memary.Presenter.PostFeedAdapter;
+import com.killerwhale.memary.Presenter.PostPresenter;
 import com.killerwhale.memary.R;
 
 /**
@@ -28,13 +31,17 @@ import com.killerwhale.memary.R;
  */
 public class PostFeedActivity extends AppCompatActivity implements OnRefreshCompleteListener {
 
+    private static final String TAG = "FeedTest";
     private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final String KEY_LATITUDE = "latitude";
     private static final String KEY_LONGITUDE = "longitude";
+    private static final int POSITION_RECENT_TAB = 0;
+    private static final int POSITION_NEARBY_TAB = 1;
 
     // Location
     private FusedLocationProviderClient FLPC;
     private LocationRequest locationRequest;
+    private Location mLocation;
 
     // Firebase
     private FirebaseFirestore db;
@@ -45,6 +52,9 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
     PostFeedAdapter rvAdapter;
     RecyclerView.LayoutManager rvManager;
     FloatingActionButton btnCreate;
+    TabLayout topFeedTab;
+    TabItem tabRecent;
+    TabItem tabNearby;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +71,11 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
 
         // UI
         btnCreate = findViewById(R.id.btnCreate);
+        topFeedTab = findViewById(R.id.topFeedTab);
+        topFeedTab.setTabTextColors(getColor(R.color.colorPrimary), getColor(R.color.colorAccent));
+        topFeedTab.setBackgroundColor(getColor(R.color.colorTabBar));
+        tabRecent = findViewById(R.id.tabRecent);
+        tabNearby = findViewById(R.id.tabNearby);
         postList = findViewById(R.id.postList);
         rvManager = new LinearLayoutManager(this);
         postList.setLayoutManager(rvManager);
@@ -96,6 +111,22 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
                 });
             }
         });
+        topFeedTab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == POSITION_RECENT_TAB) {
+                    rvAdapter.init(mLocation, PostPresenter.MODE_RECENT);
+                } else if (tab.getPosition() == POSITION_NEARBY_TAB) {
+                    rvAdapter.init(mLocation, PostPresenter.MODE_NEARBY);
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) { }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) { }
+        });
     }
 
     @Override
@@ -117,7 +148,8 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
             @Override
             public void onSuccess(Location location) {
                 if (location != null) {
-                    rvAdapter.init(location);
+                    rvAdapter.init(location, PostPresenter.MODE_RECENT);
+                    mLocation = location;
                 }
             }
         });

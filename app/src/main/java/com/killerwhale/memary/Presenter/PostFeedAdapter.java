@@ -32,11 +32,13 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     private ArrayList<Post> posts;
     private PostPresenter presenter;
     private Location mLocation;
+    private FirebaseFirestore mDatabase;
+    private int mMode;
 
     public PostFeedAdapter(Context aContext, FirebaseFirestore db, RecyclerView rcView, OnRefreshCompleteListener listener) {
         this.context = aContext;
+        this.mDatabase = db;
         this.refreshCompleteListener = listener;
-        this.presenter = new PostPresenter(db);
         this.llm = (LinearLayoutManager) rcView.getLayoutManager();
         this.recyclerView = rcView;
         this.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -49,16 +51,22 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                 }
             }
         });
-        this.posts = presenter.getPosts();
+        this.posts = new ArrayList<>();
     }
 
     /**
      * Initialization. Set current location, initialize data presenter
      * @param location current location
      */
-    public void init(Location location) {
+    public void init(Location location, int mode) {
         this.mLocation = location;
-        presenter.init(this, false);
+        this.mMode = mode;
+        if (mode == PostPresenter.MODE_RECENT) {
+            this.presenter = new PostPresenter(mDatabase);
+        } else if (mode == PostPresenter.MODE_NEARBY) {
+            this.presenter = new PostPresenter(mDatabase, 100);
+        }
+        this.presenter.init(this, false, mode);
     }
 
     @NonNull
@@ -122,7 +130,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
      */
     public void refreshData() {
         posts.clear();
-        presenter.init(this, true);
+        presenter.init(this, true, mMode);
     }
 
     public void updateView() {

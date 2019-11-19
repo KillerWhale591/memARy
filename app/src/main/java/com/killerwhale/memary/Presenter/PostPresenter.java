@@ -68,12 +68,12 @@ public class PostPresenter {
      * @param adapter adapter to present
      * @param refresh true if it is an init. after refresh operation
      */
-    public void init(final PostFeedAdapter adapter, final boolean refresh) {
+    public void init(final PostFeedAdapter adapter, final boolean refresh, int mode) {
         mPosts.clear();
         nextTimeQuery = null;
-        if (mMode == MODE_RECENT) {
+        if (mode == MODE_RECENT) {
             queryByTime(adapter, refresh);
-        } else if (mMode == MODE_NEARBY) {
+        } else if (mode == MODE_NEARBY) {
             queryByDistance(adapter, refresh, mRadius);
         }
     }
