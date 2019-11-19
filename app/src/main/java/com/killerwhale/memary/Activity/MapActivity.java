@@ -69,23 +69,28 @@ import java.util.List;
 
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, MapboxMap.OnMapClickListener{
-    private static final String CIRCLE_LAYER_ID = "earthquakes-circle";
+    private static final String CIRCLE_LAYER_ID = "circle";
     private static final String MARKER_SOURCE = "markers-source";
     private static final String MARKER_STYLE_LAYER = "markers-style-layer";
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
-    private static final int  ZOOM_THRESHOLD = 17;
+    private static final int  ZOOM_THRESHOLD = 12;
     private static final String SELECTED_MARKER = "selected-marker";
     private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
+    private static final String MARKER_SOURCE_LOCATION = "markers-source-location";
+    private static final String CIRCLE_LAYER_ID_LOCATION ="circle-location" ;
+    private static final String MARKER_STYLE_LAYER_LOCATION = "markers-style-layer-location";
 
     private FloatingActionButton fabCenterCamera;
     private FloatingActionButton fabTogglePostLocation;
     private Location[] mlocations;
+    private Location[] mLocationLocation;
     private MapboxMap mapboxMap;
     private MapView mapView;
     private ValueAnimator markerAnimator;
     private boolean markerSelected = false;
+    private int displayMarkerType = 0;// 0 = post, 1 = location
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -120,6 +125,35 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }catch (Exception e){
             e.printStackTrace();
         }
+        mLocationLocation = new Location[9];
+        mLocationLocation[0] = new Location(Integer.toString(0));
+        mLocationLocation[0].setLatitude(42.355084);
+        mLocationLocation[0].setLongitude(-71.061482);
+        mLocationLocation[1] = new Location(Integer.toString(0));
+        mLocationLocation[1].setLatitude(42.357621);
+        mLocationLocation[1].setLongitude(-71.054787);
+        mLocationLocation[2] = new Location(Integer.toString(0));
+        mLocationLocation[2].setLatitude(42.363900);
+        mLocationLocation[2].setLongitude(-71.067834);
+        mLocationLocation[3] = new Location(Integer.toString(0));
+        mLocationLocation[3].setLatitude(42.349068);
+        mLocationLocation[3].setLongitude(-71.082115);
+        mLocationLocation[4] = new Location(Integer.toString(0));
+        mLocationLocation[4].setLatitude(42.346890);
+        mLocationLocation[4].setLongitude(-71.091979);
+        mLocationLocation[5] = new Location(Integer.toString(0));
+        mLocationLocation[5].setLatitude(42.350681);
+        mLocationLocation[5].setLongitude(-71.085702);
+        mLocationLocation[6] = new Location(Integer.toString(0));
+        mLocationLocation[6].setLatitude(42.352642);
+        mLocationLocation[6].setLongitude(-71.078965);
+        mLocationLocation[7] = new Location(Integer.toString(0));
+        mLocationLocation[7].setLatitude(42.346833);
+        mLocationLocation[7].setLongitude(-71.071259);
+        mLocationLocation[8] = new Location(Integer.toString(0));
+        mLocationLocation[8].setLatitude(42.360336);
+        mLocationLocation[8].setLongitude(-71.087731);
+
 
 
         mapView = findViewById(R.id.mapView);
@@ -138,13 +172,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //Step3: set up sytles, there are bunch of styles for us to choose
         mapboxMap.setStyle(new Style.Builder().fromUri(Style.MAPBOX_STREETS), new Style.OnStyleLoaded() {
             @Override
-            public void onStyleLoaded(@NonNull Style style) {
+            public void onStyleLoaded(@NonNull final Style style) {
                 style.addImage(MARKER_IMAGE, BitmapFactory.decodeResource(
                         MapActivity.this.getResources(), R.drawable.map_marker));
+                initMarkerPosition(style);
                 enableLocationComponent(style);
                 addHeatmapLayer(style);
                 addCircleLayer(style);
-                addMarkers(style);
+                addPostMarkers(style);
                 mapboxMap.addOnMapClickListener(MapActivity.this);
                 fabCenterCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -158,6 +193,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                                     .bearing(0)
                                     .build());
                         }
+                    }
+                });
+                fabTogglePostLocation.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(displayMarkerType == 0){
+                            displayMarkerType = 1;
+                            addCircleLayer(style);
+                            addLocationMarkers(style);
+                        }else if(displayMarkerType == 1){
+                            displayMarkerType = 0;
+                            addCircleLayerLocation(style);
+                            addPostMarkers(style);
+                        }
+
+
                     }
                 });
             }
@@ -221,7 +272,37 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         return true;
     }
 //add Symbol layer
-    private void addMarkers(@NonNull Style loadedMapStyle) {
+    private void addLocationMarkers(@NonNull Style loadedMapStyle) {
+
+        /**
+         * add the features and assigned an ID to him. Example: MARKER_SOURCE
+         */
+        try {
+            loadedMapStyle.removeLayer(MARKER_STYLE_LAYER_LOCATION);
+            loadedMapStyle.removeLayer(CIRCLE_LAYER_ID_LOCATION);
+            loadedMapStyle.removeLayer(SELECTED_MARKER_LAYER);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER_LOCATION, MARKER_SOURCE_LOCATION)
+                .withProperties(
+                        PropertyFactory.iconAllowOverlap(true),
+                        PropertyFactory.iconImage((step(zoom(), literal(CIRCLE_LAYER_ID_LOCATION),
+                                stop(ZOOM_THRESHOLD, MARKER_IMAGE)))),
+//                        PropertyFactory.iconImage(MARKER_IMAGE),
+                        iconOffset(new Float[]{0f, -9f}),
+                        iconSize(0.7f)
+                        ));
+
+// Adjust the second number of the Float array based on the height of your marker image.
+// This is because the bottom of the marker should be ancon
+        loadedMapStyle.addLayer(new SymbolLayer(SELECTED_MARKER_LAYER, SELECTED_MARKER)
+                .withProperties(PropertyFactory.iconImage(MARKER_IMAGE),
+                        iconOffset(new Float[]{0f, -70f}),
+                        iconSize(0.10f),
+                        iconAllowOverlap(true)));
+    }
+    private void initMarkerPosition(@NonNull Style loadedMapStyle){
         List<Feature> features = new ArrayList<>();
         /**
          *         Step 6:get geo information, add to features
@@ -229,29 +310,42 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         for (int i = 0; i < mlocations.length; i++) {
             features.add(Feature.fromGeometry(Point.fromLngLat(mlocations[i].getLongitude(),
                     mlocations[i].getLatitude())));
-            Log.d("Tag",mlocations[i].getLatitude() + " " + mlocations[i].getLongitude());
         }
+        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
+        loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
+        List<Feature> featureLocation = new ArrayList<>();
+        for (int i = 0; i < mLocationLocation.length; i++) {
+            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(mlocations[i].getLongitude(),
+                    mLocationLocation[i].getLatitude())));
+        }
+        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
+
+    }
+
+    private void addPostMarkers(@NonNull Style loadedMapStyle){
+
         /**
          * add the features and assigned an ID to him. Example: MARKER_SOURCE
          */
-        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
+        try {
+            loadedMapStyle.removeLayer(MARKER_STYLE_LAYER);
+        }catch (Exception e){
+             e.printStackTrace();
+        }
+        //should use if statemtn to check if already exist or not
+
         loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER, MARKER_SOURCE)
                 .withProperties(
                         PropertyFactory.iconAllowOverlap(true),
-                        PropertyFactory.iconImage((step(zoom(), literal(CIRCLE_LAYER_ID),
-                                stop(ZOOM_THRESHOLD, MARKER_IMAGE)))),
+                        PropertyFactory.iconImage(CIRCLE_LAYER_ID),
                         iconOffset(new Float[]{0f, -9f}),
-                        iconSize(0.07f)
-                        ));
+                        iconSize(0.7f)
+                ));
 
 // Adjust the second number of the Float array based on the height of your marker image.
 // This is because the bottom of the marker should be ancon
-        loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
-        loadedMapStyle.addLayer(new SymbolLayer(SELECTED_MARKER_LAYER, SELECTED_MARKER)
-                .withProperties(PropertyFactory.iconImage(MARKER_IMAGE),
-                        iconOffset(new Float[]{0f, -70f}),
-                        iconAllowOverlap(true)));
     }
+
 //Step 7: add heatmap layer
     private  void addHeatmapLayer(@NonNull Style loadedMapStyle){
         HeatmapLayer heatmapLayer = new HeatmapLayer(HEATMAP_LAYER_ID, MARKER_SOURCE);
@@ -302,50 +396,50 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 circleOpacity(
                         interpolate(
                                 linear(), zoom(),
-                                stop(16, 1),
-                                stop( 12, 0)
+                                stop( 12, 0),
+                                stop(16, 1)
                         )
                 ),
                 circleRadius(
                         interpolate(
                                 linear(), zoom(),
-                                stop(16, 1),
-                                stop(12, 4)
+
+                                stop(16, 1)
+                                ,stop(12, 4)
                 ))
+        );
+        loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);
+    }
+    private void addCircleLayerLocation(@NonNull Style loadedMapStyle) {
+        CircleLayer circleLayer = new CircleLayer(CIRCLE_LAYER_ID_LOCATION, MARKER_SOURCE_LOCATION);
+        circleLayer.setProperties(
+                circleColor(rgba(123, 239, 178, 1)),
+// Transition from heatmap to circle layer by zoom level
+                circleStrokeColor("white"),
+                circleStrokeWidth(0.2f),
+                circleOpacity(
+                        interpolate(
+                                linear(), zoom(),
+                                stop( 12, 0),
+                                stop(16, 1)
+                        )
+                ),
+                circleRadius(
+                        interpolate(
+                                linear(), zoom(),
+                                stop(12, 4),
+                                stop(16, 1)
+                        ))
         );
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);
     }
 
     private void selectMarker(final SymbolLayer iconLayer) {
-        markerAnimator = new ValueAnimator();
-        markerAnimator.setObjectValues(0.07f, 0.1f);
-        markerAnimator.setDuration(300);
-        markerAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-            @Override
-            public void onAnimationUpdate(ValueAnimator animator) {
-                iconLayer.setProperties(
-                        PropertyFactory.iconSize((float) animator.getAnimatedValue())
-                );
-            }
-        });
-        markerAnimator.start();
         markerSelected = true;
     }
 
     private void deselectMarker(final SymbolLayer iconLayer) {
-        markerAnimator.setObjectValues(0.1f, 0f);
-        markerAnimator.setDuration(300);
-        markerAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
-            @Override
-            public void onAnimationUpdate(ValueAnimator animator) {
-                iconLayer.setProperties(
-                        PropertyFactory.iconSize((float) animator.getAnimatedValue())
-                );
-            }
-        });
-        markerAnimator.start();
         markerSelected = false;
     }
     @Override
