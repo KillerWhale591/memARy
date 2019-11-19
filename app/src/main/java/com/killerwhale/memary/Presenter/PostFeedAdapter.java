@@ -52,6 +52,10 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         this.posts = presenter.getPosts();
     }
 
+    /**
+     * Initialization. Set current location, initialize data presenter
+     * @param location current location
+     */
     public void init(Location location) {
         this.mLocation = location;
         presenter.init(this, false);

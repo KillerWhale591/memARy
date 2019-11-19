@@ -60,6 +60,10 @@ public class Post {
         mPostTime = postTime;
     }
 
+    /**
+     * Constructor for a post
+     * @param map data from database in HashMap form
+     */
     public Post(Map<String, Object> map) {
         HashMap postData = (HashMap) map;
         mType = ((Long) postData.get(FIELD_TYPE)).intValue();

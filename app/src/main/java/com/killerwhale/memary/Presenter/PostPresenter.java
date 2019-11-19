@@ -33,63 +33,75 @@ public class PostPresenter {
     private ArrayList<Post> mPosts = new ArrayList<>();
     private CollectionReference mPostRef;
     private GeoFirestore geoFirestore;
-    private Query next;
+    private ArrayList<Query> geoQueries;
+    private Query nextTimeQuery;
+    private int nextGeoIndex;
     private int mMode;
     private double mRadius;
 
+    /**
+     * Constructor, presenter for showing posts order by recent time
+     * @param db database ref
+     */
     public PostPresenter(FirebaseFirestore db) {
+        this.nextTimeQuery = null;
         this.mPostRef = db.collection("posts");
         this.mMode = MODE_RECENT;
     }
 
+    /**
+     * Constructor, presenter for showing nearby posts filter by distance
+     * @param db database ref
+     * @param radius searching radius
+     */
     public PostPresenter(FirebaseFirestore db, double radius) {
         this.mPostRef = db.collection("posts");
         this.geoFirestore = new GeoFirestore(mPostRef);
+        this.nextGeoIndex = -1;
         this.mRadius = radius;
         this.mMode = MODE_NEARBY;
     }
 
+    /**
+     * Initialization. Set present mode
+     * @param adapter adapter to present
+     * @param refresh true if it is an init. after refresh operation
+     */
     public void init(final PostFeedAdapter adapter, final boolean refresh) {
         mPosts.clear();
-        next = null;
+        nextTimeQuery = null;
         if (mMode == MODE_RECENT) {
             queryByTime(adapter, refresh);
         } else if (mMode == MODE_NEARBY) {
-            queryByDistance(adapter, refresh);
+            queryByDistance(adapter, refresh, mRadius);
         }
     }
 
+    /**
+     * Get all the posts
+     * @return post list
+     */
     public ArrayList<Post> getPosts() {
         return mPosts;
     }
 
+    /**
+     * Load 10 more post when scroll to the bottom
+     * @param adapter adapter
+     */
     public void load10Posts(final PostFeedAdapter adapter) {
-        if (next != null) {
-            next.get()
-                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                        @Override
-                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-                            if (documents.size() > 0) {
-                                for (DocumentSnapshot document : documents) {
-                                    Log.i(TAG, document.getId());
-                                    mPosts.add(new Post(document.getData()));
-                                }
-                                adapter.updateView();
-                                // Construct a new query starting at this document,
-                                // get the next 10 posts.
-                                DocumentSnapshot lastVisible = queryDocumentSnapshots.getDocuments()
-                                        .get(queryDocumentSnapshots.size() -1);
-                                next = mPostRef
-                                        .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
-                                        .startAfter(lastVisible)
-                                        .limit(LIMIT_POST);
-                            }
-                        }
-                    });
+        if (mMode == MODE_RECENT) {
+            loadMoreByTime(adapter);
+        } else if (mMode == MODE_NEARBY) {
+            loadMoreByDistance(adapter);
         }
     }
 
+    /**
+     * Get documents from database, query by recent time
+     * @param adapter adapter
+     * @param refresh is refresh?
+     */
     private void queryByTime(final PostFeedAdapter adapter, final boolean refresh) {
         Query timeQuery = mPostRef.orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING).limit(LIMIT_POST);
         timeQuery.get()
@@ -109,7 +121,7 @@ public class PostPresenter {
                         // get the next 10 posts.
                         DocumentSnapshot lastVisible = queryDocumentSnapshots.getDocuments()
                                 .get(queryDocumentSnapshots.size() - 1);
-                        next = mPostRef
+                        nextTimeQuery = mPostRef
                                 .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
                                 .startAfter(lastVisible)
                                 .limit(LIMIT_POST);
@@ -117,9 +129,16 @@ public class PostPresenter {
                 });
     }
 
-    private void queryByDistance(final PostFeedAdapter adapter, final boolean refresh) {
-        GeoQuery geoQuery = geoFirestore.queryAtLocation(new GeoPoint(42, -71), mRadius);
-        for (Query query : geoQuery.getQueries()) {
+    /**
+     * Get documents from database, query by nearby radius area
+     * @param adapter adapter
+     * @param refresh is refresh?
+     * @param radius nearby searching radius
+     */
+    private void queryByDistance(final PostFeedAdapter adapter, final boolean refresh, double radius) {
+        GeoQuery geoQuery = geoFirestore.queryAtLocation(new GeoPoint(42, -71), radius);
+        geoQueries = geoQuery.getQueries();
+        for (Query query : geoQueries) {
             query.get()
                     .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                         @Override
@@ -136,5 +155,36 @@ public class PostPresenter {
                         }
                     });
         }
+    }
+
+    private void loadMoreByTime(final PostFeedAdapter adapter) {
+        if (nextTimeQuery != null) {
+            nextTimeQuery.get()
+                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                        @Override
+                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                            if (documents.size() > 0) {
+                                for (DocumentSnapshot document : documents) {
+                                    Log.i(TAG, document.getId());
+                                    mPosts.add(new Post(document.getData()));
+                                }
+                                adapter.updateView();
+                                // Construct a new query starting at this document,
+                                // get the next 10 posts.
+                                DocumentSnapshot lastVisible = queryDocumentSnapshots.getDocuments()
+                                        .get(queryDocumentSnapshots.size() -1);
+                                nextTimeQuery = mPostRef
+                                        .orderBy(FIELD_TIMESTAMP, Query.Direction.DESCENDING)
+                                        .startAfter(lastVisible)
+                                        .limit(LIMIT_POST);
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void loadMoreByDistance(final PostFeedAdapter adapter) {
+
     }
 }
