@@ -5,41 +5,47 @@
     android:layout_height="match_parent"
     tools:context=".Activity.MainActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    <Button
+        android:id="@+id/btnPostFeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAllCaps="false"
+        android:text="PostFeedActivity" />
 
-        <Button
-            android:id="@+id/btnPostFeed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="PostFeedActivity"
-            android:textAllCaps="false" />
+    <Button
+        android:id="@+id/btnSignOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:text="Sign Out" />
 
-        <Button
-            android:id="@+id/btnSignOut"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sign Out" />
+    <Button
+        android:id="@+id/btnSignInActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnSignOut"
+        android:layout_alignParentRight="true"
+        android:text="SignInActivity" />
 
-        <Button
-            android:id="@+id/btnSignInActivity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SignInActivity" />
+    <Button
+        android:id="@+id/btnSignUpActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnSignInActivity"
+        android:layout_alignParentRight="true"
+        android:text="SignUpActivity" />
+    <Button
+        android:id="@+id/btnMapActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnSignUpActivity"
+        android:layout_alignParentRight="true"
+        android:text="MapActivity" />
 
-        <Button
-            android:id="@+id/btnSignUpActivity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SignUpActivity" />
-
-        <Button
-            android:id="@+id/btnLocationList"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="locationlistView" />
-    </LinearLayout>
-
+    <Button
+        android:id="@+id/btnLocationList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnMapActivity"
+        android:text="LocationList" />
 </RelativeLayout>

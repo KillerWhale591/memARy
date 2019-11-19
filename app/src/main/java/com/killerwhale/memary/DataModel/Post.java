@@ -1,5 +1,7 @@
 package com.killerwhale.memary.DataModel;
 
+import android.location.Location;
+
 /**
  * Data model for posts
  * @author Zeyu Fu
@@ -62,4 +64,6 @@ public class Post {
     public long getLocationId() {
         return mLocationId;
     }
+
+
 }
