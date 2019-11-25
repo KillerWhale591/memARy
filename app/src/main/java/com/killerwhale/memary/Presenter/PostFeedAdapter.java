@@ -1,6 +1,7 @@
 package com.killerwhale.memary.Presenter;
 
 import android.content.Context;
+import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,11 +31,14 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
     private RecyclerView recyclerView;
     private ArrayList<Post> posts;
     private PostPresenter presenter;
+    private Location mLocation;
+    private FirebaseFirestore mDatabase;
+    private int mMode;
 
     public PostFeedAdapter(Context aContext, FirebaseFirestore db, RecyclerView rcView, OnRefreshCompleteListener listener) {
         this.context = aContext;
+        this.mDatabase = db;
         this.refreshCompleteListener = listener;
-        this.presenter = new PostPresenter(db);
         this.llm = (LinearLayoutManager) rcView.getLayoutManager();
         this.recyclerView = rcView;
         this.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -47,11 +51,22 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                 }
             }
         });
-        this.posts = presenter.getPosts();
+        this.posts = new ArrayList<>();
     }
 
-    public void init() {
-        presenter.init(this, false);
+    /**
+     * Initialization. Set current location, initialize data presenter
+     * @param location current location
+     */
+    public void init(Location location, int mode) {
+        this.mLocation = location;
+        this.mMode = mode;
+        if (mode == PostPresenter.MODE_RECENT) {
+            this.presenter = new PostPresenter(mDatabase);
+        } else if (mode == PostPresenter.MODE_NEARBY) {
+            this.presenter = new PostPresenter(mDatabase, location, 1);
+        }
+        this.presenter.init(this, false, mode);
     }
 
     @NonNull
@@ -88,6 +103,9 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         // Set time
         String time = posts.get(position).getTimeFromNow(Calendar.getInstance().getTime());
         postViewHolder.txtTime.setText(time);
+        // Set distance
+        String distance = posts.get(position).getDistance(mLocation);
+        postViewHolder.txtDistance.setText(distance);
     }
 
     @Override
@@ -112,7 +130,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
      */
     public void refreshData() {
         posts.clear();
-        presenter.init(this, true);
+        presenter.init(this, true, mMode);
     }
 
     public void updateView() {

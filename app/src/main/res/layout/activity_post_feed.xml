@@ -6,8 +6,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Activity.PostFeedActivity">
 
+    <android.support.design.widget.TabLayout
+        android:id="@+id/topFeedTab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/tabRecent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tab_recent" />
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/tabNearby"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tab_nearby" />
+    </android.support.design.widget.TabLayout>
+
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
+        android:layout_below="@+id/topFeedTab"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
