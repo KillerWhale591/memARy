@@ -66,6 +66,7 @@
     </FrameLayout>
 
     <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/bigIcon"
         android:layout_width="72dp"
         android:layout_height="72dp"
         android:layout_marginTop="-24dp"
@@ -74,5 +75,13 @@
         android:background="@android:color/transparent"
         app:placeholderImage="@color/colorPrimary"
         app:roundAsCircle="true" />
+    <ImageView
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="18dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignTop="@+id/bigIcon"
+        android:backgroundTint="@color/colorWhite"
+        android:background="@drawable/ic_ar"/>
 
 </RelativeLayout>

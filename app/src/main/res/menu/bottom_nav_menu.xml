@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/action_search"
-        android:title="as"
-        android:icon="@drawable/ic_delete_24dp" />
+        android:title="@string/nav_map"
+        android:icon="@drawable/ic_map_24dp" />
     <item android:id="@+id/action_navigation"
-        android:title="sd"
-        android:icon="@drawable/ic_delete_24dp" />
+        android:title="@string/nav_post"
+        android:icon="@drawable/ic_post_24dp" />
     <item android:id="@+id/placeholderItem"
         android:title=""
         android:enabled="false" />
     <item android:id="@+id/action_sda"
-        android:title="sd"
-        android:icon="@drawable/ic_delete_24dp" />
+        android:title="@string/nav_locations"
+        android:icon="@drawable/ic_location_24dp" />
     <item android:id="@+id/action_n"
-        android:title="sd"
-        android:icon="@drawable/ic_delete_24dp" />
+        android:title="@string/nav_profile"
+        android:icon="@drawable/ic_profile_24dp" />
 </menu>
