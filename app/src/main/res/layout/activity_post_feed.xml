@@ -59,7 +59,7 @@
             android:id="@+id/navBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:itemBackground="@color/colorTabBar"
+            app:itemBackground="@color/colorWhite"
             app:itemHorizontalTranslationEnabled="false"
             app:menu="@menu/bottom_nav_menu">
         </android.support.design.widget.BottomNavigationView>
