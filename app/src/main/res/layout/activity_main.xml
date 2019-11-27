@@ -48,4 +48,11 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/btnMapActivity"
         android:text="LocationList" />
+
+    <Button
+        android:id="@+id/btnSplash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnLocationList"
+        android:text="SplashActivity"/>
 </RelativeLayout>

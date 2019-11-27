@@ -18,11 +18,6 @@
         <activity
             android:name=".Activity.SplashActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity android:name=".Activity.SignUpActivity" />
         <activity android:name=".Activity.SignInActivity" />
@@ -37,7 +32,13 @@
             android:name=".Activity.PostFeedActivity"
             android:screenOrientation="portrait" />
         <activity android:name=".Activity.LocationListActivity" />
-        <activity android:name=".Activity.MainActivity"></activity>
+        <activity android:name=".Activity.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
