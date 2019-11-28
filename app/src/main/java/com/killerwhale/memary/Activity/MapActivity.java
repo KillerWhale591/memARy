@@ -123,6 +123,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
  *         Step 1: Read Mapbox android apis
  */
         /* Map: This represents the map in the application. */
+        //TODO: connect to firebase and use the real data
         try {
             CSVReader reader = new CSVReader(new InputStreamReader(getAssets().open("a.csv")));
             mlocations = new Location[473];
@@ -182,6 +183,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         fabTogglePostLocation = (FloatingActionButton)findViewById(R.id.fabTogglePostLocation);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
+        Intent intent = getIntent();
+        String id = intent.getStringExtra("uid");
+        Double cameralat = intent.getDoubleExtra("lat", mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude());
+        Double cameralong = intent.getDoubleExtra("long", mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude());
+        setCameratoDesinatedLocation(cameralat,cameralong);
     }
 
     @Override
@@ -200,6 +206,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 initMarkerPosition(style);
                 initSearchFab();
                 enableLocationComponent(style);
+                setCameratoCurrentLocation();
                 addHeatmapLayer(style);
                 addCircleLayer(style);
                 addCircleLayerLocation(style);
@@ -214,15 +221,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 fabCenterCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        double lat1= mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude();
-                        double long1 = mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude();
-                        if(mapboxMap.getLocationComponent()!= null){
-                            mapboxMap.setCameraPosition(new CameraPosition.Builder()
-                                    .zoom(13)
-                                    .target(new LatLng(lat1, long1))
-                                    .bearing(0)
-                                    .build());
-                        }
+                        setCameratoCurrentLocation();
                     }
                 });
                 fabTogglePostLocation.setOnClickListener(new View.OnClickListener() {
@@ -242,6 +241,29 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
     }
+    private void setCameratoCurrentLocation(){
+        double lat1= mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude();
+        double long1 = mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude();
+        if(mapboxMap.getLocationComponent()!= null){
+            mapboxMap.setCameraPosition(new CameraPosition.Builder()
+                    .zoom(13)
+                    .target(new LatLng(lat1, long1))
+                    .bearing(0)
+                    .build());
+        }
+    }
+    private void setCameratoDesinatedLocation(double latititude, double longtitude){
+        double lat1= latititude;
+        double long1 = longtitude;
+        if(mapboxMap.getLocationComponent()!= null){
+            mapboxMap.setCameraPosition(new CameraPosition.Builder()
+                    .zoom(13)
+                    .target(new LatLng(lat1, long1))
+                    .bearing(0)
+                    .build());
+        }
+    }
+
     private void addUserLocations() {
         home = CarmenFeature.builder().text("Mapbox SF Office")
                 .geometry(Point.fromLngLat(-122.3964485, 37.7912561))
@@ -308,7 +330,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 // Enable to make component visible
             locationComponent.setLocationComponentEnabled(true);
 // Set the component's camera mode
-            locationComponent.setCameraMode(CameraMode.TRACKING);
+            locationComponent.setCameraMode(CameraMode.NONE);
 // Set the component's render mode
             locationComponent.setRenderMode(RenderMode.COMPASS);
     }
