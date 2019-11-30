@@ -1,20 +1,30 @@
 package com.killerwhale.memary.Activity;
 
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.killerwhale.memary.Presenter.LocationListAdapter;
 import com.killerwhale.memary.R;
+
+import java.util.Map;
 
 public class LocationListActivity extends AppCompatActivity {
 
     private
     ListView locationList;
     ListAdapter locationAdapter;
+//    FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +35,6 @@ public class LocationListActivity extends AppCompatActivity {
         locationAdapter = new LocationListAdapter(this.getBaseContext());
         locationList.setAdapter(locationAdapter);
 
-//        locationList.setOnItemClickListener(this);
     }
 
     @Override
