@@ -62,6 +62,8 @@ public class UserInfoActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        // if signed in, get Firebase Auth Uid, else do something
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser == null){
 //            startActivity(new Intent(getBaseContext(), SignInActivity.class));
@@ -75,6 +77,7 @@ public class UserInfoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_info);
 
+        //initialize
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         storageRef = FirebaseStorage.getInstance().getReference().child("avatars");
@@ -88,6 +91,7 @@ public class UserInfoActivity extends AppCompatActivity {
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // if gallery permission not granted, request permission, else go to gallery
                 if (ActivityCompat.checkSelfPermission(getBaseContext(),
                         Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(UserInfoActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PICK_FROM_GALLERY);
@@ -112,6 +116,7 @@ public class UserInfoActivity extends AppCompatActivity {
                     return;
                 }
 
+                //upload avatar and then upload record to Firestore
                 progressUserInfo.setVisibility(View.VISIBLE);
                 uploadAvatar(username);
                 Toast.makeText(getBaseContext(), "uploaded", Toast.LENGTH_SHORT).show();
@@ -142,7 +147,6 @@ public class UserInfoActivity extends AppCompatActivity {
                     Uri downloadUri = task.getResult();
                     if (downloadUri != null) {
                         Log.i(TAG, downloadUri.toString());
-//                        remoteUrl = downloadUri.toString();
                         createUserDocument(username, downloadUri.toString());
                     }
                 } else {
@@ -179,6 +183,8 @@ public class UserInfoActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        //if chosen a image, update the view with new image
         if (requestCode == PICK_FROM_GALLERY && resultCode == RESULT_OK && data != null && data.getData() != null) {
             uri = data.getData();
             icUserInfoAvatar.setImageURI(uri);
