@@ -8,4 +8,7 @@
     <string name="text_cancel">Cancel</string>
     <string name="text_post">Post</string>
     <string name="hint_edit_content">What\'s new?</string>
+    <!-- Post top tab -->
+    <string name="tab_recent">Recent</string>
+    <string name="tab_nearby">Nearby</string>
 </resources>

@@ -142,30 +142,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
  *         Step 1: Read Mapbox android apis
  */
         /* Map: This represents the map in the application. */
-        //TODO: connect to firebase and use the real data
-//        try {
-//            CSVReader reader = new CSVReader(new InputStreamReader(getAssets().open("a.csv")));
-//            mlocations = new Location[473];
-//            String[] nextLine;
-//            int i = 0;
-//            while ((nextLine = reader.readNext()) != null && i < 473) {
-//                // nextLine[] is an array of values from the line
-//                NumberFormat f = NumberFormat.getInstance();
-//                String lat = nextLine[3].trim();
-//                System.out.println(lat);
-//                String long1 =  nextLine[4].trim();
-//                System.out.println(long1);
-//
-//                float lat1 = Float.parseFloat(lat);
-//                float longd = Float.parseFloat(long1);
-//                mlocations[i] = new Location(Integer.toString(i));
-//                mlocations[i].setLatitude(Double.valueOf(lat1));
-//                mlocations[i].setLongitude(Double.valueOf(longd));
-//                i++;
-//            }
-//        }catch (Exception e){
-//            e.printStackTrace();
-//        }
+
         mLocRef = db.collection("location");
         mPostRef = db.collection("posts");
         Log.d("Tag1",mLocRef.getPath());

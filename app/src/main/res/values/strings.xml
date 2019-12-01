@@ -1,4 +1,26 @@
 <resources>
     <string name="app_name">memARy</string>
-    <string name="mapbox_access_token">pk.eyJ1IjoiY2d4eTE5OTUwOSIsImEiOiJjazJ2MDVpM28xY2ZmM2tsN29rajJ5MGRnIn0.FTt7berknZZJB49pZoTLgg</string>
+    <string name="menu_one">Sort by distance</string>
+    <string name="menu_two">Sort by number of posts</string>
+    <string name="menu_three">Sort by location name</string>
+    <string-array name="location">
+        <item>Photonics Center</item>
+        <item>Mugar Memorial Library</item>
+        <item>Boston Public Library</item>
+        <item>Shabu-Zen</item>
+        <item>Fenway Park</item>
+        <item>Saint Marys Street</item>
+        <item>AMC Boston Common 19</item>
+    </string-array>
+
+    <string-array name="address">
+        <item>8 St Marys St, Boston, MA 02215</item>
+        <item>771 Commonwealth Avenue, Boston, MA 02215</item>
+        <item>700 Boylston St, Boston, MA 02116</item>
+        <item>80 Brighton Ave, Allston, MA 02134</item>
+        <item>4 Jersey St, Boston, MA 02215</item>
+        <item>Brookline, MA 02446</item>
+        <item>175 Tremont St, Boston, MA 02111</item>
+    </string-array>
+    <string name="mapbox_access_token">YOUR_KEY_HERE</string>
 </resources>

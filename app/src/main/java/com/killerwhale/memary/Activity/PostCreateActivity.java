@@ -3,6 +3,7 @@ package com.killerwhale.memary.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -24,15 +25,21 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
-import java.util.HashMap;
+import org.imperiumlabs.geofirestore.GeoFirestore;
+
+import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -44,6 +51,8 @@ import java.util.UUID;
 public class PostCreateActivity extends AppCompatActivity {
 
     private static final String TAG = "NewPostTest";
+    private static final String KEY_LATITUDE = "latitude";
+    private static final String KEY_LONGITUDE = "longitude";
     private static final float ALPHA_HALF = 0.5f;
     private static final float ALPHA_ORIGINAL = 1f;
     private static final int REQUEST_CODE_IMAGE_CAPTURE = 202;
@@ -53,14 +62,24 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA
     };
 
+    // Firebase plug-ins
     private FirebaseFirestore db;
     private StorageReference mImagesRef;
+    private CollectionReference mPostRef;
+    private GeoFirestore geoFirestore;
+
+    // Location
+    private Location mLocation;
+
+    // UI widgets
     private Button btnCancel;
     private Button btnSubmit;
     private ImageButton btnAddImg;
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
+
+    // Post variables
     private Uri localUri;
     private String remoteUrl = "";
 
@@ -71,7 +90,20 @@ public class PostCreateActivity extends AppCompatActivity {
 
         // Database init.
         db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
+        mPostRef = db.collection("posts");
+        geoFirestore = new GeoFirestore(mPostRef);
+
+        // Location
+        Intent i = getIntent();
+        mLocation = new Location("");
+        mLocation.setLatitude(i.getDoubleExtra(KEY_LATITUDE, 0));
+        mLocation.setLongitude(i.getDoubleExtra(KEY_LONGITUDE, 0));
 
         // UI init.
         btnCancel = findViewById(R.id.btnCancel);
@@ -113,7 +145,9 @@ public class PostCreateActivity extends AppCompatActivity {
                         uploadImageAndPost(localUri);
                     }
                 } else {
-                    submitPost();
+                    if (mLocation != null) {
+                        submitPost(mLocation);
+                    }
                 }
             }
         });
@@ -252,36 +286,6 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     /**
-     * Write a new post into database
-     */
-    private void submitPost() {
-        String text = edtContent.getText().toString();
-        // Create a new post
-        Map<String, Object> post = new HashMap<>();
-        post.put("text", text);
-        post.put("image", remoteUrl);
-        post.put("type", remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE);
-        if (db != null) {
-            db.collection("posts")
-                    .add(post)
-                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                        @Override
-                        public void onSuccess(DocumentReference documentReference) {
-                            Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
-                            Log.i(TAG, documentReference.getId());
-                            finish();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error adding document", e);
-                        }
-                    });
-        }
-    }
-
-    /**
      * Upload image to FireBase storage and get url
      * @param uri image file uri
      */
@@ -308,7 +312,9 @@ public class PostCreateActivity extends AppCompatActivity {
                     if (downloadUri != null) {
                         Log.i(TAG, downloadUri.toString());
                         remoteUrl = downloadUri.toString();
-                        submitPost();
+                        if (mLocation != null) {
+                            submitPost(mLocation);
+                        }
                     }
                 } else {
                     // Handle failures
@@ -316,5 +322,38 @@ public class PostCreateActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * Submit the post with all the data fields
+     * @param location current location
+     */
+    private void submitPost(Location location) {
+        String text = edtContent.getText().toString();
+        int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
+        final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+        Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+        // Create a new post
+        Post newPost = new Post(type, text, remoteUrl, geo, time);
+        Map<String, Object> post = newPost.getHashMap();
+        if (db != null) {
+            db.collection("posts")
+                    .add(post)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
+                            // Log.i(TAG, documentReference.getId());
+                            geoFirestore.setLocation(documentReference.getId(), geo);
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error adding document", e);
+                        }
+                    });
+        }
     }
 }
