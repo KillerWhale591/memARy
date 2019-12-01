@@ -99,7 +99,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
-    private static final int  ZOOM_THRESHOLD = 13;
+    private static final int  ZOOM_THRESHOLD = 9;
     private static final String SELECTED_MARKER = "selected-marker";
     private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
     private static final String MARKER_SOURCE_LOCATION = "markers-source-location";
@@ -116,7 +116,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private FloatingActionButton fabCenterCamera;
     private FloatingActionButton fabTogglePostLocation;
-    private Location[] mlocations;
     private MapboxMap mapboxMap;
     private MapView mapView;
     private boolean markerSelected = false;
@@ -128,7 +127,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private CollectionReference mPostRef;
     private ArrayList<Location> mLocations = new ArrayList<>();
     private ArrayList<Location> mPostLocations = new ArrayList<>();
-
+    private Double cameralat;
+    private Double cameralong;
 
 
     @Override
@@ -146,6 +146,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mLocRef = db.collection("location");
         mPostRef = db.collection("posts");
         Log.d("Tag1",mLocRef.getPath());
+
         mapView = findViewById(R.id.mapView);
         fabCenterCamera = (FloatingActionButton)findViewById(R.id.fabCenterCam);
         fabTogglePostLocation = (FloatingActionButton)findViewById(R.id.fabTogglePostLocation);
@@ -166,20 +167,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             public void onStyleLoaded(@NonNull final Style style) {
                 style.addImage(MARKER_IMAGE, BitmapFactory.decodeResource(
                         MapActivity.this.getResources(), R.drawable.map_marker));
-                final Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        initMarkerPosition(style);
-                    }
-                }, 2000);
+
+                initPost(style);
+                initLocation(style);
                 initSearchFab();
                 enableLocationComponent(style);
                 Intent intent = getIntent();
                 String id = intent.getStringExtra("uid");
-                Double cameralat = intent.getDoubleExtra("lat", mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude());
-                Double cameralong = intent.getDoubleExtra("long", mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude());
-                setCameratoDesinatedLocation(cameralat,cameralong);
+
+                if(mapboxMap.getLocationComponent().getLastKnownLocation()!= null) {
+                    cameralat = intent.getDoubleExtra("lat", mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude());
+                    cameralong = intent.getDoubleExtra("long", mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude());
+                    setCameratoDesinatedLocation(cameralat,cameralong);
+                }
                 addHeatmapLayer(style);
                 addCircleLayer(style);
                 addCircleLayerLocation(style);
@@ -238,42 +238,49 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     /**
      * Get documents from database
      */
-    private void initLocation() {
+    private void initLocation(@NonNull final Style loadedMapStyle) {
         mLocRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                List<Feature> features = new ArrayList<>();
+
                 if (documents.size() > 0) {
                     for (DocumentSnapshot document : documents) {
-                        Location l = new Location("");
+                        Location l = new Location(document.getId());
                         GeoPoint geoPoint = document.getGeoPoint("geopoint");
-                        Log.d("MapOsuccess", "GeoPoint LAT: " + geoPoint.getLatitude());
-                        Log.d("MapOsuccess", "GeoPoint LONG: " + geoPoint.getLongitude());
-
-                        l.setLatitude(geoPoint.getLatitude());
-                        Log.d("MapOsuccess", "l LAT:" + Double.toString(l.getLatitude()));
-
-                        l.setLongitude(geoPoint.getLongitude());
-                        Log.d("MapOsuccess", "l LONG:" + Double.toString(l.getLongitude()));
-
-                        mPostLocations.add(l);
+                        if(geoPoint != null) {
+                            l.setLatitude(geoPoint.getLatitude());
+                            l.setLongitude(geoPoint.getLongitude());
+                            mPostLocations.add(l);
+                            features.add(Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),(geoPoint.getLatitude()))));
+                        }
                     }
-                    Log.d("hello", " " + mPostLocations.size());
                 }
+                loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
+                loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
             }
         });
     }
-    private void initPost() {
+    private void initPost(@NonNull final Style loadedMapStyle) {
         mPostRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                List<Feature> featureLocation = new ArrayList<>();
                 if (documents.size() > 0) {
                     for (DocumentSnapshot document : documents) {
-                        Location l = new Location("");
+                        Location l = new Location(document.getId());
                         GeoPoint geoPoint = document.getGeoPoint("location");
+                        if(geoPoint != null) {
+                            l.setLatitude(geoPoint.getLatitude());
+                            l.setLongitude(geoPoint.getLongitude());
+                            mLocations.add(l);
+                            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),(geoPoint.getLatitude()))));
+                        }
                     }
-
+                    Log.d("dd", "onSucces" + featureLocation.size());
+                    loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
                 }
             }
         });
@@ -415,19 +422,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
         loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
         loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
-        List<Feature> featureLocation = new ArrayList<>();
-        for (int i = 0; i < mLocations.size(); i++) {
-            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(mLocations.get(i).getLongitude(),
-                    mLocations.get(i).getLatitude())));
-            Log.d("stuff", Double.toString(mLocations.get(i).getLatitude()));
-            Log.d("stuff", Double.toString(mLocations.get(i).getLongitude()));
-
-            Log.d("stuff", "1" + featureLocation.get(i));
-
-        }
-        Log.d("Length", "featureLength" + featureLocation.size());
-
-        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
+//        List<Feature> featureLocation = new ArrayList<>();
+//        for (int i = 0; i < mLocations.size(); i++) {
+//            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(mLocations.get(i).getLongitude(),
+//                    mLocations.get(i).getLatitude())));
+//
+//        }
+//        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
 
     }
 
@@ -597,8 +598,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onStart() {
         super.onStart();
         mapView.onStart();
-        initLocation();
-        initPost();
 
     }
 
