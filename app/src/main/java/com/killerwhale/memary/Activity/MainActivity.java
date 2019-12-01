@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     private PermissionsManager permissionsManager;
     private FirebaseAuth mAuth;
     private Button btnLocationList;
+    private Button btnSplash;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
         btnLocationList = (Button) findViewById(R.id.btnLocationList);
         btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
+        btnSplash = findViewById(R.id.btnSplash);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,6 +89,12 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             public void onClick(View view) {
                 checkPermission();
 
+            }
+        });
+        btnSplash.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getBaseContext(), SplashActivity.class));
             }
         });
 
