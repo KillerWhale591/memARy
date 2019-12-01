@@ -4,6 +4,10 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/memARy.iml" filepath="$PROJECT_DIR$/memARy.iml" />
+
+      <module fileurl="file://$PROJECT_DIR$/app/memAry-app.iml" filepath="$PROJECT_DIR$/app/memAry-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/memAry-memARy.iml" filepath="$PROJECT_DIR$/memAry-memARy.iml" />
+
       <module fileurl="file://$PROJECT_DIR$/third_party/vecmath/vecmath.iml" filepath="$PROJECT_DIR$/third_party/vecmath/vecmath.iml" />
     </modules>
   </component>

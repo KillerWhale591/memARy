@@ -20,20 +20,20 @@
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.killerwhale.memary.Activity.ARPrimitiveActivity">
+    tools:context="com.killerwhale.memary.Activity.ARDrawActivity">
 
     <!-- surface view-->
     <com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView
-        android:id="@+id/surfaceview"
+        android:id="@+id/draw_surfaceview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="top" />
 
     <!-- Brush selection, record, undo-->
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/draw_container"
-        android:layout_width="407dp"
-        android:layout_height="729dp"
+        android:id="@+id/draw_draw_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_gravity="bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -41,8 +41,9 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <!-- Finding surfaces -->
-        <com.killerwhale.memary.ARComponent.Utils.DebugView
-            android:id="@+id/debug_view"
+
+        <com.killerwhale.memary.ARComponent.View.DebugView
+            android:id="@+id/draw_debug_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
@@ -51,59 +52,63 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <com.killerwhale.memary.ARComponent.Utils.BrushSelector
-            android:id="@+id/brush_selector"
+
+        <com.killerwhale.memary.ARComponent.View.BrushSelector
+            android:id="@+id/draw_brush_selector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="60dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginLeft="16dp"
+            android:accessibilityTraversalBefore="@id/draw_record_button"
             app:layout_constraintLeft_toLeftOf="parent"
-            tools:layout_editor_absoluteY="621dp" />
+            tools:layout_editor_absoluteY="473dp" />
 
-        <Button
-            android:id="@+id/btnLoad"
+        <ImageButton
+            android:id="@+id/draw_menu_item_clear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="37dp"
-            android:layout_marginBottom="30dp"
-            android:text="Load"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:background="@drawable/ripple_bg_borderless_oval"
+            android:contentDescription="@string/menu_clear"
+            android:padding="16dp"
+            android:src="@drawable/ic_clear"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/btnSave"
+        <ImageButton
+            android:id="@+id/draw_undo_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="35dp"
-            android:layout_marginEnd="35dp"
-            android:layout_marginBottom="30dp"
+            android:background="@drawable/ripple_bg_borderless_oval"
+            android:contentDescription="@string/content_description_undo"
+            android:padding="16dp"
+            android:src="@drawable/ic_undo"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/draw_menu_item_clear"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/draw_record_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="97dp"
+            android:layout_marginEnd="162dp"
+            android:layout_marginBottom="60dp"
+            android:onClick="saveStrokes"
             android:text="Save"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnClear"
-            app:layout_constraintStart_toEndOf="@+id/btnLoad" />
-
-        <Button
-            android:id="@+id/btnClear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="37dp"
-            android:layout_marginBottom="30dp"
-            android:text="Clear"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/draw_brush_selector" />
 
     </android.support.constraint.ConstraintLayout>
 
     <!-- Sharing -->
-
-    <com.killerwhale.memary.ARComponent.Utils.TrackingIndicator
-        android:id="@+id/finding_surfaces_view"
+    <com.killerwhale.memary.ARComponent.View.TrackingIndicator
+        android:id="@+id/draw_finding_surfaces_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
 
 </android.support.constraint.ConstraintLayout>

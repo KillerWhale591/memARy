@@ -73,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnProfileActivity = (Button) findViewById(R.id.btnProfileActivity);
         btnARPrimitiveActivity = (Button) findViewById(R.id.btnARPrimitive);
 
+        btnARActivity = (Button) findViewById(R.id.btnARActivity);
+        btnARDrawActivity = (Button) findViewById(R.id.btnARDrawActivity);
+        btnARPrimitiveActivity = (Button) findViewById(R.id.btnARPrimitive);
+
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
