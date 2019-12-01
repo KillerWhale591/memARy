@@ -23,8 +23,13 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     private Button btnSignOut;
     private Button btnSignInActivity;
     private Button btnSignUpActivity;
+
     private Button btnMapActivity;
     private PermissionsManager permissionsManager;
+
+    private Button btnARActivity;
+    private Button btnARDrawActivity;
+    private Button btnARPrimitiveActivity;
     private FirebaseAuth mAuth;
     private Button btnLocationList;
 
@@ -40,8 +45,13 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnSignOut = (Button) findViewById(R.id.btnSignOut);
         btnSignUpActivity = (Button) findViewById(R.id.btnSignUpActivity);
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
+
         btnLocationList = (Button) findViewById(R.id.btnLocationList);
         btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
+
+        btnARActivity = (Button) findViewById(R.id.btnARActivity);
+        btnARDrawActivity = (Button) findViewById(R.id.btnARDrawActivity);
+        btnARPrimitiveActivity = (Button) findViewById(R.id.btnARPrimitive);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
                 startActivity(intent);
             }
         });
+
         btnLocationList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,5 +134,31 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             Toast.makeText(getApplicationContext(),"Permission not Granted yet", Toast.LENGTH_SHORT).show();
             finish();
         }
+
+
+        btnARActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnARDrawActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ARDrawActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnARPrimitiveActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ARPrimitiveActivity.class);
+                startActivity(intent);
+            }
+        });
+
     }
 }
