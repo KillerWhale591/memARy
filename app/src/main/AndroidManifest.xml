@@ -18,6 +18,10 @@
         android:theme="@style/AppTheme">
         <activity android:name=".Activity.UserInfoActivity"></activity>
         <activity android:name=".Activity.ResetPasswordActivity" />
+        <activity
+            android:name=".Activity.SplashActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
+        </activity>
         <activity android:name=".Activity.SignUpActivity" />
         <activity android:name=".Activity.SignInActivity" />
         <activity
@@ -26,11 +30,10 @@
         <activity
             android:name=".Activity.PostCreateActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
         <activity
             android:name=".Activity.PostFeedActivity"
-            android:screenOrientation="portrait">
-        </activity>
+            android:screenOrientation="portrait" />
         <activity android:name=".Activity.LocationListActivity" />
         <activity android:name=".Activity.MainActivity">
             <intent-filter>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_map">Map</string>
+    <string name="nav_post">Posts</string>
+    <string name="nav_locations">Places</string>
+    <string name="nav_profile">Profile</string>
+</resources>

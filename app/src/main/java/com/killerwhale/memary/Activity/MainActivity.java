@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     private PermissionsManager permissionsManager;
     private FirebaseAuth mAuth;
     private Button btnLocationList;
+    private Button btnSplash;
 
     @Override
     protected void onStart() {
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
         btnUserInfoActivity = (Button) findViewById(R.id.btnUserInfoActivity);
         txtUser = (TextView) findViewById(R.id.txtUser);
+        btnSplash = findViewById(R.id.btnSplash);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,6 +108,12 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             public void onClick(View view) {
                 checkPermission();
 
+            }
+        });
+        btnSplash.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getBaseContext(), SplashActivity.class));
             }
         });
 
