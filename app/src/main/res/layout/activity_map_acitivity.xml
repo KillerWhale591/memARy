@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:mapbox="http://schemas.android.com/apk/res-auto"
     xmlns:fab="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Activity.MapActivity">
@@ -15,47 +16,82 @@
         mapbox:mapbox_cameraTargetLat="42.3601"
         mapbox:mapbox_cameraTargetLng="-71.0589"
 
-        mapbox:mapbox_cameraZoom="11" />
+        mapbox:mapbox_cameraZoom="11" >
+
+        <com.getbase.floatingactionbutton.FloatingActionsMenu
+            android:id="@+id/multiple_text_field_actions_parent_fab"
+            android:layout_width="340dp"
+            android:layout_height="331dp"
+            android:layout_gravity="end|bottom"
+            android:layout_marginBottom="50dp"
+            fab:fab_addButtonColorNormal="@color/mapboxRed"
+            fab:fab_addButtonColorPressed="@color/colorWhite"
+            fab:fab_addButtonPlusIconColor="@color/colorWhite"
+            fab:fab_labelStyle="@style/menu_labels_style">
+
+            <com.getbase.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabCenterCam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                fab:fab_colorNormal="@color/mapboxBlue"
+                fab:fab_colorPressed="@color/mapboxWhite"
+                fab:fab_size="mini"
+                fab:fab_title="Center Cam" />
+
+            <com.getbase.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabTogglePostLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                fab:fab_colorNormal="@color/mapboxGreen"
+                fab:fab_colorPressed="@color/mapboxWhite"
+                fab:fab_size="mini"
+                fab:fab_title="toggle post/location" />
+
+            <com.getbase.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabSearchGlobal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                fab:fab_colorNormal="@color/mapboxOrangeLight"
+                fab:fab_colorPressed="@color/mapboxWhite"
+                fab:fab_size="mini"
+                fab:fab_title="Search Location" />
+
+        </com.getbase.floatingactionbutton.FloatingActionsMenu>
+    </com.mapbox.mapboxsdk.maps.MapView>
 
 
-    <com.getbase.floatingactionbutton.FloatingActionsMenu
-        android:id="@+id/multiple_text_field_actions_parent_fab"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:id="@+id/navLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_margin="16dp"
-        fab:fab_addButtonColorNormal="@color/mapboxRed"
-        fab:fab_addButtonColorPressed="@color/colorWhite"
-        fab:fab_addButtonPlusIconColor="@color/colorWhite"
-        fab:fab_labelStyle="@style/menu_labels_style">
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabCenterCam"
-            android:layout_width="wrap_content"
+        android:layout_alignParentBottom="true">
+        <android.support.design.widget.BottomNavigationView
+            android:id="@+id/navBar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            fab:fab_colorNormal="@color/mapboxBlue"
-            fab:fab_colorPressed="@color/mapboxWhite"
-            fab:fab_size="mini"
-            fab:fab_title="Center Cam" />
+            app:itemBackground="@color/colorWhite"
+            app:itemHorizontalTranslationEnabled="false"
+            app:menu="@menu/bottom_nav_menu">
+        </android.support.design.widget.BottomNavigationView>
+    </FrameLayout>
 
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabTogglePostLocation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            fab:fab_colorNormal="@color/mapboxGreen"
-            fab:fab_colorPressed="@color/mapboxWhite"
-            fab:fab_size="mini"
-            fab:fab_title="toggle post/location" />
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabSearchGlobal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            fab:fab_colorNormal="@color/mapboxOrangeLight"
-            fab:fab_colorPressed="@color/mapboxWhite"
-            fab:fab_size="mini"
-            fab:fab_title="Search Location" />
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/bigIcon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="-24dp"
+        android:layout_alignTop="@+id/navLayout"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+        app:placeholderImage="@color/colorPrimary"
+        app:roundAsCircle="true" />
+    <ImageView
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="18dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignTop="@+id/bigIcon"
+        android:backgroundTint="@color/colorWhite"
+        android:background="@drawable/ic_ar"/>
 
-    </com.getbase.floatingactionbutton.FloatingActionsMenu>
-
-
-</FrameLayout>
-
+    </RelativeLayout>

@@ -10,22 +10,22 @@ import android.location.Location;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.gson.JsonObject;
+import android.view.MenuItem;
+
 import com.killerwhale.memary.R;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.heatmapDensity;
@@ -92,6 +92,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, MapboxMap.OnMapClickListener{
     private static final String CIRCLE_LAYER_ID = "circle";
     private static final String MARKER_SOURCE = "markers-source";
@@ -129,7 +130,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private ArrayList<Location> mPostLocations = new ArrayList<>();
     private Double cameralat;
     private Double cameralong;
-
+    private BottomNavigationView navBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -138,6 +139,28 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         setContentView(R.layout.activity_map_acitivity);
         db = FirebaseFirestore.getInstance();
+        navBar = findViewById(R.id.navBar);
+        navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case R.id.action_map:
+                        break;
+                    case R.id.action_posts:
+                        startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
+                        break;
+                    case R.id.action_places:
+                        startActivity(new Intent(getBaseContext(), LocationListActivity.class));
+                        break;
+                    case R.id.action_profile:
+                        break;
+                    default:
+                        Log.i("TAG", "Unhandled nav click");
+
+                }
+                return true;
+            }
+        });
 /**
  *         Step 1: Read Mapbox android apis
  */
@@ -606,6 +629,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onResume() {
         super.onResume();
         mapView.onResume();
+        navBar.setSelectedItemId(R.id.action_map);
     }
 
     @Override

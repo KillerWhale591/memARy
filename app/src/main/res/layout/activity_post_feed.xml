@@ -27,6 +27,7 @@
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_below="@+id/topFeedTab"
+        android:layout_above="@+id/navLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -44,9 +45,43 @@
         android:backgroundTint="@color/colorFAB"
         android:elevation="6dp"
         app:borderWidth="0dp"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/navLayout"
         android:layout_alignParentEnd="true"
         android:src="@drawable/ic_create"
         android:layout_margin="16dp" />
+
+    <FrameLayout
+        android:id="@+id/navLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+        <android.support.design.widget.BottomNavigationView
+            android:id="@+id/navBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:itemBackground="@color/colorWhite"
+            app:itemHorizontalTranslationEnabled="false"
+            app:menu="@menu/bottom_nav_menu">
+        </android.support.design.widget.BottomNavigationView>
+    </FrameLayout>
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/bigIcon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="-24dp"
+        android:layout_alignTop="@+id/navLayout"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+        app:placeholderImage="@color/colorPrimary"
+        app:roundAsCircle="true" />
+    <ImageView
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="18dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignTop="@+id/bigIcon"
+        android:backgroundTint="@color/colorWhite"
+        android:background="@drawable/ic_ar"/>
 
 </RelativeLayout>
