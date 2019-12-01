@@ -2,6 +2,7 @@ package com.killerwhale.memary.Activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,13 +20,27 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.R;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Activity for login with email
@@ -33,6 +48,7 @@ import com.killerwhale.memary.R;
  */
 public class SignInActivity extends AppCompatActivity {
 
+    private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private EditText loginEmail;
     private EditText loginPassword;
@@ -42,6 +58,7 @@ public class SignInActivity extends AppCompatActivity {
     private SignInButton btnGoogleLogin;
     private ProgressBar progressLogin;
     private GoogleSignInClient mGoogleSignInClient;
+    private StorageReference storageRef;
 
     private static final int RC_SIGN_IN = 1111;
     private static final String TAG = "BLUESOX";
@@ -59,6 +76,8 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_in);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        storageRef = FirebaseStorage.getInstance().getReference().child("avatars");
 
         loginEmail = (EditText) findViewById(R.id.loginEmail);
         loginPassword = (EditText) findViewById(R.id.loginPassword);
@@ -69,7 +88,7 @@ public class SignInActivity extends AppCompatActivity {
 
         btnGoogleLogin = (SignInButton) findViewById(R.id.btnGoogleLogin);
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("your token")
+                .requestIdToken("5903042593-a2ulpmokapp2v9j4akh8mppbvfpr7bku.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -145,7 +164,7 @@ public class SignInActivity extends AppCompatActivity {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 // Google Sign In was successful, authenticate with Firebase
-                GoogleSignInAccount account = task.getResult(ApiException.class);
+                final GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
@@ -155,7 +174,7 @@ public class SignInActivity extends AppCompatActivity {
         }
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
@@ -165,6 +184,16 @@ public class SignInActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
+                            final String uid = mAuth.getCurrentUser().getUid();
+                            DocumentReference docRef = db.collection("cities").document(uid);
+                            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if(!task.getResult().exists()){
+                                        uploadAvatar(acct.getDisplayName(), uid, acct.getPhotoUrl());
+                                    }
+                                }
+                            });
                             Log.d(TAG, "signInWithCredential:success");
                             Intent intent = new Intent(SignInActivity.this, MainActivity.class);
                             startActivity(intent);
@@ -177,5 +206,60 @@ public class SignInActivity extends AppCompatActivity {
                         // ...
                     }
                 });
+    }
+
+    private void uploadAvatar(final String username, final String Uid, final Uri uri){
+        final StorageReference avatarImgRef = storageRef.child(Uid + ".jpg");
+        UploadTask uploadTask = avatarImgRef.putFile(uri);
+
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw Objects.requireNonNull(task.getException());
+                }
+                // Continue with the task to get the download URL
+                return avatarImgRef.getDownloadUrl();
+            }
+        });
+        urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    if (downloadUri != null) {
+                        Log.i(TAG, downloadUri.toString());
+//                        remoteUrl = downloadUri.toString();
+                        createUserDocument(username, downloadUri.toString(), Uid);
+                    }
+                } else {
+                    // Handle failures
+                    Log.e(TAG, "Upload failed.");
+                }
+            }
+        });
+    }
+
+    private void createUserDocument(String username, String remoteUrl, String Uid){
+        Map<String, Object> user = new HashMap<>();
+        user.put("username", username);
+        user.put("avatar", remoteUrl);
+        user.put("posts", new ArrayList<DocumentReference>());
+        if(db != null) {
+            db.collection("users").document(Uid)
+                    .set(user)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d(TAG, "DocumentSnapshot successfully written!");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error writing document", e);
+                        }
+                    });
+        }
     }
 }

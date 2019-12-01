@@ -64,7 +64,7 @@ public class UserInfoActivity extends AppCompatActivity {
         super.onStart();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser == null){
-            startActivity(new Intent(getBaseContext(), SignInActivity.class));
+//            startActivity(new Intent(getBaseContext(), SignInActivity.class));
         } else {
             Uid = currentUser.getUid();
         }
