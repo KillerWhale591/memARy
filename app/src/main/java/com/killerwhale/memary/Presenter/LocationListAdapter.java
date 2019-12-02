@@ -29,8 +29,6 @@ public class LocationListAdapter extends BaseAdapter {
 
     private
     Context context;
-//    String location[];
-//    String address[];
     ArrayList<String> location;
     ArrayList<String> address;
     ArrayList<Integer> numPosts;
