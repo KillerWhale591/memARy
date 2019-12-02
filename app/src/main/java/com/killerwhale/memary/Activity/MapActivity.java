@@ -25,6 +25,7 @@ import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.CollectionReference;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.killerwhale.memary.R;
 
@@ -53,6 +54,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapRadius;
 
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconSize;
@@ -108,12 +110,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String MARKER_STYLE_LAYER_LOCATION = "markers-style-layer-location";
     private static final int REQUEST_CODE_AUTOCOMPLETE = 001;
     private static final int LIMIT_POST = 20;
-    private static final String FIELD_TIMESTAMP = "timestamp";
 
 
     private static final String SEARCH_MARKER_SOURCE = "search-marker-source";
     private static final String SEARCH_IMAGE = "search-marker";
     private static final String SEARCH_MARKER_LAYER = "search-marker-layer";
+    private static final String CAMERA_LOCATION_SOURCE ="camera-location-source" ;
+    private static final String CAMERA_LOCATION_LAYER = "camera-location-layer";
 
     private FloatingActionButton fabCenterCamera;
     private FloatingActionButton fabTogglePostLocation;
@@ -121,8 +124,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private MapView mapView;
     private boolean markerSelected = false;
     private int displayMarkerType = 0;// 0 = post, 1 = location
-    private CarmenFeature home;
-    private CarmenFeature work;
     private FirebaseFirestore db;
     private CollectionReference  mLocRef;
     private CollectionReference mPostRef;
@@ -175,7 +176,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         fabTogglePostLocation = (FloatingActionButton)findViewById(R.id.fabTogglePostLocation);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
-
     }
 
     @Override
@@ -193,15 +193,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
                 initPost(style);
                 initLocation(style);
+                initCameraPosition(style);
                 initSearchFab();
                 enableLocationComponent(style);
                 Intent intent = getIntent();
                 String id = intent.getStringExtra("uid");
-
-                if(mapboxMap.getLocationComponent().getLastKnownLocation()!= null) {
-                    cameralat = intent.getDoubleExtra("lat", mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude());
-                    cameralong = intent.getDoubleExtra("long", mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude());
-                    setCameratoDesinatedLocation(cameralat,cameralong);
+                cameralat = intent.getDoubleExtra("lat", 0);
+                cameralong = intent.getDoubleExtra("long", 0);
+                if(cameralat != 0 || cameralong != 0) {
+                    updateMarkerPosition(new LatLng(cameralat, cameralong));
+                    Log.d("gg", "onStyleLoaded: Success");
                 }
                 addHeatmapLayer(style);
                 addCircleLayer(style);
@@ -229,13 +230,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             displayMarkerType = 0;
                             toggleLayer(displayMarkerType);
                         }
-
-
                     }
                 });
             }
         });
     }
+
+    private void initCameraPosition(Style style) {
+        style.addSource(new GeoJsonSource(CAMERA_LOCATION_SOURCE));
+        style.addLayer(new SymbolLayer(CAMERA_LOCATION_LAYER,CAMERA_LOCATION_SOURCE).withProperties(
+                iconImage(SEARCH_IMAGE),
+                iconIgnorePlacement(true),
+                iconAllowOverlap(true),
+                iconSize(0.3f)
+        ));
+
+    }
+
     private void setCameratoCurrentLocation(){
         double lat1= mapboxMap.getLocationComponent().getLastKnownLocation().getLatitude();
         double long1 = mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude();
@@ -308,6 +319,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
     }
+    private void updateMarkerPosition(LatLng position) {
+// This method is were we update the marker position once we have new coordinates. First we
+// check if this is the first time we are executing this handler, the best way to do this is
+// check if marker is null;
+        if (mapboxMap.getStyle() != null) {
+            GeoJsonSource cameraSource = mapboxMap.getStyle().getSourceAs(CAMERA_LOCATION_SOURCE);
+            if (cameraSource != null) {
+                cameraSource.setGeoJson(FeatureCollection.fromFeature(
+                        Feature.fromGeometry(Point.fromLngLat(position.getLongitude(), position.getLatitude()))
+                ));
+            }
+        }
+
+// Lastly, animate the camera to the new position so the user
+// wont have to search for the marker and then return.
+        mapboxMap.animateCamera(CameraUpdateFactory.newLatLng(position));
+    }
 
 
 
@@ -362,7 +390,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 // Enable to make component visible
             locationComponent.setLocationComponentEnabled(true);
 // Set the component's camera mode
-            locationComponent.setCameraMode(CameraMode.NONE);
+            locationComponent.setCameraMode(CameraMode.TRACKING);
 // Set the component's render mode
             locationComponent.setRenderMode(RenderMode.COMPASS);
     }

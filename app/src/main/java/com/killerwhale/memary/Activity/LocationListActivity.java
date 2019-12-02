@@ -1,9 +1,12 @@
 package com.killerwhale.memary.Activity;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -25,7 +28,17 @@ public class LocationListActivity extends AppCompatActivity {
         locationAdapter = new LocationListAdapter(this.getBaseContext());
         locationList.setAdapter(locationAdapter);
 
-//        locationList.setOnItemClickListener(this);
+        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Intent intent = new Intent(LocationListActivity.this, MapActivity.class);
+            intent.putExtra("lat", 41.0);
+            intent.putExtra("long", -72.0);
+            startActivity(intent);
+        }
+
+        });
+
     }
 
     @Override
