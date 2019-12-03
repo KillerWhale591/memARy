@@ -131,12 +131,13 @@ public class LocationListAdapter extends BaseAdapter {
 //        String string = (mDistance.get(position)) + " miles";
 //        tvDistance.setText(string);
         ivImage.setImageResource(R.drawable.location_image);
-        tvNumPosts.setText(String.valueOf(mNumPosts.get(position)));
+//        tvNumPosts.setText(String.valueOf(mNumPosts.get(position)));
 
         try{
             tvLocation.setText(mLocationModel.get(position).getLocation());
             tvAddress.setText(mLocationModel.get(position).getAddress());
             tvDistance.setText(mLocationModel.get(position).getDistance(currLocation));
+            tvNumPosts.setText(mLocationModel.get(position).getPosts());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -229,7 +230,7 @@ public class LocationListAdapter extends BaseAdapter {
     }
 
     /**
-     * Get documents from database, query by nearby radius area
+     * Get documents from database, query by name of location
      * @param adapter adapter
      */
     public void queryByName(final LocationListAdapter adapter) {
@@ -250,5 +251,29 @@ public class LocationListAdapter extends BaseAdapter {
                             }
                         }
                     });
-            }
+    }
+
+    /**
+     * Get documents from database, query by number of posts
+     * @param adapter adapter
+     */
+    public void queryByPosts(final LocationListAdapter adapter) {
+        mLocationModel.clear();
+        Query nameQuery = mLocRef.orderBy("posts", Query.Direction.DESCENDING);
+        nameQuery.get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                        if (documents.size() > 0) {
+                            for (DocumentSnapshot document : documents) {
+                                if (document != null) {
+                                    mLocationModel.add(new LocationModel(document.getData()));
+                                }
+                            }
+                            notifyDataSetChanged();
+                        }
+                    }
+                });
+    }
 }

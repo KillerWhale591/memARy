@@ -15,7 +15,7 @@ public class LocationModel {
     public float distance;
     public int img;
     private String image;
-    public int numPosts;
+    public Integer numPosts;
     private GeoPoint geoPoint;
     private static final float METERS_TO_MILES = 1609.3f;
     private static final float MINIMUM_DISTANCE = 0.1f;
@@ -35,6 +35,7 @@ public class LocationModel {
         this.geoPoint = (GeoPoint) LocationData.get("geopoint");
         this.image = (String) LocationData.get("image");
         this.location = (String) LocationData.get("name");
+        this.numPosts = ((Long)LocationData.get("posts")).intValue();
     }
 
     public String getLocation() {
@@ -43,6 +44,10 @@ public class LocationModel {
 
     public String getAddress() {
         return address;
+    }
+
+    public String getPosts() {
+        return String.valueOf(numPosts);
     }
 
     /**

@@ -71,6 +71,7 @@ public class LocationListActivity extends AppCompatActivity {
             }
         });
         llAdapter.init();
+        llAdapter.queryByName(llAdapter);
     }
 
     @Override
@@ -92,7 +93,8 @@ public class LocationListActivity extends AppCompatActivity {
                 llAdapter.queryByName(llAdapter);
                 break;
             case R.id.mnu_posts:
-                llAdapter.sortByPost();
+//                llAdapter.sortByPost();
+                llAdapter.queryByPosts(llAdapter);
                 break;
         }
         locationList.setAdapter(llAdapter);
