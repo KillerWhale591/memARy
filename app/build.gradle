@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
+def API_KEY = '"' + ApiKey + '"' ?: '"Define your ApiKey in gradle.properties"'
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -17,10 +19,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "mode"
+    productFlavors {
+        sandbox {
+            dimension "mode"
+            applicationIdSuffix "sandbox"
+            versionNameSuffix "-sandbox"
+            buildConfigField "boolean", "GLOBAL", "true"
+            //buildConfigField "boolean", "DEBUG", "true"
+            buildConfigField "boolean", "SHOW_NAVIGATION", "false"
+            resValue "string", "ApiKey", API_KEY
+        }
+        production {
+            dimension "mode"
+            buildConfigField "boolean", "GLOBAL", "false"
+            //buildConfigField "boolean", "DEBUG", "false"
+            buildConfigField "boolean", "SHOW_NAVIGATION", "true"
+            resValue "string", "ApiKey", API_KEY
+        }
+    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':vecmath')
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     implementation 'com.android.support:support-v4:28.0.0'
@@ -33,12 +55,18 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:16.1.0'
     implementation 'com.facebook.fresco:fresco:1.13.0'
     implementation 'com.android.support:design:28.0.0'
+
+    implementation 'com.google.ar:core:1.6.0'
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.uncorkedstudios.android:recordable-surfaceview:1.1.1'
+    implementation 'com.google.android.gms:play-services-nearby:15.0.1'
     implementation 'com.google.android.gms:play-services-location:15.0.1'
     implementation 'com.github.imperiumlabs:GeoFirestore-Android:v1.4.0'
-
+    implementation 'com.airbnb.android:lottie:2.5.3'
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.4.0'
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.1'
     implementation 'com.google.android.gms:play-services-auth:16.0.1'
     implementation 'com.android.support:preference-v7:28.0.0'
+
 
 }

@@ -5,8 +5,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
 
     <application
         android:name=".MainApp"
@@ -34,6 +40,24 @@
         <activity
             android:name=".Activity.PostFeedActivity"
             android:screenOrientation="portrait" />
+
+        </activity>
+        <activity
+            android:name=".Activity.ARActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".Activity.ARDrawActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".Activity.PermissionsActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".Activity.ARPrimitiveActivity"
+            android:screenOrientation="portrait">
+        </activity>
         <activity android:name=".Activity.LocationListActivity" />
         <activity android:name=".Activity.MainActivity">
             <intent-filter>
@@ -42,6 +66,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data android:name="com.google.ar.core" android:value="required" />
     </application>
 
 </manifest>
