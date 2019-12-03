@@ -88,6 +88,16 @@ public class LocationListActivity extends AppCompatActivity {
         });
         llAdapter.init();
         llAdapter.queryByName(llAdapter);
+        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Intent intent = new Intent(LocationListActivity.this, MapActivity.class);
+            intent.putExtra("lat", 41.0);
+            intent.putExtra("long", -72.0);
+            startActivity(intent);
+        }
+
+        });
     }
 
     @Override
