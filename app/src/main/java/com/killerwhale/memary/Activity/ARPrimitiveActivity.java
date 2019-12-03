@@ -443,6 +443,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
             mOverflowButton.setVisibility(View.GONE);
         }
 
+
+
+
     }
 
     /**
@@ -561,8 +564,14 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
             // Update ARCore frame
             mFrame = mSession.update();
-            if (mAnchor == null) {
-                createAnchor();
+            //if (mAnchor == null) {
+            //    createAnchor();
+            //}
+            if (mAnchor == null){
+                mAnchor =  mSession.createAnchor(
+                        mFrame.getCamera().getPose()
+                                .compose(Pose.makeTranslation(0, 0, -1f))
+                                .extractTranslation());
             }
 
             // Notify the hostManager of all the anchor updates.
@@ -573,7 +582,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
             // Update tracking states
             mTrackingIndicator.setTrackingStates(mFrame, mAnchor);
-
+            if (mAnchor == null) {
+                createAnchor();
+            }
 
             if (mTrackingIndicator.trackingState == TrackingState.TRACKING && !bHasTracked.get()) {
                 bHasTracked.set(true);
@@ -1342,7 +1353,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                //mFrame = mSession.update();
+
                 Pose pose = mFrame.getCamera().getPose();
 
                 try {

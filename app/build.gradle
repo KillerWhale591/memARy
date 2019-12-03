@@ -26,14 +26,14 @@ android {
             applicationIdSuffix "sandbox"
             versionNameSuffix "-sandbox"
             buildConfigField "boolean", "GLOBAL", "true"
-            buildConfigField "boolean", "DEBUG", "true"
+            //buildConfigField "boolean", "DEBUG", "true"
             buildConfigField "boolean", "SHOW_NAVIGATION", "false"
             resValue "string", "ApiKey", API_KEY
         }
         production {
             dimension "mode"
             buildConfigField "boolean", "GLOBAL", "false"
-            buildConfigField "boolean", "DEBUG", "false"
+            //buildConfigField "boolean", "DEBUG", "false"
             buildConfigField "boolean", "SHOW_NAVIGATION", "true"
             resValue "string", "ApiKey", API_KEY
         }
@@ -56,10 +56,11 @@ dependencies {
     implementation 'com.facebook.fresco:fresco:1.13.0'
     implementation 'com.android.support:design:28.0.0'
 
-    implementation 'com.google.ar:core:1.2.0'
+    implementation 'com.google.ar:core:1.6.0'
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation 'com.uncorkedstudios.android:recordable-surfaceview:1.1.1'
     implementation 'com.google.android.gms:play-services-nearby:15.0.1'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
     implementation 'com.github.imperiumlabs:GeoFirestore-Android:v1.4.0'
     implementation 'com.airbnb.android:lottie:2.5.3'
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:8.4.0'
