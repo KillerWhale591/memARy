@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Notifications">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="notifications"
+            android:title="Enable Notifications" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="System">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="Orientation"
+            android:summaryOff="Bass will not be shown currently."
+            android:summaryOn="Bass will be shown currently."
+            android:title="Lock Portrait Mode" />
+    </PreferenceCategory>
+</PreferenceScreen>
