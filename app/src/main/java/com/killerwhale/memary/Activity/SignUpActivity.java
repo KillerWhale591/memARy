@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 
@@ -29,6 +30,13 @@ public class SignUpActivity extends AppCompatActivity {
     private EditText registerPassword;
     private Button btnRegister;
     private Button btnGoToLogin;
+    private ProgressBar progressRegister;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        btnGoToLogin.setAlpha(1f);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +49,7 @@ public class SignUpActivity extends AppCompatActivity {
         registerPassword = (EditText) findViewById(R.id.registerPassword);
         btnRegister = (Button) findViewById(R.id.btnRegister);
         btnGoToLogin = (Button) findViewById(R.id.btnGoToLogin);
+        progressRegister = (ProgressBar) findViewById(R.id.progressRegister);
 
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,15 +72,17 @@ public class SignUpActivity extends AppCompatActivity {
                     return;
                 }
 
+                progressRegister.setVisibility(View.VISIBLE);
                 mAuth.createUserWithEmailAndPassword(email, password)
                         .addOnCompleteListener(SignUpActivity.this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
+                                progressRegister.setVisibility(View.INVISIBLE);
                                 if (!task.isSuccessful()) {
                                     Toast.makeText(SignUpActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
                                 } else {
                                     Toast.makeText(SignUpActivity.this, "signed up successfully", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                                    Intent intent = new Intent(SignUpActivity.this, UserInfoActivity.class);
                                     startActivity(intent);
                                 }
                             }
@@ -82,6 +93,7 @@ public class SignUpActivity extends AppCompatActivity {
         btnGoToLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                btnGoToLogin.setAlpha(0.5f);
                 Intent intent = new Intent(SignUpActivity.this, SignInActivity.class);
                 startActivity(intent);
             }
