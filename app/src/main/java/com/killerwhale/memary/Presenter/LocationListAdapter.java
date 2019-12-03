@@ -104,7 +104,7 @@ public class LocationListAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return mLocation.get(position);
+        return mLocationModel.get(position).getGeoPoint();
     }
 
     @Override

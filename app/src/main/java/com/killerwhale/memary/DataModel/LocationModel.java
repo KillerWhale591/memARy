@@ -1,6 +1,7 @@
 package com.killerwhale.memary.DataModel;
 
 import android.location.Location;
+import android.widget.ListView;
 
 import com.google.firebase.firestore.GeoPoint;
 
@@ -65,5 +66,9 @@ public class LocationModel {
             dist = MINIMUM_DISTANCE;
         }
         return Float.valueOf(f.format(dist)) + SUFFIX_MILES;
+    }
+
+    public GeoPoint getGeoPoint() {
+        return geoPoint;
     }
 }
