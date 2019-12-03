@@ -146,6 +146,7 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
                         startActivity(new Intent(getBaseContext(), LocationListActivity.class));
                         break;
                     case R.id.action_profile:
+                        startActivity(new Intent(getBaseContext(), ProfileActivity.class));
                         break;
                     default:
                         Log.i(TAG, "Unhandled nav click");

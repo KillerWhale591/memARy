@@ -3,16 +3,15 @@
     <PreferenceCategory android:title="Notifications">
         <SwitchPreference
             android:defaultValue="true"
-            android:key="notifications"
+            android:key="notification"
             android:title="Enable Notifications" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="System">
         <CheckBoxPreference
             android:defaultValue="true"
-            android:key="Orientation"
-            android:summaryOff="Bass will not be shown currently."
-            android:summaryOn="Bass will be shown currently."
+            android:key="orientations"
+            android:summaryOn="Locked to Portrait."
             android:title="Lock Portrait Mode" />
     </PreferenceCategory>
 </PreferenceScreen>
