@@ -258,17 +258,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     .build());
         }
     }
-    private void setCameratoDesinatedLocation(double latititude, double longtitude){
-        double lat1= latititude;
-        double long1 = longtitude;
-        if(mapboxMap.getLocationComponent()!= null){
-            mapboxMap.setCameraPosition(new CameraPosition.Builder()
-                    .zoom(13)
-                    .target(new LatLng(lat1, long1))
-                    .bearing(0)
-                    .build());
-        }
-    }
+//    private void setCameratoDesinatedLocation(double latititude, double longtitude){
+//        double lat1= latititude;
+//        double long1 = longtitude;
+//        if(mapboxMap.getLocationComponent()!= null){
+//            mapboxMap.setCameraPosition(new CameraPosition.Builder()
+//                    .zoom(13)
+//                    .target(new LatLng(lat1, long1))
+//                    .bearing(0)
+//                    .build());
+//        }
+//    }
     /**
      * Get documents from database
      */
@@ -329,6 +329,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 cameraSource.setGeoJson(FeatureCollection.fromFeature(
                         Feature.fromGeometry(Point.fromLngLat(position.getLongitude(), position.getLatitude()))
                 ));
+
             }
         }
 
@@ -406,7 +407,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             final SymbolLayer selectedMarkerSymbolLayer =
                     (SymbolLayer) style.getLayer(SELECTED_MARKER_LAYER);
             final PointF pixel = mapboxMap.getProjection().toScreenLocation(point);
-            List<Feature> features = mapboxMap.queryRenderedFeatures(pixel, MARKER_STYLE_LAYER);
+            List<Feature> features = mapboxMap.queryRenderedFeatures(pixel, MARKER_STYLE_LAYER_LOCATION);
             List<Feature> selectedFeature = mapboxMap.queryRenderedFeatures(
                     pixel, SELECTED_MARKER_LAYER);
             if (selectedFeature.size() > 0 && markerSelected) {
@@ -419,7 +420,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 }
                 return false;
             }
-            GeoJsonSource source = style.getSourceAs(SELECTED_MARKER);
+            GeoJsonSource source = style.getSourceAs(SEARCH_IMAGE);
             if (source != null) {
                 source.setGeoJson(FeatureCollection.fromFeatures(
                         new Feature[]{Feature.fromGeometry(features.get(0).geometry())}));
@@ -430,6 +431,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
             if (features.size() > 0) {
                 selectMarker(selectedMarkerSymbolLayer);
+
             }
         }
         return true;
@@ -592,6 +594,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void selectMarker(final SymbolLayer iconLayer) {
+
+        iconLayer.setProperties(
+                PropertyFactory.iconImage(SEARCH_IMAGE)
+        );
         markerSelected = true;
     }
 
