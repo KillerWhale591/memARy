@@ -39,18 +39,6 @@ public class LocationListActivity extends AppCompatActivity {
         locationList = (ListView) findViewById(R.id.locationList);
         llAdapter = new LocationListAdapter(this.getBaseContext());
         locationList.setAdapter(llAdapter);
-        this.locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                GeoPoint geoPoint = (GeoPoint) parent.getItemAtPosition(position);
-                double lati = geoPoint.getLatitude();
-                double longti = geoPoint.getLongitude();
-                Intent i = new Intent(getBaseContext(), MapActivity.class);
-                i.putExtra("latitude", lati);
-                i.putExtra("longitude", longti);
-                startActivity(i);
-            }
-        });
 
         // Database init.
         db = FirebaseFirestore.getInstance();
@@ -88,15 +76,27 @@ public class LocationListActivity extends AppCompatActivity {
         });
         llAdapter.init();
         llAdapter.queryByName(llAdapter);
-        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Intent intent = new Intent(LocationListActivity.this, MapActivity.class);
-            intent.putExtra("lat", 41.0);
-            intent.putExtra("long", -72.0);
-            startActivity(intent);
-        }
-
+//        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+//        @Override
+//        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//            Intent intent = new Intent(LocationListActivity.this, MapActivity.class);
+//            intent.putExtra("lat", 41.0);
+//            intent.putExtra("long", -72.0);
+//            startActivity(intent);
+//        }
+//
+//        });
+        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                GeoPoint geoPoint = (GeoPoint) parent.getItemAtPosition(position);
+                double lati = geoPoint.getLatitude();
+                double longti = geoPoint.getLongitude();
+                Intent i = new Intent(getBaseContext(), MapActivity.class);
+                i.putExtra("lat", lati);
+                i.putExtra("long", longti);
+                startActivity(i);
+            }
         });
     }
 
