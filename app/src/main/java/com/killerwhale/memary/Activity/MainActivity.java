@@ -6,12 +6,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.killerwhale.memary.R;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -24,10 +28,24 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
     private Button btnSignInActivity;
     private Button btnSignUpActivity;
     private Button btnMapActivity;
+    private Button btnUserInfoActivity;
+    private Button btnProfileActivity;
+    private TextView txtUser;
     private PermissionsManager permissionsManager;
     private FirebaseAuth mAuth;
     private Button btnLocationList;
     private Button btnSplash;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if(currentUser == null){
+            txtUser.setText("User: null");
+        } else {
+            txtUser.setText("User: " + currentUser.getUid());
+        }
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -43,7 +61,10 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnSignInActivity = (Button) findViewById(R.id.btnSignInActivity);
         btnLocationList = (Button) findViewById(R.id.btnLocationList);
         btnMapActivity = (Button) findViewById(R.id.btnMapActivity);
+        btnUserInfoActivity = (Button) findViewById(R.id.btnUserInfoActivity);
+        txtUser = (TextView) findViewById(R.id.txtUser);
         btnSplash = findViewById(R.id.btnSplash);
+        btnProfileActivity = (Button) findViewById(R.id.btnProfileActivity);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,6 +116,22 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getBaseContext(), SplashActivity.class));
+            }
+        });
+
+        btnUserInfoActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), UserInfoActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnProfileActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ProfileActivity.class);
+                startActivity(intent);
             }
         });
 

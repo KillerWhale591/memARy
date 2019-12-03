@@ -42,6 +42,22 @@
         android:layout_alignParentRight="true"
         android:text="MapActivity" />
 
+    <TextView
+        android:id="@+id/txtUser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+
+    <Button
+        android:id="@+id/btnUserInfoActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnMapActivity"
+        android:layout_alignParentRight="true"
+        android:text="UserInfoActivity" />
+
     <Button
         android:id="@+id/btnLocationList"
         android:layout_width="wrap_content"
@@ -55,4 +71,12 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/btnLocationList"
         android:text="SplashActivity"/>
+
+    <Button
+        android:id="@+id/btnProfileActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnUserInfoActivity"
+        android:layout_alignParentRight="true"
+        android:text="ProfileActivity" />
 </RelativeLayout>
