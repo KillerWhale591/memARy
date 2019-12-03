@@ -325,7 +325,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         super.onResume();
 
 
-
         // ARCore requires camera permissions to operate. If we did not yet obtain runtime
         // permission on Android M and above, now is a good time to ask the user for it.
         if (PermissionHelper.hasRequiredPermissions(this)) {
