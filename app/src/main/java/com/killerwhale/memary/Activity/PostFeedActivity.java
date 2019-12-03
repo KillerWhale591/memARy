@@ -2,6 +2,8 @@ package com.killerwhale.memary.Activity;
 
 import android.content.Intent;
 import android.location.Location;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabItem;
 import android.support.design.widget.TabLayout;
@@ -10,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -47,6 +51,7 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
     private FirebaseFirestore db;
 
     // UI
+    BottomNavigationView navBar;
     SwipeRefreshLayout swipeRefreshLayout;
     RecyclerView postList;
     PostFeedAdapter rvAdapter;
@@ -77,6 +82,7 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
         tabRecent = findViewById(R.id.tabRecent);
         tabNearby = findViewById(R.id.tabNearby);
         postList = findViewById(R.id.postList);
+        navBar = findViewById(R.id.navBar);
         rvManager = new LinearLayoutManager(this);
         postList.setLayoutManager(rvManager);
         rvAdapter = new PostFeedAdapter(getBaseContext(), db, postList, this);
@@ -127,6 +133,27 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
             @Override
             public void onTabReselected(TabLayout.Tab tab) { }
         });
+        navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case R.id.action_map:
+                        startActivity(new Intent(getBaseContext(), MapActivity.class));
+                        break;
+                    case R.id.action_posts:
+                        break;
+                    case R.id.action_places:
+                        startActivity(new Intent(getBaseContext(), LocationListActivity.class));
+                        break;
+                    case R.id.action_profile:
+                        break;
+                    default:
+                        Log.i(TAG, "Unhandled nav click");
+
+                }
+                return true;
+            }
+        });
     }
 
     @Override
@@ -153,6 +180,12 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
                 }
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navBar.setSelectedItemId(R.id.action_posts);
     }
 
     @Override
