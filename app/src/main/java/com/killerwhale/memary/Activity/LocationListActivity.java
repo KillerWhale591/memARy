@@ -2,8 +2,11 @@ package com.killerwhale.memary.Activity;
 
 import android.content.Intent;
 import android.location.Location;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,8 +30,8 @@ public class LocationListActivity extends AppCompatActivity {
 
     private ListView locationList;
     private FirebaseFirestore db;
-
     private LocationListAdapter llAdapter;
+    BottomNavigationView navBar;
 
 
     @Override
@@ -39,6 +42,7 @@ public class LocationListActivity extends AppCompatActivity {
         locationList = (ListView) findViewById(R.id.locationList);
         llAdapter = new LocationListAdapter(this.getBaseContext());
         locationList.setAdapter(llAdapter);
+        navBar = findViewById(R.id.navBar);
 
         // Database init.
         db = FirebaseFirestore.getInstance();
@@ -48,6 +52,25 @@ public class LocationListActivity extends AppCompatActivity {
                 .build();
         db.setFirestoreSettings(settings);
 
+        navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                switch (menuItem.getItemId()) {
+                    case R.id.action_map:
+                        startActivity(new Intent(getBaseContext(), MapActivity.class));
+                        break;
+                    case R.id.action_posts:
+                        startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
+                        break;
+                    case R.id.action_profile:
+                        break;
+                    default:
+                        Log.i("nvBar", "Unhandled nav click");
+
+                }
+                return true;
+            }
+        });
     }
 
     @Override
@@ -98,6 +121,12 @@ public class LocationListActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navBar.setSelectedItemId(R.id.action_places);
     }
 
     @Override
