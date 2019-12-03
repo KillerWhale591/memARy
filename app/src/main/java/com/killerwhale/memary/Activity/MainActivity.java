@@ -146,6 +146,30 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
+        btnARActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnARDrawActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ARDrawActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btnARPrimitiveActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getBaseContext(), ARPrimitiveActivity.class);
+                startActivity(intent);
+            }
+        });
+
 
     }
     public void checkPermission(){
@@ -179,31 +203,6 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
             Toast.makeText(getApplicationContext(),"Permission not Granted yet", Toast.LENGTH_SHORT).show();
             finish();
         }
-
-
-        btnARActivity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getBaseContext(), ARActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btnARDrawActivity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getBaseContext(), ARDrawActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        btnARPrimitiveActivity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getBaseContext(), ARPrimitiveActivity.class);
-                startActivity(intent);
-            }
-        });
 
     }
 }
