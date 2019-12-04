@@ -147,6 +147,7 @@ public class Post {
      */
     public Map<String, Object> getHashMap() {
         Map<String, Object> map = new HashMap<>();
+        map.put(FIELD_UID, mUid);
         map.put(FIELD_TYPE, mType);
         map.put(FIELD_TEXT, mPostText);
         map.put(FIELD_IMAGE, mImageUrl);
