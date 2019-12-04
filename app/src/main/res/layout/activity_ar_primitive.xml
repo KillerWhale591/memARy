@@ -42,7 +42,7 @@
 
         <!-- Finding surfaces -->
 
-        <com.killerwhale.memary.ARComponent.View.DebugView
+        <com.killerwhale.memary.ARComponent.Utils.DebugView
             android:id="@+id/debug_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -52,7 +52,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <com.killerwhale.memary.ARComponent.View.BrushSelector
+        <com.killerwhale.memary.ARComponent.Utils.BrushSelector
             android:id="@+id/brush_selector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -125,7 +125,7 @@
 
     <!-- Sharing -->
 
-    <com.killerwhale.memary.ARComponent.View.TrackingIndicator
+    <com.killerwhale.memary.ARComponent.Utils.TrackingIndicator
         android:id="@+id/finding_surfaces_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

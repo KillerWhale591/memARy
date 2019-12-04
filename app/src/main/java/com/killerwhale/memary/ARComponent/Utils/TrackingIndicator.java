@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.killerwhale.memary.ARComponent.View;
+package com.killerwhale.memary.ARComponent.Utils;
 
 import android.content.Context;
 import android.os.Handler;
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by kaitlynanderson on 2/7/18.
- * Custom View for showing curly line while not tracking
+ * Custom Utils for showing curly line while not tracking
  */
 
 public class TrackingIndicator extends ConstraintLayout {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.killerwhale.memary.ARComponent.View;
+package com.killerwhale.memary.ARComponent.Utils;
 
 import android.animation.Animator;
 import android.content.Context;
@@ -22,9 +22,7 @@ import android.util.Pair;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.accessibility.AccessibilityEvent;
 
-import com.killerwhale.memary.ARSettings;
 import com.killerwhale.memary.R;
 
 /**

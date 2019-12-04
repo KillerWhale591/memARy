@@ -17,13 +17,11 @@ package com.killerwhale.memary.Activity;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Rect;
-import android.icu.util.Calendar;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -34,19 +32,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import com.arexperiments.justaline.analytics.Fa;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
-import com.killerwhale.memary.ARComponent.Rendering.AnchorRenderer;
-import com.killerwhale.memary.ARComponent.Rendering.BackgroundRenderer;
-import com.killerwhale.memary.ARComponent.Rendering.LineShaderRenderer;
-import com.killerwhale.memary.ARComponent.Rendering.LineUtils;
-import com.killerwhale.memary.ARComponent.Rendering.PointCloudRenderer;
-import com.killerwhale.memary.ARComponent.View.BrushSelector;
-import com.killerwhale.memary.ARComponent.View.ClearDrawingDialog;
-import com.killerwhale.memary.ARComponent.View.DebugView;
-import com.killerwhale.memary.ARComponent.View.ErrorDialog;
-//import com.arexperiments.justaline.view.RecordButton;
-import com.killerwhale.memary.ARComponent.View.TrackingIndicator;
+import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
+import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
+import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
+import com.killerwhale.memary.ARComponent.Renderer.LineUtils;
+import com.killerwhale.memary.ARComponent.Renderer.PointCloudRenderer;
+import com.killerwhale.memary.ARComponent.Utils.BrushSelector;
+import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
+import com.killerwhale.memary.ARComponent.Utils.DebugView;
+import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
+import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
@@ -57,13 +53,12 @@ import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.NotTrackingException;
-import com.killerwhale.memary.ARSettings;
+import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 import com.killerwhale.memary.BuildConfig;
 import com.killerwhale.memary.R;
-import com.killerwhale.memary.SessionHelper;
+import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -91,7 +86,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         ErrorDialog.Listener,ClearDrawingDialog.Listener{
 
     private static final String TAG = "ARPrimitiveActivity";
-    private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
     //private Fa mAnalytics;
@@ -375,9 +369,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 Log.i("ADD 3D Point", "Without Anchor");
             }
         }
-
-        // update firebase database
-        //mPairSessionManager.updateStroke(mStrokes.get(index));
         isDrawing = true;
     }
 
@@ -490,9 +481,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 }
             }
 
-//            for (int i = 0; i < mStrokes.size(); i++) {
-//                mStrokes.get(i).update();
-//            }
             boolean renderNeedsUpdate = false;
             for (Stroke stroke : mSharedStrokes.values()) {
                 if (stroke.update()) {
@@ -641,23 +629,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
     }
 
-    private void toggleOverflowMenu() {
-        if (mOverflowLayout.getVisibility() == View.VISIBLE) {
-            hideOverflowMenu();
-        } else {
-            showOverflowMenu();
-        }
-    }
-
-    private void showOverflowMenu() {
-
-    }
-
-    private void hideOverflowMenu() {
-    }
-
-
-
     /**
      * onClickClear handle showing an AlertDialog to clear the drawing
      */
@@ -734,34 +705,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         return !outRect.contains(x, y);
     }
 
-    private File createVideoOutputFile() {
-
-        File tempFile;
-
-        File dir = new File(getCacheDir(), "captures");
-
-        if (!dir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
-        }
-
-        Calendar c = Calendar.getInstance();
-
-        String filename = "JustALine_" +
-                c.get(Calendar.YEAR) + "-" +
-                (c.get(Calendar.MONTH) + 1) + "-" +
-                c.get(Calendar.DAY_OF_MONTH)
-                + "_" +
-                c.get(Calendar.HOUR_OF_DAY) +
-                c.get(Calendar.MINUTE) +
-                c.get(Calendar.SECOND);
-
-        tempFile = new File(dir, filename + ".mp4");
-
-        return tempFile;
-
-    }
-
     @Override
     public void onSurfaceDestroyed() {
         mBackgroundRenderer.clearGL();
@@ -836,8 +779,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
     @Override
     public void onClick(View v) {
-        boolean hideOverflow = true;
-        boolean hidePairToolTip = true;
         switch (v.getId()) {
             case R.id.menu_item_clear:
                 onClickClear();
@@ -854,63 +795,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
         }
         mBrushSelector.close();
-        if (hideOverflow) {
-            hideOverflowMenu();
-        }
-    }
-
-
-    /**
-     * Update views for the given mode
-     */
-    private void setMode(Mode mode) {
-        if (mMode != mode) {
-            mMode = mode;
-
-            switch (mMode) {
-                case DRAW:
-                    showView(mDrawUiContainer);
-                    showView(mTrackingIndicator);
-                    mTrackingIndicator.setDrawPromptEnabled(true);
-                    break;
-                case PAIR_ANCHOR_RESOLVING:
-                    hideView(mDrawUiContainer);
-                    mTrackingIndicator.setDrawPromptEnabled(false);
-                    showView(mTrackingIndicator);
-                    break;
-                case PAIR_PARTNER_DISCOVERY:
-                case PAIR_ERROR:
-                case PAIR_SUCCESS:
-                    hideView(mDrawUiContainer);
-                    hideView(mTrackingIndicator);
-                    mTrackingIndicator.setDrawPromptEnabled(false);
-                    break;
-            }
-        }
-    }
-
-    private void showView(View toShow) {
-        toShow.setVisibility(View.VISIBLE);
-        toShow.animate().alpha(1).start();
-    }
-
-    private void hideView(final View toHide) {
-        toHide.animate().alpha(0).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                toHide.setVisibility(View.GONE);
-            }
-        }).start();
-    }
-
-    public void enableView(View toEnable) {
-        toEnable.setEnabled(true);
-        toEnable.animate().alpha(1f);
-    }
-
-    public void disableView(View toDisable) {
-        toDisable.setEnabled(false);
-        toDisable.animate().alpha(.5f);
     }
 
     public void createAnchor() {
@@ -971,14 +855,12 @@ public class ARPrimitiveActivity extends ARBaseActivity
     }
 
     public void serializeStorkes(List<Stroke> mStrokes) throws IOException {
-        try{
-            //File outFile = new File(Environment.getExternalStorageDirectory(), "appSaveStroke.data");
-            //ObjectOutput out = new ObjectOutputStream(new FileOutputStream(outFile));
+        try {
             FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getApplicationContext().MODE_PRIVATE);
             ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
             out.writeObject(mStrokes);
             out.close();
-        }catch(IOException e){
+        } catch(IOException e) {
             e.printStackTrace();
         }
     }
@@ -996,7 +878,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         }
     }
 
-    public List<Stroke> fetchStrokes() throws IOException, ClassNotFoundException {
+    public List<Stroke> fetchStrokes() {
         try{
             FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
             ObjectInputStream in = new ObjectInputStream(fileInputStream);

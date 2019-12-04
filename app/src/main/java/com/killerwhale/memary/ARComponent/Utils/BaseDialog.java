@@ -12,7 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package com.killerwhale.memary.ARComponent.Utils;
+
+import android.app.Activity;
+import android.app.DialogFragment;
+
 /**
- * This package contains classes that do the rendering for this example.
+ * Created by Kat on 3/21/18.
  */
-package com.killerwhale.memary.ARComponent.Rendering;
+
+public class BaseDialog extends DialogFragment {
+
+    public void show(Activity activity) {
+        // Show the dialog.
+        show(activity.getFragmentManager(), null);
+    }
+}

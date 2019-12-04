@@ -7,7 +7,7 @@
         android:layout_height="wrap_content">
 
 
-    <com.killerwhale.memary.ARComponent.View.DrawPrompt
+    <com.killerwhale.memary.ARComponent.Utils.DrawPrompt
             android:id="@+id/draw_prompt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

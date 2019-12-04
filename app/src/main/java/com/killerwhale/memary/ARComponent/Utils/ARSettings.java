@@ -27,7 +27,7 @@
  * limitations under the License.
  */
 
-package com.killerwhale.memary;
+package com.killerwhale.memary.ARComponent.Utils;
 
 import javax.vecmath.Vector3f;
 

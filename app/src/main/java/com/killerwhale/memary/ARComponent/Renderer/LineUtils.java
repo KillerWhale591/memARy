@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.killerwhale.memary.ARComponent.Rendering;
+package com.killerwhale.memary.ARComponent.Renderer;
 
 import android.opengl.Matrix;
 
-import com.killerwhale.memary.ARSettings;
+import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 import com.killerwhale.memary.ARComponent.Model.Ray;
 import com.google.ar.core.Pose;
 
