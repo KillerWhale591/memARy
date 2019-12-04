@@ -129,9 +129,8 @@ public class PostPresenter {
                             }
                             if (refresh) {
                                 adapter.updateAndStopRefresh();
-                            } else {
-                                adapter.updateView();
                             }
+                            addUserInfo(adapter);
                             // Construct a new query starting at this document,
                             // get the next 10 posts.
                             DocumentSnapshot lastVisible = documents.get(queryDocumentSnapshots.size() - 1);
@@ -171,9 +170,8 @@ public class PostPresenter {
                                     }
                                     if (refresh) {
                                         adapter.updateAndStopRefresh();
-                                    } else {
-                                        adapter.updateView();
                                     }
+                                    addUserInfo(adapter);
                                     allGeoQuery = query;
                                     DocumentSnapshot last = documents
                                             .get(queryDocumentSnapshots.size() - 1);
@@ -185,6 +183,10 @@ public class PostPresenter {
         }
     }
 
+    /**
+     * Load 10 more posts by recent time
+     * @param adapter adapter
+     */
     private void loadMoreByTime(final PostFeedAdapter adapter) {
         if (nextTimeQuery != null) {
             nextTimeQuery.get()
@@ -198,7 +200,7 @@ public class PostPresenter {
                                     Post post = new Post(document.getData());
                                     mPosts.add(post);
                                 }
-                                adapter.updateView();
+                                addUserInfo(adapter);
                                 // Construct a new query starting at this document,
                                 // get the next 10 posts.
                                 DocumentSnapshot lastVisible = queryDocumentSnapshots.getDocuments()
@@ -213,6 +215,10 @@ public class PostPresenter {
         }
     }
 
+    /**
+     * Load 10 more posts by nearby
+     * @param adapter adapter
+     */
     private void loadMoreByDistance(final PostFeedAdapter adapter) {
         if (nextGeoQuery != null) {
             nextGeoQuery.get()
@@ -227,7 +233,7 @@ public class PostPresenter {
                                     Post post = new Post(document.getData());
                                     mPosts.add(post);
                                 }
-                                adapter.updateView();
+                                addUserInfo(adapter);
                                 DocumentSnapshot last = documents.get(queryDocumentSnapshots.size() - 1);
                                 nextGeoQuery = allGeoQuery.startAfter(last).limit(LIMIT_POST);
                             }
@@ -237,28 +243,30 @@ public class PostPresenter {
     }
 
     /**
-     * Attach user information to a post and add to post list
-     * @param post Post model
+     * Add username and avatar to a post and update view
+     * @param adapter adapter
      */
-    private void addPost(final Post post) {
-        String uid = post.getUid();
-        if (uid != null) {
-            DocumentReference userRef = mDatabase.collection("users").document(uid);
-            userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot doc = task.getResult();
-                        if (doc != null) {
-                            String username = (String) doc.get(User.FIELD_USERNAME);
-                            String avatar = (String) doc.get(User.FIELD_AVATAR);
-                            post.setUsername(username);
-                            post.setAvatar(avatar);
-                            mPosts.add(post);
+    private void addUserInfo(final PostFeedAdapter adapter) {
+        for (final Post post : mPosts) {
+            String uid = post.getUid();
+            if (uid != null) {
+                DocumentReference userRef = mDatabase.collection("users").document(uid);
+                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc != null) {
+                                String username = (String) doc.get(User.FIELD_USERNAME);
+                                String avatar = (String) doc.get(User.FIELD_AVATAR);
+                                post.setUsername(username);
+                                post.setAvatar(avatar);
+                                adapter.updateView();
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         }
     }
 }
