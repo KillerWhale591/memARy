@@ -1,6 +1,5 @@
 package com.killerwhale.memary.Activity;
 
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,7 +11,6 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,7 +26,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.CollectionReference;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.killerwhale.memary.R;
 
@@ -94,11 +91,7 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.opencsv.CSVReader;
 
-import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -114,8 +107,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
     private static final int  ZOOM_THRESHOLD = 9;
-    private static final String SELECTED_MARKER = "selected-marker";
-    private static final String SELECTED_MARKER_LAYER = "selected-marker-layer";
     private static final String MARKER_SOURCE_LOCATION = "markers-source-location";
     private static final String CIRCLE_LAYER_ID_LOCATION ="circle-location" ;
     private static final String MARKER_STYLE_LAYER_LOCATION = "markers-style-layer-location";
@@ -138,7 +129,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private FloatingActionButton fabTogglePostLocation;
     private MapboxMap mapboxMap;
     private MapView mapView;
-    private boolean markerSelected = false;
     private int displayMarkerType = 0;// 0 = post, 1 = location
     private FirebaseFirestore db;
     private CollectionReference  mLocRef;
@@ -185,7 +175,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         mLocRef = db.collection("location");
         mPostRef = db.collection("posts");
-        Log.d("Tag1",mLocRef.getPath());
+//        Log.d("Tag1",mLocRef.getPath());
 
         mapView = findViewById(R.id.mapView);
         fabCenterCamera = (FloatingActionButton)findViewById(R.id.fabCenterCam);
@@ -218,7 +208,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 cameralong = intent.getDoubleExtra("long", 0);
                 if(cameralat != 0 || cameralong != 0) {
                     updateMarkerPosition(new LatLng(cameralat, cameralong));
-                    Log.d("gg", "onStyleLoaded: Success");
+//                    Log.d("gg", "onStyleLoaded: Success");
                 }
                 addHeatmapLayer(style);
                 addCircleLayer(style);
@@ -529,20 +519,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      */
     private boolean handleClickIcon(PointF screenPoint) {
         List<Feature> features = mapboxMap.queryRenderedFeatures(screenPoint, MARKER_STYLE_LAYER_LOCATION);
-        Log.i("gg", String.valueOf(features.isEmpty()));
+//        Log.i("gg", String.valueOf(features.isEmpty()));
         if (!features.isEmpty()) {
             String name = features.get(0).getStringProperty("name");
-            Log.i("ggg", name);
+//            Log.i("ggg", name);
             List<Feature> featureList = featureCollection.features();
             if (featureList != null) {
                 for (int i = 0; i < featureList.size(); i++) {
                     if (featureList.get(i).getStringProperty("name").equals(name)) {
-                        Log.i("ggg", String.valueOf(featureSelectStatus(i)));
+//                        Log.i("ggg", String.valueOf(featureSelectStatus(i)));
                         if (featureSelectStatus(i)) {
                             setFeatureSelectState(featureList.get(i), false);
                         } else {
                             setSelected(i);
-                            Log.i("ggg", String.valueOf(featureSelectStatus(i)));
+//                            Log.i("ggg", String.valueOf(featureSelectStatus(i)));
                         }
                     }
                 }
@@ -621,15 +611,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         iconSize(0.07f)
                         ));
 
-// Adjust the second number of the Float array based on the height of your marker image.
-// This is because the bottom of the marker should be ancon
-        loadedMapStyle.addLayer(new SymbolLayer(SELECTED_MARKER_LAYER, SELECTED_MARKER)
-                .withProperties(PropertyFactory.iconImage(MARKER_IMAGE),
-                        iconOffset(new Float[]{0f, -70f}),
-                        iconSize(0.10f),
-                        visibility(NONE),
-                        iconAllowOverlap(true)));
-
     }
     private void initMarkerPosition(@NonNull Style loadedMapStyle){
         Log.d("Hello", "Hello");
@@ -642,7 +623,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     mPostLocations.get(i).getLatitude())));
         }
         loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
-        loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
 //        List<Feature> featureLocation = new ArrayList<>();
 //        for (int i = 0; i < mLocations.size(); i++) {
 //            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(mLocations.get(i).getLongitude(),
