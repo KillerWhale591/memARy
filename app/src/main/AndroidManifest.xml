@@ -50,7 +50,7 @@
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name=".Activity.ARPrimitiveActivity"
+            android:name=".Activity.ARActivity"
             android:screenOrientation="portrait">
         </activity>
         <activity android:name=".Activity.LocationListActivity" />

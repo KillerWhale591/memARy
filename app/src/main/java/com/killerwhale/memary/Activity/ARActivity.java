@@ -43,23 +43,11 @@ import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
 
+
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-//import com.arexperiments.justaline.analytics.Fa;
-import com.killerwhale.memary.ARComponent.Model.Stroke;
-import com.killerwhale.memary.ARComponent.Rendering.AnchorRenderer;
-import com.killerwhale.memary.ARComponent.Rendering.BackgroundRenderer;
-import com.killerwhale.memary.ARComponent.Rendering.LineShaderRenderer;
-import com.killerwhale.memary.ARComponent.Rendering.LineUtils;
-import com.killerwhale.memary.ARComponent.Rendering.PointCloudRenderer;
-import com.killerwhale.memary.ARComponent.View.BrushSelector;
-import com.killerwhale.memary.ARComponent.View.ClearDrawingDialog;
-import com.killerwhale.memary.ARComponent.View.DebugView;
-import com.killerwhale.memary.ARComponent.View.ErrorDialog;
-//import com.arexperiments.justaline.view.RecordButton;
-import com.killerwhale.memary.ARComponent.View.TrackingIndicator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -84,11 +72,11 @@ import javax.vecmath.Vector3f;
  * This is a basic implementation of Offline AR functions
  */
 
-public class ARPrimitiveActivity extends ARBaseActivity
+public class ARActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
         ErrorDialog.Listener,ClearDrawingDialog.Listener{
 
-    private static final String TAG = "ARPrimitiveActivity";
+    private static final String TAG = "ARActivity";
     private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
     private static final int TOUCH_QUEUE_SIZE = 10;
 
@@ -106,8 +94,13 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private AnchorRenderer cloudAnchorRenderer;
     private TrackingIndicator mTrackingIndicator;
     private Button btnSave;
+    private ImageButton
     private Button btnLoad;
-    private Button btnClear;
+    private ImageButton btnClear;
+    private View mUndoButton;
+    private View mDrawUiContainer;
+    private View mOverflowButton;
+    private TextView mPairActiveView;
     private DebugView mDebugView;
 
     private Frame mFrame;
@@ -145,7 +138,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ar_primitive);
+        setContentView(R.layout.activity_ar);
 
         // Debug view
         if (BuildConfig.DEBUG) {
@@ -159,13 +152,15 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mSurfaceView = findViewById(R.id.surfaceview);
         mSurfaceView.setRendererCallbacks(this);
 
-        btnSave = findViewById(R.id.btnSave);
-        btnLoad = findViewById(R.id.btnLoad);
+        //btnLoad = findViewById(R.id.btnLoad);
         btnClear = findViewById(R.id.btnClear);
 
         btnSave.setOnClickListener(this);
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
+
+        mUndoButton = findViewById(R.id.btnUndo);
+        
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
 
@@ -708,7 +703,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mBackgroundRenderer.createOnGlThread(this);
         mSession.setCameraTextureName(mBackgroundRenderer.getTextureId());
         try {
-            mLineShaderRenderer.createOnGlThread(ARPrimitiveActivity.this);
+            mLineShaderRenderer.createOnGlThread(ARActivity.this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -733,6 +728,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                mUndoButton.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                btnClear.setVisibility(
+                        (mStrokes.size() > 0 || mSharedStrokes.size() > 0) ? View.VISIBLE
+                                : View.GONE);
                 mTrackingIndicator.setHasStrokes(mStrokes.size() > 0);
             }
         });
@@ -749,9 +748,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         switch (v.getId()) {
             case R.id.btnClear:
                 onClickClear();
-                break;
-            case R.id.btnLoad:
-                loadStrokes();
                 break;
             case R.id.btnSave:
                 saveStrokes();
@@ -834,7 +830,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
     public void saveStrokes(){
         try {
             serializeStorkes(mStrokes);
-            Toast.makeText(ARPrimitiveActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
+            Toast.makeText(ARActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
             Log.i("Checkpointer", "Saved!");
         }
         catch (IOException e){
