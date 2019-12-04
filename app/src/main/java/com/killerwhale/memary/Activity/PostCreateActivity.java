@@ -26,6 +26,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -67,6 +69,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private StorageReference mImagesRef;
     private CollectionReference mPostRef;
     private GeoFirestore geoFirestore;
+    private String mUid = "";
 
     // Location
     private Location mLocation;
@@ -98,6 +101,10 @@ public class PostCreateActivity extends AppCompatActivity {
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
         mPostRef = db.collection("posts");
         geoFirestore = new GeoFirestore(mPostRef);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            mUid = user.getUid();
+        }
 
         // Location
         Intent i = getIntent();
@@ -334,7 +341,7 @@ public class PostCreateActivity extends AppCompatActivity {
         final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
         Timestamp time = new Timestamp(Calendar.getInstance().getTime());
         // Create a new post
-        Post newPost = new Post(type, text, remoteUrl, geo, time);
+        Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
         Map<String, Object> post = newPost.getHashMap();
         if (db != null) {
             db.collection("posts")

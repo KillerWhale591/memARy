@@ -12,6 +12,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
@@ -24,6 +28,9 @@ import java.util.Calendar;
  * @author Zeyu Fu
  */
 public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostViewHolder> {
+
+    private static final String FIELD_USERNAME = "username";
+    private static final String FIELD_AVATAR = "avatar";
 
     private Context context;
     private OnRefreshCompleteListener refreshCompleteListener;
@@ -106,6 +113,13 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         // Set distance
         String distance = posts.get(position).getDistance(mLocation);
         postViewHolder.txtDistance.setText(distance);
+        // Set user info
+        String username = posts.get(position).getUsername();
+        String avatar = posts.get(position).getAvatar();
+        postViewHolder.txtUsername.setText(username);
+        if (avatar != null) {
+            postViewHolder.imgAvatar.setImageURI(Uri.parse(avatar));
+        }
     }
 
     @Override
