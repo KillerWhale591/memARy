@@ -294,7 +294,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-                List<Feature> features = new ArrayList<>();
+                List<Feature> featureLocation = new ArrayList<>();
+
+
+                HashMap<String, Bitmap> imagesMap = new HashMap<>();
+                LayoutInflater inflater = LayoutInflater.from(getApplicationContext()); //这里可能错
+
+
 
                 if (documents.size() > 0) {
                     for (DocumentSnapshot document : documents) {
@@ -304,38 +310,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             l.setLatitude(geoPoint.getLatitude());
                             l.setLongitude(geoPoint.getLongitude());
                             mPostLocations.add(l);
-                            features.add(Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),geoPoint.getLatitude())));
-                        }
-                    }
-                }
-                loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
-                loadedMapStyle.addSource(new GeoJsonSource(SELECTED_MARKER));
-            }
-        });
-    }
-    private void initPost(@NonNull final Style loadedMapStyle) {
-        mPostRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-                List<Feature> featureLocation = new ArrayList<>();
-
-
-                HashMap<String, Bitmap> imagesMap = new HashMap<>();
-                LayoutInflater inflater = LayoutInflater.from(getApplicationContext()); //这里可能错
-
-
-                if (documents.size() > 0) {
-                    for (DocumentSnapshot document : documents) {
-                        Location l = new Location(document.getId());
-                        GeoPoint geoPoint = document.getGeoPoint("location");
-                        if(geoPoint != null) {
-                            l.setLatitude(geoPoint.getLatitude());
-                            l.setLongitude(geoPoint.getLongitude());
-                            mLocations.add(l);
                             Feature currFeature = Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),geoPoint.getLatitude()));
 
-                            String name = document.getString("text");
+                            String name = document.getString("name");
                             currFeature.addStringProperty("name", name);
                             currFeature.addBooleanProperty(PROPERTY_SELECTED, false);
 
@@ -344,7 +321,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
                             BubbleLayout bubbleLayout = (BubbleLayout) inflater.inflate(R.layout.symbol_layer_info_window_layout_callout, null);
-                            String address = document.getString("text");
+                            String address = document.getString("address");
                             TextView titleTextView = bubbleLayout.findViewById(R.id.info_window_title);
                             titleTextView.setText(name);
                             TextView descriptionTextView = bubbleLayout.findViewById(R.id.info_window_description);
@@ -361,13 +338,36 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
                         }
                     }
-                    Log.d("dd", "onSucces" + featureLocation.size());
-                    featureCollection = FeatureCollection.fromFeatures(featureLocation);
-                    source = new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation));
-                    loadedMapStyle.addSource(source);
-                    Log.i("gg", String.valueOf(featureLocation.size()));
-                    Log.i("gg", String.valueOf(imagesMap.keySet().size()));
-                    loadedMapStyle.addImages(imagesMap);
+                }
+                source = new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation));
+                featureCollection = FeatureCollection.fromFeatures(featureLocation);
+                loadedMapStyle.addSource(source);
+//                    Log.i("gg", String.valueOf(featureLocation.size()));
+//                    Log.i("gg", String.valueOf(imagesMap.keySet().size()));
+                loadedMapStyle.addImages(imagesMap);
+            }
+        });
+    }
+    private void initPost(@NonNull final Style loadedMapStyle) {
+        mPostRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                List<Feature> featureLocation = new ArrayList<>();
+                if (documents.size() > 0) {
+                    for (DocumentSnapshot document : documents) {
+                        Location l = new Location(document.getId());
+                        GeoPoint geoPoint = document.getGeoPoint("location");
+                        if(geoPoint != null) {
+                            l.setLatitude(geoPoint.getLatitude());
+                            l.setLongitude(geoPoint.getLongitude());
+                            mLocations.add(l);
+                            Feature currFeature = Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),geoPoint.getLatitude()));
+                            featureLocation.add(currFeature);
+                        }
+                    }
+//                    Log.d("dd", "onSucces" + featureLocation.size());
+                    loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(featureLocation)));
                 }
             }
         });
@@ -513,39 +513,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //Step 5; enable clickable symbol( marker)
     @Override
     public boolean onMapClick(@NonNull LatLng point) {
-//        Style style = mapboxMap.getStyle();
-//        if (style != null) {
-//            final SymbolLayer selectedMarkerSymbolLayer =
-//                    (SymbolLayer) style.getLayer(SELECTED_MARKER_LAYER);
-//            final PointF pixel = mapboxMap.getProjection().toScreenLocation(point);
-//            List<Feature> features = mapboxMap.queryRenderedFeatures(pixel, MARKER_STYLE_LAYER_LOCATION);
-//            List<Feature> selectedFeature = mapboxMap.queryRenderedFeatures(
-//                    pixel, SELECTED_MARKER_LAYER);
-//            if (selectedFeature.size() > 0 && markerSelected) {
-//                return false;
-//            }
-//
-//            if (features.isEmpty()) {
-//                if (markerSelected) {
-//                    deselectMarker(selectedMarkerSymbolLayer);
-//                }
-//                return false;
-//            }
-//            GeoJsonSource source = style.getSourceAs(SEARCH_IMAGE);
-//            if (source != null) {
-//                source.setGeoJson(FeatureCollection.fromFeatures(
-//                        new Feature[]{Feature.fromGeometry(features.get(0).geometry())}));
-//            }
-//
-//            if (markerSelected) {
-//                deselectMarker(selectedMarkerSymbolLayer);
-//            }
-//            if (features.size() > 0) {
-//                selectMarker(selectedMarkerSymbolLayer);
-//
-//            }
-//        }
-//        return true;
         return handleClickIcon(mapboxMap.getProjection().toScreenLocation(point));
     }
 
@@ -565,6 +532,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.i("gg", String.valueOf(features.isEmpty()));
         if (!features.isEmpty()) {
             String name = features.get(0).getStringProperty("name");
+            Log.i("ggg", name);
             List<Feature> featureList = featureCollection.features();
             if (featureList != null) {
                 for (int i = 0; i < featureList.size(); i++) {
