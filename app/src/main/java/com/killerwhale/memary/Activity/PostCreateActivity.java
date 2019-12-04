@@ -30,6 +30,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
@@ -37,6 +38,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
+import com.killerwhale.memary.DataModel.User;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
@@ -104,6 +106,25 @@ public class PostCreateActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             mUid = user.getUid();
+            if (!mUid.isEmpty()) {
+                DocumentReference userRef = db.collection("users").document(mUid);
+                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc != null) {
+                                String avatar = (String) doc.get(User.FIELD_AVATAR);
+                                if (avatar != null) {
+                                    SimpleDraweeView icAvatar = findViewById(R.id.icAvatar);
+                                    icAvatar.setImageURI(Uri.parse(avatar));
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
         }
 
         // Location

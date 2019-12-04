@@ -66,6 +66,7 @@
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
             fresco:placeholderImage="@drawable/placeholder_avatar"
+            fresco:roundAsCircle="true"
             fresco:viewAspectRatio="1"/>
 
         <RelativeLayout

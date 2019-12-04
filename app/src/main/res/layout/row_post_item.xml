@@ -17,6 +17,7 @@
         android:paddingBottom="10dp"
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
+        fresco:roundAsCircle="true"
         fresco:placeholderImage="@drawable/placeholder_avatar"
         fresco:viewAspectRatio="1"/>
 
