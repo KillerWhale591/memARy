@@ -3,7 +3,9 @@ package com.killerwhale.memary.Activity;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.location.Location;
@@ -14,6 +16,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
@@ -24,10 +27,13 @@ import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.CollectionReference;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.killerwhale.memary.R;
 
+import static com.mapbox.mapboxsdk.style.expressions.Expression.eq;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.heatmapDensity;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.interpolate;
 
@@ -41,6 +47,7 @@ import static com.mapbox.mapboxsdk.style.expressions.Expression.step;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.zoom;
 
+import static com.mapbox.mapboxsdk.style.layers.Property.ICON_ANCHOR_BOTTOM;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
@@ -53,6 +60,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapOpacity;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.heatmapRadius;
 
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAnchor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconImage;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconOffset;
@@ -61,6 +69,7 @@ import static com.mapbox.mapboxsdk.style.layers.Property.VISIBLE;
 import static com.mapbox.mapboxsdk.style.layers.Property.NONE;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility;
 
+import com.mapbox.mapboxsdk.annotations.BubbleLayout;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.location.LocationComponent;
@@ -88,13 +97,16 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.opencsv.CSVReader;
 
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, MapboxMap.OnMapClickListener{
+
     private static final String CIRCLE_LAYER_ID = "circle";
     private static final String MARKER_SOURCE = "markers-source";
     private static final String MARKER_STYLE_LAYER = "markers-style-layer";
@@ -116,6 +128,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String SEARCH_MARKER_LAYER = "search-marker-layer";
     private static final String CAMERA_LOCATION_SOURCE ="camera-location-source" ;
     private static final String CAMERA_LOCATION_LAYER = "camera-location-layer";
+
+    private static final String INFO_WINDOW_LAYER = "info-window-layer";
+    private static final String PROPERTY_SELECTED = "selected";
+    private FeatureCollection featureCollection;
+    private GeoJsonSource source;
 
     private FloatingActionButton fabCenterCamera;
     private FloatingActionButton fabTogglePostLocation;
@@ -208,6 +225,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 addCircleLayerLocation(style);
                 addPostMarkers(style);
                 addLocationMarkers(style);
+                setUpInfoWindowLayer(style);
                 style.addImage(SEARCH_IMAGE, BitmapFactory.decodeResource(
                         MapActivity.this.getResources(), R.drawable.blue_marker_view));
                 setupSearchSource(style);
@@ -286,7 +304,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             l.setLatitude(geoPoint.getLatitude());
                             l.setLongitude(geoPoint.getLongitude());
                             mPostLocations.add(l);
-                            features.add(Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),(geoPoint.getLatitude()))));
+                            features.add(Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),geoPoint.getLatitude())));
                         }
                     }
                 }
@@ -301,6 +319,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
                 List<Feature> featureLocation = new ArrayList<>();
+
+
+                HashMap<String, Bitmap> imagesMap = new HashMap<>();
+                LayoutInflater inflater = LayoutInflater.from(getApplicationContext()); //这里可能错
+
+
                 if (documents.size() > 0) {
                     for (DocumentSnapshot document : documents) {
                         Location l = new Location(document.getId());
@@ -309,15 +333,75 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             l.setLatitude(geoPoint.getLatitude());
                             l.setLongitude(geoPoint.getLongitude());
                             mLocations.add(l);
-                            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),(geoPoint.getLatitude()))));
+                            Feature currFeature = Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),geoPoint.getLatitude()));
+
+                            String name = document.getString("text");
+                            currFeature.addStringProperty("name", name);
+                            currFeature.addBooleanProperty(PROPERTY_SELECTED, false);
+
+
+                            featureLocation.add(currFeature);
+
+
+                            BubbleLayout bubbleLayout = (BubbleLayout) inflater.inflate(R.layout.symbol_layer_info_window_layout_callout, null);
+                            String address = document.getString("text");
+                            TextView titleTextView = bubbleLayout.findViewById(R.id.info_window_title);
+                            titleTextView.setText(name);
+                            TextView descriptionTextView = bubbleLayout.findViewById(R.id.info_window_description);
+                            descriptionTextView.setText(address);
+                            int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+                            bubbleLayout.measure(measureSpec, measureSpec);
+                            float measuredWidth = bubbleLayout.getMeasuredWidth();
+                            bubbleLayout.setArrowPosition(measuredWidth / 2 - 5);
+                            Bitmap bitmap = SymbolGenerator.generate(bubbleLayout);
+                            imagesMap.put(name, bitmap);
+
+
+
+
                         }
                     }
                     Log.d("dd", "onSucces" + featureLocation.size());
-                    loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
+                    featureCollection = FeatureCollection.fromFeatures(featureLocation);
+                    source = new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation));
+                    loadedMapStyle.addSource(source);
+                    Log.i("gg", String.valueOf(featureLocation.size()));
+                    Log.i("gg", String.valueOf(imagesMap.keySet().size()));
+                    loadedMapStyle.addImages(imagesMap);
                 }
             }
         });
     }
+
+    /**
+     * Utility class to generate Bitmaps for Symbol.
+     */
+    private static class SymbolGenerator {
+
+        /**
+         * Generate a Bitmap from an Android SDK View.
+         *
+         * @param view the View to be drawn to a Bitmap
+         * @return the generated bitmap
+         */
+        static Bitmap generate(@NonNull View view) {
+            int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+            view.measure(measureSpec, measureSpec);
+
+            int measuredWidth = view.getMeasuredWidth();
+            int measuredHeight = view.getMeasuredHeight();
+
+            view.layout(0, 0, measuredWidth, measuredHeight);
+            Bitmap bitmap = Bitmap.createBitmap(measuredWidth, measuredHeight, Bitmap.Config.ARGB_8888);
+            bitmap.eraseColor(Color.TRANSPARENT);
+            Canvas canvas = new Canvas(bitmap);
+            view.draw(canvas);
+            return bitmap;
+        }
+    }
+
+
+
     private void updateMarkerPosition(LatLng position) {
 // This method is were we update the marker position once we have new coordinates. First we
 // check if this is the first time we are executing this handler, the best way to do this is
@@ -336,6 +420,34 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 // wont have to search for the marker and then return.
         mapboxMap.animateCamera(CameraUpdateFactory.newLatLng(position));
     }
+
+
+
+    /**
+     * Setup a layer with Android SDK call-outs
+     * <p>
+     * name of the feature is used as key for the iconImage
+     * </p>
+     */
+    private void setUpInfoWindowLayer(@NonNull Style loadedStyle) {
+        loadedStyle.addLayer(new SymbolLayer(INFO_WINDOW_LAYER, MARKER_SOURCE_LOCATION)
+                .withProperties(
+                        /* show image with id title based on the value of the name feature property */
+                        iconImage("{name}"),
+
+                        /* set anchor of icon to bottom-left */
+                        iconAnchor(ICON_ANCHOR_BOTTOM),
+
+                        /* all info window and marker image to appear at the same time*/
+                        iconAllowOverlap(true),
+
+                        /* offset the info window to be above the marker */
+                        iconOffset(new Float[] {-2f, -28f})
+                )
+                /* add a filter to show only when selected feature property is true */
+                .withFilter(eq((get(PROPERTY_SELECTED)), literal(true))));
+    }
+
 
 
 
@@ -401,40 +513,129 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //Step 5; enable clickable symbol( marker)
     @Override
     public boolean onMapClick(@NonNull LatLng point) {
-        Style style = mapboxMap.getStyle();
-        if (style != null) {
-            final SymbolLayer selectedMarkerSymbolLayer =
-                    (SymbolLayer) style.getLayer(SELECTED_MARKER_LAYER);
-            final PointF pixel = mapboxMap.getProjection().toScreenLocation(point);
-            List<Feature> features = mapboxMap.queryRenderedFeatures(pixel, MARKER_STYLE_LAYER_LOCATION);
-            List<Feature> selectedFeature = mapboxMap.queryRenderedFeatures(
-                    pixel, SELECTED_MARKER_LAYER);
-            if (selectedFeature.size() > 0 && markerSelected) {
-                return false;
-            }
-
-            if (features.isEmpty()) {
-                if (markerSelected) {
-                    deselectMarker(selectedMarkerSymbolLayer);
-                }
-                return false;
-            }
-            GeoJsonSource source = style.getSourceAs(SEARCH_IMAGE);
-            if (source != null) {
-                source.setGeoJson(FeatureCollection.fromFeatures(
-                        new Feature[]{Feature.fromGeometry(features.get(0).geometry())}));
-            }
-
-            if (markerSelected) {
-                deselectMarker(selectedMarkerSymbolLayer);
-            }
-            if (features.size() > 0) {
-                selectMarker(selectedMarkerSymbolLayer);
-
-            }
-        }
-        return true;
+//        Style style = mapboxMap.getStyle();
+//        if (style != null) {
+//            final SymbolLayer selectedMarkerSymbolLayer =
+//                    (SymbolLayer) style.getLayer(SELECTED_MARKER_LAYER);
+//            final PointF pixel = mapboxMap.getProjection().toScreenLocation(point);
+//            List<Feature> features = mapboxMap.queryRenderedFeatures(pixel, MARKER_STYLE_LAYER_LOCATION);
+//            List<Feature> selectedFeature = mapboxMap.queryRenderedFeatures(
+//                    pixel, SELECTED_MARKER_LAYER);
+//            if (selectedFeature.size() > 0 && markerSelected) {
+//                return false;
+//            }
+//
+//            if (features.isEmpty()) {
+//                if (markerSelected) {
+//                    deselectMarker(selectedMarkerSymbolLayer);
+//                }
+//                return false;
+//            }
+//            GeoJsonSource source = style.getSourceAs(SEARCH_IMAGE);
+//            if (source != null) {
+//                source.setGeoJson(FeatureCollection.fromFeatures(
+//                        new Feature[]{Feature.fromGeometry(features.get(0).geometry())}));
+//            }
+//
+//            if (markerSelected) {
+//                deselectMarker(selectedMarkerSymbolLayer);
+//            }
+//            if (features.size() > 0) {
+//                selectMarker(selectedMarkerSymbolLayer);
+//
+//            }
+//        }
+//        return true;
+        return handleClickIcon(mapboxMap.getProjection().toScreenLocation(point));
     }
+
+
+
+
+    /**
+     * This method handles click events for SymbolLayer symbols.
+     * <p>
+     * When a SymbolLayer icon is clicked, we moved that feature to the selected state.
+     * </p>
+     *
+     * @param screenPoint the point on screen clicked
+     */
+    private boolean handleClickIcon(PointF screenPoint) {
+        List<Feature> features = mapboxMap.queryRenderedFeatures(screenPoint, MARKER_STYLE_LAYER_LOCATION);
+        Log.i("gg", String.valueOf(features.isEmpty()));
+        if (!features.isEmpty()) {
+            String name = features.get(0).getStringProperty("name");
+            List<Feature> featureList = featureCollection.features();
+            if (featureList != null) {
+                for (int i = 0; i < featureList.size(); i++) {
+                    if (featureList.get(i).getStringProperty("name").equals(name)) {
+                        Log.i("ggg", String.valueOf(featureSelectStatus(i)));
+                        if (featureSelectStatus(i)) {
+                            setFeatureSelectState(featureList.get(i), false);
+                        } else {
+                            setSelected(i);
+                            Log.i("ggg", String.valueOf(featureSelectStatus(i)));
+                        }
+                    }
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+
+    /**
+     * Set a feature selected state.
+     *
+     * @param index the index of selected feature
+     */
+    private void setSelected(int index) {
+        if (featureCollection.features() != null) {
+            Feature feature = featureCollection.features().get(index);
+            setFeatureSelectState(feature, true);
+            refreshSource();
+        }
+    }
+
+    /**
+     * Selects the state of a feature
+     *
+     * @param feature the feature to be selected.
+     */
+    private void setFeatureSelectState(Feature feature, boolean selectedState) {
+        if (feature.properties() != null) {
+            feature.properties().addProperty(PROPERTY_SELECTED, selectedState);
+            refreshSource();
+        }
+    }
+
+    /**
+     * Updates the display of data on the map after the FeatureCollection has been modified
+     */
+    private void refreshSource() {
+        if (source != null && featureCollection != null) {
+            source.setGeoJson(featureCollection);
+        }
+    }
+
+    /**
+     * Checks whether a Feature's boolean "selected" property is true or false
+     *
+     * @param index the specific Feature's index position in the FeatureCollection's list of Features.
+     * @return true if "selected" is true. False if the boolean property is false.
+     */
+    private boolean featureSelectStatus(int index) {
+        if (featureCollection == null) {
+            return false;
+        }
+        return featureCollection.features().get(index).getBooleanProperty(PROPERTY_SELECTED);
+    }
+
+
+
 //add Symbol layer
     private void addLocationMarkers(@NonNull Style loadedMapStyle) {
 
