@@ -124,6 +124,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String PROPERTY_SELECTED = "selected";
     private FeatureCollection featureCollection;
     private GeoJsonSource source;
+    private int formalSelectLocationIndex = -1;
 
     private FloatingActionButton fabCenterCamera;
     private FloatingActionButton fabTogglePostLocation;
@@ -207,7 +208,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 cameralat = intent.getDoubleExtra("lat", 0);
                 cameralong = intent.getDoubleExtra("long", 0);
                 if(cameralat != 0 || cameralong != 0) {
+                    displayMarkerType  = 1;
                     updateMarkerPosition(new LatLng(cameralat, cameralong));
+
 //                    Log.d("gg", "onStyleLoaded: Success");
                 }
                 addHeatmapLayer(style);
@@ -220,6 +223,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         MapActivity.this.getResources(), R.drawable.blue_marker_view));
                 setupSearchSource(style);
                 setupSearchLayer(style);
+                toggleLayer(displayMarkerType);
                 mapboxMap.addOnMapClickListener(MapActivity.this);
                 fabCenterCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -246,10 +250,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void initCameraPosition(Style style) {
         style.addSource(new GeoJsonSource(CAMERA_LOCATION_SOURCE));
         style.addLayer(new SymbolLayer(CAMERA_LOCATION_LAYER,CAMERA_LOCATION_SOURCE).withProperties(
-                iconImage(SEARCH_IMAGE),
+                iconImage(MARKER_IMAGE),
                 iconIgnorePlacement(true),
                 iconAllowOverlap(true),
-                iconSize(0.3f)
+                iconSize(0.07f)
         ));
 
     }
@@ -279,7 +283,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     /**
      * Get documents from database
      */
-    private void initLocation(@NonNull final Style loadedMapStyle) {
+        private void initLocation(@NonNull final Style loadedMapStyle) {
         mLocRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
@@ -356,7 +360,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             featureLocation.add(currFeature);
                         }
                     }
-//                    Log.d("dd", "onSucces" + featureLocation.size());
+                    Log.d("dd", "onSucces" + featureLocation.size());
                     loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(featureLocation)));
                 }
             }
@@ -461,20 +465,27 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 Layer PostCirCleLayer = style.getLayer(CIRCLE_LAYER_ID);
                 Layer heatmapLayer = style.getLayer(HEATMAP_LAYER_ID);
                 Layer LocationLayer = style.getLayer(MARKER_STYLE_LAYER_LOCATION);
-                if (PostLayer != null) {
-                    if (displayMarkerType == 1) {
-                        PostLayer.setProperties(visibility(NONE));
-                        PostCirCleLayer.setProperties(visibility(NONE));
-                        heatmapLayer.setProperties(visibility(NONE));
-                        LocationLayer.setProperties(visibility(VISIBLE));
+                Layer InfoWindowLayer = style.getLayer(INFO_WINDOW_LAYER);
+                try {
+                    if (PostLayer != null) {
+                        if (displayMarkerType == 1) {
+                            PostLayer.setProperties(visibility(NONE));
+                            PostCirCleLayer.setProperties(visibility(NONE));
+                            heatmapLayer.setProperties(visibility(NONE));
+                            InfoWindowLayer.setProperties(visibility(VISIBLE));
+                            LocationLayer.setProperties(visibility(VISIBLE));
 
-                    } else {
-                        PostLayer.setProperties(visibility(VISIBLE));
-                        PostCirCleLayer.setProperties(visibility(VISIBLE));
-                        heatmapLayer.setProperties(visibility(VISIBLE));
-                        LocationLayer.setProperties(visibility(NONE));
+                        } else {
+                            PostLayer.setProperties(visibility(VISIBLE));
+                            PostCirCleLayer.setProperties(visibility(VISIBLE));
+                            heatmapLayer.setProperties(visibility(VISIBLE));
+                            InfoWindowLayer.setProperties(visibility(NONE));
+                            LocationLayer.setProperties(visibility(NONE));
 
+                        }
                     }
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
         });
@@ -530,7 +541,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //                        Log.i("ggg", String.valueOf(featureSelectStatus(i)));
                         if (featureSelectStatus(i)) {
                             setFeatureSelectState(featureList.get(i), false);
+//                            formalSelectLocationIndex = -1;
                         } else {
+                            Log.i("gg", String.valueOf(formalSelectLocationIndex));
+                            Log.i("gg", String.valueOf(i));
+//                            if(formalSelectLocationIndex != -1 && formalSelectLocationIndex != i) {
+//                                setFeatureSelectState(featureList.get(formalSelectLocationIndex), false);
+//                                formalSelectLocationIndex = i;
+//                            }
                             setSelected(i);
 //                            Log.i("ggg", String.valueOf(featureSelectStatus(i)));
                         }
@@ -724,13 +742,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 // Transition from heatmap to circle layer by zoom level
                 circleStrokeColor("white"),
                 circleStrokeWidth(0.2f),
-                circleOpacity(
-                        interpolate(
-                                linear(), zoom(),
-                                stop( 12, 0),
-                                stop(16, 1)
-                        )
-                ),
                 circleRadius(
                         interpolate(
                                 linear(), zoom(),

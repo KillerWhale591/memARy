@@ -23,7 +23,7 @@
         <item>Brookline, MA 02446</item>
         <item>175 Tremont St, Boston, MA 02111</item>
     </string-array>
-    <string name="mapbox_access_token">YOUR_KEY_HERE</string>
+    <string name="mapbox_access_token">pk.eyJ1IjoiY2d4eTE5OTUwOSIsImEiOiJjazNuZjZ4c3IxNXAzM2tuM2dxZGJudTl6In0.5SvhOlvAL1sAl6RjkY7xhg</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
