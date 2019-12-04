@@ -28,8 +28,6 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.killerwhale.memary.ARComponent.Model.Stroke;
@@ -103,15 +101,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private AnchorRenderer zeroAnchorRenderer;
     private AnchorRenderer cloudAnchorRenderer;
     private TrackingIndicator mTrackingIndicator;
-    private LinearLayout mOverflowLayout;
     private Button btnSave;
     private Button btnLoad;
     private Button btnClear;
-    private View mUndoButton;
-    private View mDrawUiContainer;
-    private View mOverflowButton;
-    private View mClearDrawingButton;
-    private TextView mPairActiveView;
     private DebugView mDebugView;
 
     private Frame mFrame;
@@ -172,11 +164,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
 
-        mClearDrawingButton = findViewById(R.id.menu_item_clear);
-        mClearDrawingButton.setOnClickListener(this);
-
-        mUndoButton = findViewById(R.id.undo_button);
-
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
 
@@ -186,8 +173,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mStrokes = new ArrayList<>();
         touchQueueSize = new AtomicInteger(0);
         touchQueue = new AtomicReferenceArray<>(TOUCH_QUEUE_SIZE);
-
-        mDrawUiContainer = findViewById(R.id.draw_container);
 
 }
 
@@ -287,14 +272,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
         // TODO: Only used id hidden by "Hide UI menu"
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
-
-        if (!BuildConfig.SHOW_NAVIGATION) {
-            mOverflowButton.setVisibility(View.GONE);
-        }
-
-
-
-
     }
 
     /**
@@ -760,10 +737,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mUndoButton.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
-                mClearDrawingButton.setVisibility(
-                        (mStrokes.size() > 0 || mSharedStrokes.size() > 0) ? View.VISIBLE
-                                : View.GONE);
                 mTrackingIndicator.setHasStrokes(mStrokes.size() > 0);
             }
         });
@@ -780,9 +753,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.menu_item_clear:
-                onClickClear();
-                break;
             case R.id.btnClear:
                 onClickClear();
                 break;
@@ -869,7 +839,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         try {
             List<Stroke> newmStrokes = fetchStrokes();
             mStrokes = newmStrokes;
-            Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
             Log.i("Checkpointer", "Loaded!");
             update();
         }
