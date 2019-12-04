@@ -47,7 +47,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.killerwhale.memary.ARComponent.Analytics.AnalyticsEvents;
 //import com.arexperiments.justaline.analytics.Fa;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Rendering.AnchorRenderer;
@@ -90,18 +89,14 @@ public class ARPrimitiveActivity extends ARBaseActivity
         ErrorDialog.Listener,ClearDrawingDialog.Listener{
 
     private static final String TAG = "ARPrimitiveActivity";
-
     private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
-
     private static final int TOUCH_QUEUE_SIZE = 10;
-
 
     enum Mode {
         DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
     }
 
     private Mode mMode = Mode.DRAW;
-
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private RecordableSurfaceView mSurfaceView;
     private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
@@ -171,7 +166,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         btnSave.setOnClickListener(this);
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
-
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
 
@@ -181,8 +175,8 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mStrokes = new ArrayList<>();
         touchQueueSize = new AtomicInteger(0);
         touchQueue = new AtomicReferenceArray<>(TOUCH_QUEUE_SIZE);
-
 }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -261,6 +255,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
         }
 
         mSurfaceView.resume();
+
+        mSurfaceView.resume();
+
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -747,7 +744,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         showStrokeDependentUI();
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -777,14 +773,11 @@ public class ARPrimitiveActivity extends ARBaseActivity
                     showView(mDrawUiContainer);
                     showView(mTrackingIndicator);
                     mTrackingIndicator.setDrawPromptEnabled(true);
-                    //mTrackingIndicator.removeListener(mPairView);
-                    //mPairView.hide();
                     break;
                 case PAIR_ANCHOR_RESOLVING:
                     hideView(mDrawUiContainer);
                     mTrackingIndicator.setDrawPromptEnabled(false);
                     showView(mTrackingIndicator);
-                    //mTrackingIndicator.addListener(mPairView);
                     break;
                 case PAIR_PARTNER_DISCOVERY:
                 case PAIR_ERROR:
@@ -792,9 +785,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                     hideView(mDrawUiContainer);
                     hideView(mTrackingIndicator);
                     mTrackingIndicator.setDrawPromptEnabled(false);
-                    //mTrackingIndicator.removeListener(mPairView);
-                    //mPairView.show();
-                    //mPairView.onErrorRemoved();
                     break;
             }
         }
@@ -832,7 +822,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                     }
                     mLineShaderRenderer.bNeedsUpdate.set(true);
                 }
-
         });
     }
 
