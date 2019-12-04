@@ -42,18 +42,6 @@
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name=".Activity.ARActivity"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity
-            android:name=".Activity.ARDrawActivity"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity
-            android:name=".Activity.PermissionsActivity"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity
             android:name=".Activity.ARPrimitiveActivity"
             android:screenOrientation="portrait">
         </activity>

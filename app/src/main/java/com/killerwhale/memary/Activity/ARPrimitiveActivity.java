@@ -15,9 +15,6 @@
 package com.killerwhale.memary.Activity;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.icu.util.Calendar;
@@ -37,7 +34,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.killerwhale.memary.ARComponent.Analytics.AnalyticsEvents;
 //import com.arexperiments.justaline.analytics.Fa;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Rendering.AnchorRenderer;
@@ -63,7 +59,6 @@ import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.NotTrackingException;
 import com.killerwhale.memary.ARSettings;
 import com.killerwhale.memary.BuildConfig;
-import com.killerwhale.memary.PermissionHelper;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
@@ -88,8 +83,7 @@ import javax.vecmath.Vector3f;
 
 
 /**
- * This is a complex example that shows how to create an augmented reality (AR) application using
- * the ARCore API.
+ * This is a basic implementation of Offline AR functions
  */
 
 public class ARPrimitiveActivity extends ARBaseActivity
@@ -97,11 +91,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
         ErrorDialog.Listener,ClearDrawingDialog.Listener{
 
     private static final String TAG = "ARPrimitiveActivity";
-
     private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
-
     private static final int TOUCH_QUEUE_SIZE = 10;
-
+    private boolean mUserRequestedARCoreInstall = true;
     //private Fa mAnalytics;
 
     enum Mode {
@@ -109,107 +101,52 @@ public class ARPrimitiveActivity extends ARBaseActivity
     }
 
     private Mode mMode = Mode.DRAW;
-
-    private View mDrawUiContainer;
-
-    // Set to true ensures requestInstall() triggers installation if necessary.
-    private boolean mUserRequestedARCoreInstall = true;
-
+    private Handler mHandler = new Handler(Looper.getMainLooper());
     private RecordableSurfaceView mSurfaceView;
-
-    private Session mSession;
-
     private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
-
     private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
-//    private DebugMeshShaderRenderer mLineShaderRenderer = new DebugMeshShaderRenderer();
-
     private final PointCloudRenderer pointCloud = new PointCloudRenderer();
-
     private AnchorRenderer zeroAnchorRenderer;
-
     private AnchorRenderer cloudAnchorRenderer;
-
-    private Frame mFrame;
-
-    private float[] projmtx = new float[16];
-
-    private float[] viewmtx = new float[16];
-
-    private float[] mZeroMatrix = new float[16];
-
-    private float mScreenWidth = 0;
-
-    private float mScreenHeight = 0;
-
-    private Vector2f mLastTouch;
-
-    private AtomicInteger touchQueueSize;
-
-    private AtomicReferenceArray<Vector2f> touchQueue;
-
-    private float mLineWidthMax = 0.33f;
-
-    private float[] mLastFramePosition;
-
-    private Boolean isDrawing = false;
-
-    private AtomicBoolean bHasTracked = new AtomicBoolean(false);
-
-    private AtomicBoolean bTouchDown = new AtomicBoolean(false);
-
-    private AtomicBoolean bClearDrawing = new AtomicBoolean(false);
-
-    private AtomicBoolean bUndo = new AtomicBoolean(false);
-
-    private AtomicBoolean bNewStroke = new AtomicBoolean(false);
-
-    private List<Stroke> mStrokes;
-
-    private File mOutputFile;
-
-    private BrushSelector mBrushSelector;
-
-    //private RecordButton mRecordButton;
+    private TrackingIndicator mTrackingIndicator;
+    private LinearLayout mOverflowLayout;
     private Button btnSave;
     private Button btnLoad;
     private Button btnClear;
-
     private View mUndoButton;
-
-    private TrackingIndicator mTrackingIndicator;
-
+    private View mDrawUiContainer;
     private View mOverflowButton;
-
-    private LinearLayout mOverflowLayout;
-
     private View mClearDrawingButton;
-
-    private Handler mHandler = new Handler(Looper.getMainLooper());
-
-    /*
-     * Track number frames where we lose ARCore tracking. If we lose tracking for less than
-     * a given number then continue painting.
-     */
-    private static final int MAX_UNTRACKED_FRAMES = 5;
-
-    private int mFramesNotTracked = 0;
-
+    private TextView mPairActiveView;
     private DebugView mDebugView;
 
-    private boolean mDebugEnabled = false;
-
-    private long mRenderDuration;
-
-    /*
-     * Session sharing
-     */
-
+    private Frame mFrame;
+    private Session mSession;
     private Anchor mAnchor;
+    private List<Stroke> mStrokes;
+    private BrushSelector mBrushSelector;
 
+    private float[] projmtx = new float[16];
+    private float[] viewmtx = new float[16];
+    private float[] mZeroMatrix = new float[16];
+    private float mScreenWidth = 0;
+    private float mScreenHeight = 0;
+    private Vector2f mLastTouch;
+    private AtomicInteger touchQueueSize;
+    private AtomicReferenceArray<Vector2f> touchQueue;
+    private float mLineWidthMax = 0.33f;
+    private float[] mLastFramePosition;
+    private Boolean isDrawing = false;
+    private AtomicBoolean bHasTracked = new AtomicBoolean(false);
+    private AtomicBoolean bTouchDown = new AtomicBoolean(false);
+    private AtomicBoolean bClearDrawing = new AtomicBoolean(false);
+    private AtomicBoolean bUndo = new AtomicBoolean(false);
+    private AtomicBoolean bNewStroke = new AtomicBoolean(false);
+    private static final int MAX_UNTRACKED_FRAMES = 5;
+    private int mFramesNotTracked = 0;
     private Map<String, Stroke> mSharedStrokes = new HashMap<>();
-
-    private TextView mPairActiveView;
+    private boolean mDebugEnabled = false;
+    private long mRenderDuration;
 
 
     /**
@@ -241,30 +178,13 @@ public class ARPrimitiveActivity extends ARBaseActivity
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
 
-        //mOverflowButton = findViewById(R.id.button_overflow_menu);
-        //mOverflowButton.setOnClickListener(this);
-        //mOverflowLayout = findViewById(R.id.layout_menu_items);
         mClearDrawingButton = findViewById(R.id.menu_item_clear);
         mClearDrawingButton.setOnClickListener(this);
-        //findViewById(R.id.menu_item_about).setOnClickListener(this);
-        //findViewById(R.id.menu_item_share_app).setOnClickListener(this);
-
-//        findViewById(R.id.menu_item_crash).setOnClickListener(this);
-//        findViewById(R.id.menu_item_hide_ui).setOnClickListener(this);
-
-        //mPairButton = findViewById(R.id.button_pair);
-        //mPairButton.setOnClickListener(this);
-        //mPairButtonToolTip = findViewById(R.id.tooltip_button_pair);
-        //mPairButtonToolTip.setListener(this);
-        //mPairActiveView = findViewById(R.id.pair_active);
 
         mUndoButton = findViewById(R.id.undo_button);
 
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
-
-        //mRecordButton = findViewById(R.id.record_button);
-        //mRecordButton.setEnabled(false);
 
         // Reset the zero matrix
         Matrix.setIdentityM(mZeroMatrix, 0);
@@ -273,47 +193,17 @@ public class ARPrimitiveActivity extends ARBaseActivity
         touchQueueSize = new AtomicInteger(0);
         touchQueue = new AtomicReferenceArray<>(TOUCH_QUEUE_SIZE);
 
-        //mPlaybackView = findViewById(R.id.playback);
-
         mDrawUiContainer = findViewById(R.id.draw_container);
 
-        //mPairView = findViewById(R.id.view_join);
-        //mPairView.setListener(this);
-
-//        if (JOIN_GLOBAL_ROOM) {
-//            mPairSessionManager = new GlobalPairSessionManager(this);
-//
-//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//            builder.setTitle("Pick global session")
-//                    .setItems(R.array.sessions_array, new DialogInterface.OnClickListener() {
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            GlobalRoomManager.setGlobalRoomName(String.valueOf(which));
-//                        }
-//                    });
-//            AlertDialog dialog = builder.create();
-//            dialog.show();
-//        } else {
-//            mPairSessionManager = new PairSessionManager(this);
-//        }
-//        mPairSessionManager.setPairingStateChangeListener(mPairView);
-//        mPairSessionManager.addPartnerUpdateListener(mPairButton);
-//        mPairSessionManager.addPartnerUpdateListener(this);
-//        mPairSessionManager.setAnchorStateListener(this);
-    }
+}
 
     @Override
     protected void onStart() {
         super.onStart();
-//        mPairSessionManager.login(this);
-//        if (mPairSessionManager.isPaired()) {
-//            mPairSessionManager.resumeListeners(this);
-//        }
     }
 
     @Override
     protected void onStop() {
-//        mPairSessionManager.pauseListeners();
-
         super.onStop();
     }
 
@@ -327,71 +217,66 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
         // ARCore requires camera permissions to operate. If we did not yet obtain runtime
         // permission on Android M and above, now is a good time to ask the user for it.
-        if (PermissionHelper.hasRequiredPermissions(this)) {
 
-            // Check if ARCore is installed/up-to-date
-            int message = -1;
-            Exception exception = null;
-            try {
-                if (mSession == null) {
-                    switch (ArCoreApk.getInstance()
-                            .requestInstall(this, mUserRequestedARCoreInstall)) {
-                        case INSTALLED:
-                            mSession = new Session(this);
+        // Check if ARCore is installed/up-to-date
+        int message = -1;
+        Exception exception = null;
+        try {
+            if (mSession == null) {
+                switch (ArCoreApk.getInstance()
+                        .requestInstall(this, mUserRequestedARCoreInstall)) {
+                    case INSTALLED:
+                        mSession = new Session(this);
 
-                            break;
-                        case INSTALL_REQUESTED:
-                            // Ensures next invocation of requestInstall() will either return
-                            // INSTALLED or throw an exception.
-                            mUserRequestedARCoreInstall = false;
-                            // at this point, the activity is paused and user will go through
-                            // installation process
-                            return;
-                    }
+                        break;
+                    case INSTALL_REQUESTED:
+                        // Ensures next invocation of requestInstall() will either return
+                        // INSTALLED or throw an exception.
+                        mUserRequestedARCoreInstall = false;
+                        // at this point, the activity is paused and user will go through
+                        // installation process
+                        return;
                 }
-            } catch (Exception e) {
-                exception = e;
-                message = getARCoreInstallErrorMessage(e);
             }
-
-            // display possible ARCore error to user
-            if (message >= 0) {
-                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Exception creating session", exception);
-                finish();
-                return;
-            }
-
-            // Create default config and check if supported.
-            Config config = new Config(mSession);
-            config.setLightEstimationMode(Config.LightEstimationMode.DISABLED);
-            config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
-            if (!mSession.isSupported(config)) {
-                Toast.makeText(getApplicationContext(), R.string.ar_not_supported,
-                        Toast.LENGTH_LONG).show();
-                finish();
-                return;
-            }
-            mSession.configure(config);
-
-            // Note that order of session/surface resume matters - session must be resumed
-            // before the surface view is resumed or the surface may call back on a session that is
-            // not ready.
-            try {
-                mSession.resume();
-            } catch (CameraNotAvailableException e) {
-                ErrorDialog.newInstance(R.string.error_camera_not_available, true)
-                        .show(this);
-            } catch (Exception e) {
-                ErrorDialog.newInstance(R.string.error_resuming_session, true).show(this);
-            }
-
-            mSurfaceView.resume();
-        } else {
-            // take user to permissions activity
-            startActivity(new Intent(this, PermissionsActivity.class));
-            finish();
+        } catch (Exception e) {
+            exception = e;
+            message = getARCoreInstallErrorMessage(e);
         }
+
+        // display possible ARCore error to user
+        if (message >= 0) {
+            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Exception creating session", exception);
+            finish();
+            return;
+        }
+
+        // Create default config and check if supported.
+        Config config = new Config(mSession);
+        config.setLightEstimationMode(Config.LightEstimationMode.DISABLED);
+        config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
+        if (!mSession.isSupported(config)) {
+            Toast.makeText(getApplicationContext(), R.string.ar_not_supported,
+                    Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        mSession.configure(config);
+
+        // Note that order of session/surface resume matters - session must be resumed
+        // before the surface view is resumed or the surface may call back on a session that is
+        // not ready.
+        try {
+            mSession.resume();
+        } catch (CameraNotAvailableException e) {
+            ErrorDialog.newInstance(R.string.error_camera_not_available, true)
+                    .show(this);
+        } catch (Exception e) {
+            ErrorDialog.newInstance(R.string.error_resuming_session, true).show(this);
+        }
+
+        mSurfaceView.resume();
+
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -399,46 +284,17 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mScreenHeight = displayMetrics.heightPixels;
         mScreenWidth = displayMetrics.widthPixels;
 
-//        mRecordButton.reset();
-//        mRecordButton.setListener(this);
-//
-//        mPlaybackView.setListener(this);
-//
-//        mPlaybackView.resume();
-
-//        if (mPairSessionManager.isPaired()) {
-//
-//            if (!SessionHelper.shouldContinuePairedSession(this)) {
-//                mPairSessionManager.checkForPartners(new RoomManager.PartnerDetectionListener() {
-//                    @Override
-//                    public void onPartnersDetected() {
-//                        // Stay in room
-//                    }
-//
-//                    @Override
-//                    public void onNoPartnersDetected() {
-//                        mPairSessionManager.leaveRoom(false);
-//                    }
-//                });
-//            } // time limit has not elapsed, force rejoin room (listeners restarted in onStart)
-//
-//        } else
-//
         if (!SessionHelper.shouldContinueSession(this)) {
             // if user has left activity for too long, clear the strokes from the previous session
             bClearDrawing.set(true);
             showStrokeDependentUI();
         }
 
-//        mPairSessionManager.setSession(mSession);
-//
-//        mPairView.setListener(this);
 
         // TODO: Only used id hidden by "Hide UI menu"
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
 
         if (!BuildConfig.SHOW_NAVIGATION) {
-//            mRecordButton.setVisibility(View.GONE);
             mOverflowButton.setVisibility(View.GONE);
         }
 
@@ -452,29 +308,15 @@ public class ARPrimitiveActivity extends ARBaseActivity
      */
     @Override
     public void onPause() {
-//        if (mRecordButton.isRecording()) {
-//            mRecordButton.setRecording(false);
-//        }
 
-        // Note that the order matters - SurfaceView is paused first so that it does not try
-        // to query the session. If Session is paused before GLSurfaceView, GLSurfaceView may
-        // still call mSession.update() and get a SessionPausedException.
         mSurfaceView.pause();
         if (mSession != null) {
             mSession.pause();
         }
 
-        //mRecordButton.setListener(null);
         mTrackingIndicator.resetTrackingTimeout();
 
-//        if (mPlaybackView != null) {
-//            mPlaybackView.pause();
-//            mPlaybackView.setListener(null);
-//        }
-
         SessionHelper.setSessionEnd(this);
-
-//        mPairView.setListener(null);
 
         super.onPause();
     }
@@ -491,15 +333,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         stroke.setLineWidth(mLineWidthMax);
         mStrokes.add(stroke);
 
-        // update firebase
-        int index = mStrokes.size() - 1;
-//        mPairSessionManager.updateStroke(index, mStrokes.get(index));
-        //mPairSessionManager.addStroke(mStrokes.get(index));
-
         showStrokeDependentUI();
-
-//        mAnalytics.setUserProperty(AnalyticsEvents.USER_PROPERTY_HAS_DRAWN,
-//                AnalyticsEvents.VALUE_TRUE);
 
         mTrackingIndicator.setDrawnInSession();
     }
@@ -563,9 +397,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
             // Update ARCore frame
             mFrame = mSession.update();
-            //if (mAnchor == null) {
-            //    createAnchor();
-            //}
+
             if (mAnchor == null){
                 mAnchor =  mSession.createAnchor(
                         mFrame.getCamera().getPose()
@@ -575,8 +407,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
             // Notify the hostManager of all the anchor updates.
             Collection<Anchor> updatedAnchors = mFrame.getUpdatedAnchors();
-            //mPairSessionManager.onUpdate(updatedAnchors);
-
 
 
             // Update tracking states
@@ -587,9 +417,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
             if (mTrackingIndicator.trackingState == TrackingState.TRACKING && !bHasTracked.get()) {
                 bHasTracked.set(true);
-//                mAnalytics
-//                        .setUserProperty(AnalyticsEvents.USER_PROPERTY_TRACKING_ESTABLISHED,
-//                                AnalyticsEvents.VALUE_TRUE);
             }
 
             // Get projection matrix.
@@ -663,7 +490,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 }
             }
 
-            // Update line animation
 //            for (int i = 0; i < mStrokes.size(); i++) {
 //                mStrokes.get(i).update();
 //            }
@@ -801,7 +627,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private void clearDrawing() {
         mStrokes.clear();
         mLineShaderRenderer.clear();
-//        mPairSessionManager.clearStrokes();
         showStrokeDependentUI();
     }
 
@@ -814,8 +639,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
         bUndo.set(true);
 
-//        mAnalytics.setUserProperty(AnalyticsEvents.USER_PROPERTY_TAPPED_UNDO,
-//                AnalyticsEvents.VALUE_TRUE);
     }
 
     private void toggleOverflowMenu() {
@@ -827,72 +650,19 @@ public class ARPrimitiveActivity extends ARBaseActivity
     }
 
     private void showOverflowMenu() {
-//        if (!mPlaybackView.isOpen()) { // only show overflow if not in playback view
-//            mOverflowLayout.setVisibility(View.VISIBLE);
-//        }
+
     }
 
     private void hideOverflowMenu() {
-        //mOverflowLayout.setVisibility(View.GONE);
     }
 
 
-//    private boolean stopRecording() {
-//        boolean stoppedSuccessfully;
-//        try {
-//            stoppedSuccessfully = mSurfaceView.stopRecording();
-//        } catch (RuntimeException e) {
-//            stoppedSuccessfully = false;
-//            Fa.get().exception(e, "Error stopping recording");
-//        }
-//        if (stoppedSuccessfully) {
-//            mRecordButton.setEnabled(false);
-//            openPlayback(mOutputFile);
-//            Log.v(TAG, "Recording Stopped");
-//        } else {
-//            // reset everything to try again
-//            onPlaybackClosed();
-//            ErrorDialog.newInstance(R.string.stop_recording_failed, false).show(this);
-//        }
-//
-//        mOverflowButton.setVisibility(View.VISIBLE);
-//        enableView(mPairButton);
-//
-//        return stoppedSuccessfully;
-//    }
-
-
-//    private boolean startRecording() {
-//        boolean startSuccessful = mSurfaceView.startRecording();
-//
-//        if (startSuccessful) {
-//            mOverflowButton.setVisibility(View.GONE);
-//            hideOverflowMenu();
-//            disableView(mPairButton);
-//            Log.v(TAG, "Recording Started");
-//        } else {
-//            Toast.makeText(this, R.string.start_recording_failed, Toast.LENGTH_SHORT).show();
-//            prepareForRecording();
-//        }
-//        return startSuccessful;
-//    }
-//
-//
-//    private void openPlayback(File file) {
-//        mPlaybackView.open(file);
-//        hideView(mDrawUiContainer);
-//        mPairButtonToolTip.hide();
-//        hideView(mTrackingIndicator);
-//    }
-//
 
     /**
      * onClickClear handle showing an AlertDialog to clear the drawing
      */
     private void onClickClear() {
         ClearDrawingDialog.newInstance(false).show(this);
-//        mAnalytics.setUserProperty(AnalyticsEvents.USER_PROPERTY_TAPPED_CLEAR,
-//                AnalyticsEvents.VALUE_TRUE);
     }
 
     // ------- Touch events
@@ -949,18 +719,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
     }
 
     private void closeViewsOutsideTapTarget(MotionEvent tap) {
-//        if (isOutsideViewBounds(mOverflowLayout, (int) tap.getRawX(), (int) tap.getRawY())
-//                && mOverflowLayout.getVisibility() == View.VISIBLE) {
-//            hideOverflowMenu();
-//        }
         if (isOutsideViewBounds(mBrushSelector, (int) tap.getRawX(), (int) tap.getRawY())
                 && mBrushSelector.isOpen()) {
             mBrushSelector.close();
         }
-//        if (isOutsideViewBounds(mPairButtonToolTip, (int) tap.getRawX(), (int) tap.getRawY())
-//                && mPairButtonToolTip.getVisibility() == View.VISIBLE) {
-//            mPairButtonToolTip.hide();
-//        }
     }
 
     private boolean isOutsideViewBounds(View view, int x, int y) {
@@ -1008,35 +770,12 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
     @Override
     public void onSurfaceCreated() {
-        //prepareForRecording();
 
         zeroAnchorRenderer = new AnchorRenderer();
         cloudAnchorRenderer = new AnchorRenderer();
         pointCloud.createOnGlThread(/*context=*/ this);
     }
 
-//    private void prepareForRecording() {
-//        Log.d(TAG, "prepareForRecording: ");
-//        try {
-//            mOutputFile = createVideoOutputFile();
-//            android.graphics.Point size = new android.graphics.Point();
-//            getWindowManager().getDefaultDisplay().getRealSize(size);
-//            mSurfaceView.initRecorder(mOutputFile, size.x, size.y, null, null);
-//
-//            // on some devices, this will not be on the UI thread when called from onSurfaceCreated
-//            runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mRecordButton.setEnabled(true);
-//                }
-//            });
-//        } catch (IOException ioex) {
-//            Log.e(TAG, "Couldn't setup recording", ioex);
-//            Fa.get().exception(ioex, "Error setting up recording");
-//        }
-//
-//
-//    }
 
     @Override
     public void onSurfaceChanged(int width, int height) {
@@ -1093,12 +832,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         showStrokeDependentUI();
     }
 
-//    private void shareApp() {
-//        Intent intent = new Intent(Intent.ACTION_SEND);
-//        intent.setType("text/plain");
-//        intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_app_message));
-//        startActivity(Intent.createChooser(intent, getString(R.string.share_with)));
-//    }
 
 
     @Override
@@ -1106,10 +839,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         boolean hideOverflow = true;
         boolean hidePairToolTip = true;
         switch (v.getId()) {
-//            case R.id.button_overflow_menu:
-//                toggleOverflowMenu();
-//                hideOverflow = false;
-//                break;
             case R.id.menu_item_clear:
                 onClickClear();
                 break;
@@ -1122,134 +851,14 @@ public class ARPrimitiveActivity extends ARBaseActivity
             case R.id.btnSave:
                 saveStrokes();
                 break;
-//            case R.id.menu_item_about:
-//                Intent intent = new Intent(this, AboutActivity.class);
-//                startActivity(intent);
-//                break;
-//            case R.id.menu_item_share_app:
-//                shareApp();
-//                mAnalytics.send(AnalyticsEvents.EVENT_TAPPED_SHARE_APP);
-//                break;
-//            case R.id.menu_item_crash:
-//                throw new RuntimeException("Intentional crash from overflow menu option");
-//            case R.id.menu_item_hide_ui:
-//                findViewById(R.id.draw_container).setVisibility(View.INVISIBLE);
-//                break;
-//            case R.id.button_pair:
-//                if (mPairSessionManager.isInRoom()) {
-//                    LeaveRoomDialog.newInstance().show(this);
-//                } else if (mPairButtonToolTip.getVisibility() == View.GONE) {
-//                    mPairButtonToolTip.show();
-//                    mPairButton.setContentDescription(getString(R.string.content_description_close_join_friend_menu));
-//                    mPairButton.setAccessibilityTraversalBefore(R.id.pair_tooltip_title);
-//                    hidePairToolTip = false;
-//                }
-//                break;
+
         }
         mBrushSelector.close();
         if (hideOverflow) {
             hideOverflowMenu();
         }
-//        if (hidePairToolTip) {
-//            mPairButtonToolTip.hide();
-//            if (!mPairSessionManager.isPaired())
-//                mPairButton.setContentDescription(getString(R.string.content_description_join_friend));
-//        }
     }
 
-//    @Override
-//    public boolean onRequestRecordingStart() {
-//        return startRecording();
-//    }
-//
-//    @Override
-//    public boolean onRequestRecordingStop() {
-//        return stopRecording();
-//    }
-//
-//    @Override
-//    public void onRequestRecordingCancel() {
-//        try {
-//            mSurfaceView.stopRecording();
-//        } catch (RuntimeException e) {
-//            Fa.get().exception(e, "Error stopping recording during cancel");
-//        }
-//
-//        // reset everything to try again
-//        onPlaybackClosed();
-//
-//        mOverflowButton.setVisibility(View.VISIBLE);
-//
-//        enableView(mPairButton);
-//
-//    }
-//
-//    @Override
-//    public void onBackPressed() {
-//        if (mPlaybackView.isOpen()) {
-//            mPlaybackView.close();
-//        } else if (mMode == Mode.PAIR_PARTNER_DISCOVERY || mMode == Mode.PAIR_ANCHOR_RESOLVING) {
-//            mPairView.hide();
-//            setMode(Mode.DRAW);
-//            mPairSessionManager.leaveRoom(false);
-//        } else {
-//            super.onBackPressed();
-//        }
-//    }
-//
-//    @Override
-//    public void onWindowFocusChanged(boolean hasFocus) {
-//        if (mPlaybackView == null || !mPlaybackView.isOpen()) {
-//            super.onWindowFocusChanged(hasFocus);
-//        }
-//    }
-//
-//    @Override
-//    public void onPlaybackClosed() {
-//        showView(mDrawUiContainer);
-//        showView(mTrackingIndicator);
-//
-//        setupImmersive();
-//        mRecordButton.reset();
-//        prepareForRecording();
-//    }
-
-//    @Override
-//    public void requestStoragePermission() {
-//        PermissionHelper.requestStoragePermission(this, false);
-//    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-
-        if (requestCode == PermissionHelper.REQUEST_CODE_STORAGE_PERMISSIONS) {
-            // send storage permissions result to playback view
-            //mPlaybackView.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
-
-//    @Override
-//    public void onPairPressed() {
-//        mPairSessionManager.startPairingSession(this);
-//
-//        mPairButton.setContentDescription(getString(R.string.content_description_disconnect_from_friend));
-//
-//        Fa.get().send(AnalyticsEvents.EVENT_TAPPED_START_PAIR);
-//        Fa.get().setUserProperty(AnalyticsEvents.USER_PROPERTY_HAS_TAPPED_PAIR,
-//                AnalyticsEvents.VALUE_TRUE);
-//    }
-
-//    @Override
-//    public void onJoinRoomPressed() {
-//        try {
-//            ((GlobalPairSessionManager) mPairSessionManager).joinGlobalRoom(this);
-//        } catch (ClassCastException e) {
-//            Fa.get().exception(e, "Join Room pressed in production app");
-//        }
-//    }
 
     /**
      * Update views for the given mode
@@ -1263,14 +872,11 @@ public class ARPrimitiveActivity extends ARBaseActivity
                     showView(mDrawUiContainer);
                     showView(mTrackingIndicator);
                     mTrackingIndicator.setDrawPromptEnabled(true);
-                    //mTrackingIndicator.removeListener(mPairView);
-                    //mPairView.hide();
                     break;
                 case PAIR_ANCHOR_RESOLVING:
                     hideView(mDrawUiContainer);
                     mTrackingIndicator.setDrawPromptEnabled(false);
                     showView(mTrackingIndicator);
-                    //mTrackingIndicator.addListener(mPairView);
                     break;
                 case PAIR_PARTNER_DISCOVERY:
                 case PAIR_ERROR:
@@ -1278,31 +884,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
                     hideView(mDrawUiContainer);
                     hideView(mTrackingIndicator);
                     mTrackingIndicator.setDrawPromptEnabled(false);
-                    //mTrackingIndicator.removeListener(mPairView);
-                    //mPairView.show();
-                    //mPairView.onErrorRemoved();
                     break;
             }
         }
     }
-
-//    @Override
-//    public void setAnchor(Anchor anchor) {
-//        mAnchor = anchor;
-//
-//        for (Stroke stroke : mStrokes) {
-//            Log.d(TAG, "setAnchor: pushing line");
-//            stroke.offsetToPose(mAnchor.getPose());
-//            mPairSessionManager.addStroke(stroke);
-//        }
-//
-//        mLineShaderRenderer.bNeedsUpdate.set(true);
-//    }
-
-//    @Override
-//    public void onModeChanged(Mode mode) {
-//        setMode(mode);
-//    }
 
     private void showView(View toShow) {
         toShow.setVisibility(View.VISIBLE);
@@ -1327,26 +912,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         toDisable.setEnabled(false);
         toDisable.animate().alpha(.5f);
     }
-
-//    @Override
-//    public void onPairCanceled() {
-//        mPairView.hide();
-//
-//        setMode(Mode.DRAW);
-//
-//        mPairSessionManager.leaveRoom(false);
-//    }
-
-//    @Override
-//    public void onPairViewClosed() {
-//        setMode(Mode.DRAW);
-//    }
-//
-//    @Override
-//    public void onReadyToSetAnchor() {
-//        mPairSessionManager.readyToSetAnchor();
-//        Fa.get().send(AnalyticsEvents.EVENT_TAPPED_READY_TO_SET_ANCHOR);
-//    }
 
     public void createAnchor() {
         runOnUiThread(new Runnable() {
@@ -1378,173 +943,21 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 if (mStrokes.size() > 0) {
                     for (int i = 0; i < mStrokes.size(); i++) {
                         mStrokes.get(i).offsetToPose(pose);
-//                        if (mStrokes.get(i).hasFirebaseReference())
-//                            mPairSessionManager.updateStroke(mStrokes.get(i));
-//                        else
-//                            mPairSessionManager.addStroke(mStrokes.get(i));
+
                     }
                     mLineShaderRenderer.bNeedsUpdate.set(true);
                 }
 
-                //mPairSessionManager.setAnchor(mAnchor);
             }
         });
     }
 
-//    @Override
-//    public void clearLines() {
-//        mSharedStrokes.clear();
-//        mStrokes.clear();
-//        mLineShaderRenderer.bNeedsUpdate.set(true);
-//    }
-
-//    @Override
-//    public void onAnchorChangedLeftRoom() {
-//        ErrorDialog.newInstance(R.string.drawing_session_ended, false)
-//                .show(this);
-//    }
-
-//    @Override
-//    public void onConnectivityLostLeftRoom() {
-//        ErrorDialog.newInstance(R.string.pair_no_data_connection_title,
-//                R.string.pair_no_data_connection_body, false)
-//                .show(this);
-//    }
-
-//    @Override
-//    public void clearAnchor(Anchor anchor) {
-//        if (anchor != null && anchor.equals(mAnchor)) {
-//            for (Stroke stroke : mStrokes) {
-//                stroke.offsetFromPose(mAnchor.getPose());
-//            }
-//            mAnchor = null;
-//            Matrix.setIdentityM(mLineShaderRenderer.mModelMatrix, 0);
-//        }
-//    }
-//
-//    @Override
-//    public void setRoomNumber(String roomKey) {
-//        if (mDebugEnabled) {
-//            mDebugView.setRoomNumber(roomKey);
-//        }
-//    }
-//
-//    @Override
-//    public void onReadyResolveAnchor() {
-//        mPairSessionManager.resolveAnchorFromAnchorId();
-//    }
-//
-//    @Override
-//    public void setAnchorResolvingMode() {
-//        setMode(Mode.PAIR_ANCHOR_RESOLVING);
-//    }
-//
-//    @Override
-//    public void setPairErrorMode() {
-//        setMode(Mode.PAIR_ERROR);
-//    }
-//
-//    @Override
-//    public void setPairSuccessMode() {
-//        setMode(Mode.PAIR_SUCCESS);
-//    }
-//
-//    @Override
-//    public void attemptPartnerDiscovery() {
-//        mPairSessionManager.startPairingSession(this);
-//    }
-//
-//    @Override
-//    public void onPartnerCountChanged(int partnerCount) {
-//        if (partnerCount < 2) {
-//            mPairActiveView.setText(R.string.partner_lost);
-//            mPairActiveView.setBackgroundResource(R.drawable.bg_pair_state_partner_lost);
-//        } else {
-//            mPairActiveView.setText(R.string.partner_paired);
-//            mPairActiveView.setBackgroundResource(R.drawable.bg_pair_state_paired);
-//        }
-//    }
-//
-//    @Override
-//    public void onConnectedToSession() {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                mPairSessionManager.setStrokeListener(DrawARActivity.this);
-//                mPairActiveView.setText(R.string.partner_paired);
-//                showView(mPairActiveView);
-//
-//                mTrackingIndicator.setAnchorTrackingMessageEnabled(true);
-//                mTrackingIndicator.setShowPairedSessionDrawPrompt(true);
-//            }
-//        });
-//    }
-//
-//    @Override
-//    public void onDisconnectedFromSession() {
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                hideView(mPairActiveView);
-//
-//                mPairButton.setContentDescription(getString(R.string.content_description_join_friend));
-//
-//                mTrackingIndicator.setAnchorTrackingMessageEnabled(false);
-//                mTrackingIndicator.setShowPairedSessionDrawPrompt(false);
-//            }
-//        });
-//    }
-//
-//    @Override
-//    public void onLineAdded(String uid, Stroke value) {
-//        value.localLine = false;
-//        value.calculateTotalLength();
-//        mSharedStrokes.put(uid, value);
-//        showStrokeDependentUI();
-//        mLineShaderRenderer.bNeedsUpdate.set(true);
-//    }
-//
-//    @Override
-//    public void onLineRemoved(String uid) {
-//        if (mSharedStrokes.containsKey(uid)) {
-//            mSharedStrokes.remove(uid);
-//            mLineShaderRenderer.bNeedsUpdate.set(true);
-//        } else {
-//            for (Stroke stroke : mStrokes) {
-//                if (uid.equals(stroke.getFirebaseKey())) {
-//                    mStrokes.remove(stroke);
-//                    if (!stroke.finished) {
-//                        bTouchDown.set(false);
-//                    }
-//                    mLineShaderRenderer.bNeedsUpdate.set(true);
-//                    break;
-//                }
-//            }
-//        }
-//
-//        showStrokeDependentUI();
-//    }
-//
-//    @Override
-//    public void onLineUpdated(String uid, Stroke value) {
-//        Stroke stroke = mSharedStrokes.get(uid);
-//        if (stroke == null) {
-//            return;
-//        }
-//        stroke.updateStrokeData(value);
-//        mLineShaderRenderer.bNeedsUpdate.set(true);
-//    }
 
     @Override
     public void exitApp() {
         finish();
     }
 
-//    @Override
-//    public void onExitRoomSelected() {
-//        mPairSessionManager.leaveRoom(true);
-//        Fa.get().send(AnalyticsEvents.EVENT_TAPPED_DISCONNECT_PAIRED_SESSION);
-//    }
 
     public void saveStrokes(){
         try {

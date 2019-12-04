@@ -250,7 +250,7 @@ public class BrushSelector extends ConstraintLayout implements View.OnClickListe
             mMediumButton.setEnabled(false);
             mLargeButton.setEnabled(false);
 
-            mBrushButton.setAccessibilityTraversalBefore(R.id.record_button);
+            //mBrushButton.setAccessibilityTraversalBefore(R.id.record_button);
         } else {
             Animator.AnimatorListener showListener = new Animator.AnimatorListener() {
                 @Override
