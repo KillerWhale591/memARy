@@ -20,7 +20,7 @@
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.killerwhale.memary.Activity.ARPrimitiveActivity">
+    tools:context="com.killerwhale.memary.Activity.ARActivity">
 
     <!-- surface view-->
     <com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView
@@ -56,18 +56,19 @@
             android:id="@+id/brush_selector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="60dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginBottom="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            tools:layout_editor_absoluteY="621dp" />
+            app:layout_constraintLeft_toLeftOf="parent" />
 
 
         <!-- Overflow Menu -->
 
         <ImageButton
-            android:id="@+id/menu_item_clear"
+            android:id="@+id/btnClear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
             android:background="@drawable/ripple_bg_borderless_oval"
             android:contentDescription="@string/menu_clear"
             android:padding="16dp"
@@ -77,7 +78,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/undo_button"
+            android:id="@+id/btnUndo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/ripple_bg_borderless_oval"
@@ -86,40 +87,20 @@
             android:padding="16dp"
             android:src="@drawable/ic_undo"
             android:visibility="gone"
-            app:layout_constraintStart_toEndOf="@id/menu_item_clear"
+            app:layout_constraintStart_toEndOf="@id/btnClear"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/btnLoad"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="37dp"
-            android:layout_marginBottom="30dp"
-            android:text="Load"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <Button
+        <ImageButton
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="35dp"
-            android:layout_marginEnd="35dp"
-            android:layout_marginBottom="30dp"
-            android:text="Save"
+            android:layout_marginStart="111dp"
+            android:layout_marginEnd="176dp"
+            android:layout_marginBottom="32dp"
+            android:src="@drawable/ic_finish"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnClear"
-            app:layout_constraintStart_toEndOf="@+id/btnLoad" />
-
-        <Button
-            android:id="@+id/btnClear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="37dp"
-            android:layout_marginBottom="30dp"
-            android:text="Clear"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/brush_selector" />
 
     </android.support.constraint.ConstraintLayout>
 

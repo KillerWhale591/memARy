@@ -23,13 +23,13 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -86,11 +86,11 @@ import javax.vecmath.Vector3f;
  * This is a basic implementation of Offline AR functions
  */
 
-public class ARPrimitiveActivity extends ARBaseActivity
+public class ARActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
         ErrorDialog.Listener,ClearDrawingDialog.Listener{
 
-    private static final String TAG = "ARPrimitiveActivity";
+    private static final String TAG = "ARActivity";
     private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
@@ -111,12 +111,12 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private TrackingIndicator mTrackingIndicator;
     private LinearLayout mOverflowLayout;
     private Button btnSave;
+    private ImageButton
     private Button btnLoad;
-    private Button btnClear;
+    private ImageButton btnClear;
     private View mUndoButton;
     private View mDrawUiContainer;
     private View mOverflowButton;
-    private View mClearDrawingButton;
     private TextView mPairActiveView;
     private DebugView mDebugView;
 
@@ -156,7 +156,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ar_primitive);
+        setContentView(R.layout.activity_ar);
 
         // Debug view
         if (BuildConfig.DEBUG) {
@@ -170,18 +170,14 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mSurfaceView = findViewById(R.id.surfaceview);
         mSurfaceView.setRendererCallbacks(this);
 
-        btnSave = findViewById(R.id.btnSave);
-        btnLoad = findViewById(R.id.btnLoad);
+        //btnLoad = findViewById(R.id.btnLoad);
         btnClear = findViewById(R.id.btnClear);
 
         btnSave.setOnClickListener(this);
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
 
-        mClearDrawingButton = findViewById(R.id.menu_item_clear);
-        mClearDrawingButton.setOnClickListener(this);
-
-        mUndoButton = findViewById(R.id.undo_button);
+        mUndoButton = findViewById(R.id.btnUndo);
 
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
@@ -792,7 +788,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         mBackgroundRenderer.createOnGlThread(this);
         mSession.setCameraTextureName(mBackgroundRenderer.getTextureId());
         try {
-            mLineShaderRenderer.createOnGlThread(ARPrimitiveActivity.this);
+            mLineShaderRenderer.createOnGlThread(ARActivity.this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -818,7 +814,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
             @Override
             public void run() {
                 mUndoButton.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
-                mClearDrawingButton.setVisibility(
+                btnClear.setVisibility(
                         (mStrokes.size() > 0 || mSharedStrokes.size() > 0) ? View.VISIBLE
                                 : View.GONE);
                 mTrackingIndicator.setHasStrokes(mStrokes.size() > 0);
@@ -839,14 +835,8 @@ public class ARPrimitiveActivity extends ARBaseActivity
         boolean hideOverflow = true;
         boolean hidePairToolTip = true;
         switch (v.getId()) {
-            case R.id.menu_item_clear:
-                onClickClear();
-                break;
             case R.id.btnClear:
                 onClickClear();
-                break;
-            case R.id.btnLoad:
-                loadStrokes();
                 break;
             case R.id.btnSave:
                 saveStrokes();
@@ -962,7 +952,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
     public void saveStrokes(){
         try {
             serializeStorkes(mStrokes);
-            Toast.makeText(ARPrimitiveActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
+            Toast.makeText(ARActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
             Log.i("Checkpointer", "Saved!");
         }
         catch (IOException e){
