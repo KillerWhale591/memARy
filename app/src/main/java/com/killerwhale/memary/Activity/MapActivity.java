@@ -741,18 +741,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);
     }
 
-    private void selectMarker(final SymbolLayer iconLayer) {
-
-        iconLayer.setProperties(
-                PropertyFactory.iconImage(SEARCH_IMAGE)
-        );
-        markerSelected = true;
-    }
-
-    private void deselectMarker(final SymbolLayer iconLayer) {
-
-        markerSelected = false;
-    }
+    
     private void initSearchFab() {
         findViewById(R.id.fabSearchGlobal).setOnClickListener(new View.OnClickListener() {
             @Override
