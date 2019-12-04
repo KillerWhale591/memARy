@@ -34,6 +34,7 @@
         android:layout_below="@id/btnSignInActivity"
         android:layout_alignParentRight="true"
         android:text="SignUpActivity" />
+
     <Button
         android:id="@+id/btnMapActivity"
         android:layout_width="wrap_content"
@@ -66,6 +67,14 @@
         android:text="LocationList" />
 
     <Button
+        android:id="@+id/btnARPrimitive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/btnPostFeed"
+        android:text="ARPrimitive" />
+
+    <Button
         android:id="@+id/btnSplash"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -79,5 +88,6 @@
         android:layout_below="@id/btnUserInfoActivity"
         android:layout_alignParentRight="true"
         android:text="ProfileActivity" />
+
 </RelativeLayout>
 
