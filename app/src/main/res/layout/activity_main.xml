@@ -89,21 +89,6 @@
         android:layout_below="@id/btnPostFeed"
         android:text="ARActivity" />
 
-    <Button
-        android:id="@+id/btnARDrawActivity"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@id/btnARActivity"
-        android:text="ARDrawActivity" />
-
-    <Button
-        android:id="@+id/btnARPrimitive"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@id/btnARDrawActivity"
-        android:text="ARPrimitive" />
 
 </RelativeLayout>
 
