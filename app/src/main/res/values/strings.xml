@@ -23,7 +23,28 @@
         <item>Brookline, MA 02446</item>
         <item>175 Tremont St, Boston, MA 02111</item>
     </string-array>
-    <string name="mapbox_access_token">pk.eyJ1IjoiY2d4eTE5OTUwOSIsImEiOiJjazNuZjZ4c3IxNXAzM2tuM2dxZGJudTl6In0.5SvhOlvAL1sAl6RjkY7xhg</string>
+    <string name="mapbox_access_token">YOUR_KEY_HERE</string>
+
+    <!-- Image and ImageButton Content Descriptions for Accessibility-->
+    <string name="content_description_undo">Undo</string>
+    <string name="content_description_overflow_menu">More options</string>
+    <string name="content_description_large_brush">Large Brush</string>
+    <string name="content_description_medium_brush">Medium Brush</string>
+    <string name="content_description_small_brush">Small Brush</string>
+    <string name="content_description_select_brush">Change Brush Size</string>
+    <string name="content_description_upload">Upload</string>
+    <string name="content_description_memary_splash">memARy</string>
+    <string name="content_description_draw">Draw</string>
+
+    <!-- Permissions-->
+    <string name="title_activity_permissions">Permissions Required</string>
+    <string name="initial_permissions_required">Camera permissions is required</string>
+    <string name="ask_me_again">Try again</string>
+    <string name="open_system_permissions">Open System Permissions</string>
+    <string name="storage_permission_rationale">We need storage permission to save your video</string>
+    <string name="ok">OK</string>
+    <string name="action_unavailable">Action unavailable</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

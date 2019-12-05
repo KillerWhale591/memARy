@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -26,8 +27,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
@@ -35,10 +39,12 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
+import com.killerwhale.memary.DataModel.User;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
@@ -67,6 +73,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private StorageReference mImagesRef;
     private CollectionReference mPostRef;
     private GeoFirestore geoFirestore;
+    private String mUid = "";
 
     // Location
     private Location mLocation;
@@ -98,6 +105,29 @@ public class PostCreateActivity extends AppCompatActivity {
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
         mPostRef = db.collection("posts");
         geoFirestore = new GeoFirestore(mPostRef);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            mUid = user.getUid();
+            if (!mUid.isEmpty()) {
+                DocumentReference userRef = db.collection("users").document(mUid);
+                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc != null) {
+                                String avatar = (String) doc.get(User.FIELD_AVATAR);
+                                if (avatar != null) {
+                                    SimpleDraweeView icAvatar = findViewById(R.id.icAvatar);
+                                    icAvatar.setImageURI(Uri.parse(avatar));
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        }
 
         // Location
         Intent i = getIntent();
@@ -334,17 +364,36 @@ public class PostCreateActivity extends AppCompatActivity {
         final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
         Timestamp time = new Timestamp(Calendar.getInstance().getTime());
         // Create a new post
-        Post newPost = new Post(type, text, remoteUrl, geo, time);
+        Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
         Map<String, Object> post = newPost.getHashMap();
         if (db != null) {
             db.collection("posts")
                     .add(post)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
-                        public void onSuccess(DocumentReference documentReference) {
+                        public void onSuccess(final DocumentReference documentReference) {
                             Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
                             // Log.i(TAG, documentReference.getId());
                             geoFirestore.setLocation(documentReference.getId(), geo);
+                            if (!mUid.isEmpty()) {
+                                final DocumentReference userRef = db.collection("users").document(mUid);
+                                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot doc = task.getResult();
+                                            Map<String, Object> data = doc.getData();
+                                            if (data != null) {
+                                                Object userPosts = data.get(User.FIELD_POSTS);
+                                                if (userPosts != null) {
+                                                    ((ArrayList<String>) userPosts).add(documentReference.getId());
+                                                    userRef.set(data);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
                             finish();
                         }
                     })
