@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -43,6 +44,7 @@ import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
@@ -369,10 +371,29 @@ public class PostCreateActivity extends AppCompatActivity {
                     .add(post)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
-                        public void onSuccess(DocumentReference documentReference) {
+                        public void onSuccess(final DocumentReference documentReference) {
                             Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
                             // Log.i(TAG, documentReference.getId());
                             geoFirestore.setLocation(documentReference.getId(), geo);
+                            if (!mUid.isEmpty()) {
+                                final DocumentReference userRef = db.collection("users").document(mUid);
+                                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot doc = task.getResult();
+                                            Map<String, Object> data = doc.getData();
+                                            if (data != null) {
+                                                Object userPosts = data.get(User.FIELD_POSTS);
+                                                if (userPosts != null) {
+                                                    ((ArrayList<String>) userPosts).add(documentReference.getId());
+                                                    userRef.set(data);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
                             finish();
                         }
                     })
