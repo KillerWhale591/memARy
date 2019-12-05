@@ -290,11 +290,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
                 List<Feature> featureLocation = new ArrayList<>();
 
-
                 HashMap<String, Bitmap> imagesMap = new HashMap<>();
-                LayoutInflater inflater = LayoutInflater.from(getApplicationContext()); //这里可能错
-
-
+                LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
 
                 if (documents.size() > 0) {
                     for (DocumentSnapshot document : documents) {
@@ -305,15 +302,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             l.setLongitude(geoPoint.getLongitude());
                             mPostLocations.add(l);
                             Feature currFeature = Feature.fromGeometry(Point.fromLngLat(geoPoint.getLongitude(),geoPoint.getLatitude()));
-
                             String name = document.getString("name");
                             currFeature.addStringProperty("name", name);
                             currFeature.addBooleanProperty(PROPERTY_SELECTED, false);
-
-
                             featureLocation.add(currFeature);
-
-
                             BubbleLayout bubbleLayout = (BubbleLayout) inflater.inflate(R.layout.symbol_layer_info_window_layout_callout, null);
                             String address = document.getString("address");
                             TextView titleTextView = bubbleLayout.findViewById(R.id.info_window_title);
@@ -326,10 +318,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             bubbleLayout.setArrowPosition(measuredWidth / 2 - 5);
                             Bitmap bitmap = SymbolGenerator.generate(bubbleLayout);
                             imagesMap.put(name, bitmap);
-
-
-
-
                         }
                     }
                 }
@@ -381,10 +369,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         static Bitmap generate(@NonNull View view) {
             int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             view.measure(measureSpec, measureSpec);
-
             int measuredWidth = view.getMeasuredWidth();
             int measuredHeight = view.getMeasuredHeight();
-
             view.layout(0, 0, measuredWidth, measuredHeight);
             Bitmap bitmap = Bitmap.createBitmap(measuredWidth, measuredHeight, Bitmap.Config.ARGB_8888);
             bitmap.eraseColor(Color.TRANSPARENT);
@@ -441,9 +427,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 /* add a filter to show only when selected feature property is true */
                 .withFilter(eq((get(PROPERTY_SELECTED)), literal(true))));
     }
-
-
-
 
     private void setupSearchLayer(Style style) {
         style.addLayer(new SymbolLayer(SEARCH_MARKER_LAYER,SEARCH_MARKER_SOURCE).withProperties(
@@ -508,17 +491,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             locationComponent.setRenderMode(RenderMode.COMPASS);
     }
 
-
-
-
 //Step 5; enable clickable symbol( marker)
     @Override
     public boolean onMapClick(@NonNull LatLng point) {
         return handleClickIcon(mapboxMap.getProjection().toScreenLocation(point));
     }
-
-
-
 
     /**
      * This method handles click events for SymbolLayer symbols.
@@ -562,7 +539,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
 
-
     /**
      * Set a feature selected state.
      *
@@ -576,6 +552,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
+
     /**
      * Selects the state of a feature
      *
@@ -588,6 +565,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
+
     /**
      * Updates the display of data on the map after the FeatureCollection has been modified
      */
@@ -596,6 +574,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             source.setGeoJson(featureCollection);
         }
     }
+
 
     /**
      * Checks whether a Feature's boolean "selected" property is true or false
@@ -609,7 +588,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
         return featureCollection.features().get(index).getBooleanProperty(PROPERTY_SELECTED);
     }
-
 
 
 //add Symbol layer
@@ -630,6 +608,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         ));
 
     }
+
     private void initMarkerPosition(@NonNull Style loadedMapStyle){
         Log.d("Hello", "Hello");
         List<Feature> features = new ArrayList<>();
@@ -648,7 +627,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //
 //        }
 //        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
-
     }
 
     private void addPostMarkers(@NonNull Style loadedMapStyle){
@@ -768,6 +746,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
     }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -778,7 +758,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 // Create a new FeatureCollection and add a new Feature to it using selectedCarmenFeature above.
 // Then retrieve and update the source designated for showing a selected location's symbol layer icon
-
             if (mapboxMap != null) {
                 Style style = mapboxMap.getStyle();
                 if (style != null) {
@@ -814,11 +793,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         navBar.setSelectedItemId(R.id.action_map);
     }
 
+
     @Override
     protected void onPause() {
         super.onPause();
         mapView.onPause();
     }
+
 
     @Override
     protected void onStop() {
@@ -826,11 +807,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mapView.onStop();
     }
 
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
     }
+
 
     @Override
     protected void onDestroy() {
@@ -838,17 +821,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (mapboxMap != null) {
             mapboxMap.removeOnMapClickListener(this);
         }
-
         mapView.onDestroy();
     }
+
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
         mapView.onLowMemory();
     }
-
-
-
 }
 
