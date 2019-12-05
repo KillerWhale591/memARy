@@ -17,7 +17,8 @@
         android:paddingBottom="10dp"
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
-        fresco:placeholderImage="@drawable/placeholder_avatar"
+        fresco:roundAsCircle="true"
+        fresco:placeholderImage="@color/colorPrimaryDark"
         fresco:viewAspectRatio="1"/>
 
     <LinearLayout
