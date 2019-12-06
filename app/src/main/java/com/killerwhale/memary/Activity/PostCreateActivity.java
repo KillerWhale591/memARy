@@ -3,12 +3,17 @@ package com.killerwhale.memary.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -51,9 +56,14 @@ import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -222,14 +232,20 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable  Intent data) {
         if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
-            if (resultCode == RESULT_OK) {
+            if (resultCode == RESULT_OK ) {
                 setAddingImageEnabled(false);
-                if (data != null) {
-                    localUri = data.getData();
-                }
-                imgAttach.setImageURI(localUri);
+                Log.d(TAG,"onActivityResult: ");
+//                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+                    Log.d(TAG, "onActivityResult: "+ localUri.toString());
+                    try {
+                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), localUri);
+                        Log.d(TAG, "onActivityResult: "+ bitmap.toString());
+                        imgAttach.setImageBitmap(bitmap);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
             }
         }
         else if(requestCode == ACTION_SEARCH_NEARBY){
@@ -302,10 +318,37 @@ public class PostCreateActivity extends AppCompatActivity {
 
     /**
      * Start a camera session to take photo
+     * ref: https://stackoverflow.com/questions/1910608/android-action-image-capture-intent
+     * ref:https://stackoverflow.com/questions/6448856/android-camera-intent-how-to-get-full-sized-photo
      */
     private void takePhoto() {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File photo;
+        try
+        {
+            // place where to store camera taken picture
+            photo = this.createTemporaryFile("picture", ".jpg");
+            photo.delete();
+            localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider",photo);
+        }
+        catch(Exception e)
+        {
+            Log.v(TAG, "Can't create file to take picture!");
+            Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
+        }
+        i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
+        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivityForResult(i, REQUEST_CODE_IMAGE_CAPTURE);
+    }
+    private File createTemporaryFile(String part, String ext) throws Exception
+    {
+        File tempDir= Environment.getExternalStorageDirectory();
+        tempDir=new File(tempDir.getAbsolutePath()+"/.temp/");
+        if(!tempDir.exists())
+        {
+            tempDir.mkdirs();
+        }
+        return File.createTempFile(part, ext, tempDir);
     }
 
     /**
