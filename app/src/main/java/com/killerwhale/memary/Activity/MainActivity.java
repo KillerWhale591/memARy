@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         txtUser = (TextView) findViewById(R.id.txtUser);
         btnSplash = findViewById(R.id.btnSplash);
         btnProfileActivity = (Button) findViewById(R.id.btnProfileActivity);
-        btnARPrimitiveActivity = (Button) findViewById(R.id.btnARPrimitive);
+        btnARActivity = (Button) findViewById(R.id.btnARActivity);
 
         btnARActivity = (Button) findViewById(R.id.btnARActivity);
         btnARDrawActivity = (Button) findViewById(R.id.btnARDrawActivity);
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         });
 
 
-        btnARPrimitiveActivity.setOnClickListener(new View.OnClickListener() {
+        btnARActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getBaseContext(), ARActivity.class);

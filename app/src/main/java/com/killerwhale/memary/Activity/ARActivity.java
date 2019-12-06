@@ -25,6 +25,7 @@ import android.os.Looper;
 
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
@@ -42,7 +43,6 @@ import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
-
 
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -69,35 +69,40 @@ import javax.vecmath.Vector3f;
 
 
 /**
- * This is a basic implementation of Offline AR functions
+ * Author: Qili Zeng (qzeng@bu.edu)
+ * With reference to: justaline APP by Google
+ * This is a comprehensive implementation of memARy AR functions.
  */
 
 public class ARActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
-        ErrorDialog.Listener,ClearDrawingDialog.Listener{
+        ErrorDialog.Listener,ClearDrawingDialog.Listener, UploadDrawingDialog.Listener {
 
     private static final String TAG = "ARActivity";
     private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
     private static final int TOUCH_QUEUE_SIZE = 10;
+    private boolean mUserRequestedARCoreInstall = true;
 
     enum Mode {
-        DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
-    }
+        DRAW, VIEW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
+    };
 
-    private Mode mMode = Mode.DRAW;
+    private Mode mMode = Mode.VIEW;
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private RecordableSurfaceView mSurfaceView;
     private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
     private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
+    private LineShaderRendererGroup mCloudShaderRenderer = new LineShaderRendererGroup();
     private final PointCloudRenderer pointCloud = new PointCloudRenderer();
     private AnchorRenderer zeroAnchorRenderer;
     private AnchorRenderer cloudAnchorRenderer;
     private TrackingIndicator mTrackingIndicator;
-    private Button btnSave;
-    private ImageButton
-    private Button btnLoad;
+
+    private LinearLayout mOverflowLayout;
+    private ImageButton btnReturn;
+    private ImageButton btnUndo;
+    private ImageButton btnSave;
     private ImageButton btnClear;
-    private View mUndoButton;
     private View mDrawUiContainer;
     private View mOverflowButton;
     private TextView mPairActiveView;
@@ -120,16 +125,20 @@ public class ARActivity extends ARBaseActivity
     private float mLineWidthMax = 0.33f;
     private float[] mLastFramePosition;
     private Boolean isDrawing = false;
+
     private AtomicBoolean bHasTracked = new AtomicBoolean(false);
     private AtomicBoolean bTouchDown = new AtomicBoolean(false);
     private AtomicBoolean bClearDrawing = new AtomicBoolean(false);
+    private AtomicBoolean bUploadDrawing = new AtomicBoolean(false);
     private AtomicBoolean bUndo = new AtomicBoolean(false);
+    private AtomicBoolean bModeChange = new AtomicBoolean(false);
     private AtomicBoolean bNewStroke = new AtomicBoolean(false);
     private static final int MAX_UNTRACKED_FRAMES = 5;
     private int mFramesNotTracked = 0;
     private Map<String, Stroke> mSharedStrokes = new HashMap<>();
     private boolean mDebugEnabled = false;
     private long mRenderDuration;
+    private GestureDetector gestureDetector;
 
     /**
      * Setup the app when main activity is created
@@ -152,15 +161,15 @@ public class ARActivity extends ARBaseActivity
         mSurfaceView = findViewById(R.id.surfaceview);
         mSurfaceView.setRendererCallbacks(this);
 
-        //btnLoad = findViewById(R.id.btnLoad);
+        btnUndo = findViewById(R.id.btnUndo);
         btnClear = findViewById(R.id.btnClear);
-
-        btnSave.setOnClickListener(this);
-        btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
 
-        mUndoButton = findViewById(R.id.btnUndo);
-        
+        btnSave = findViewById(R.id.btnSave);
+        btnSave.setOnClickListener(this);
+        btnReturn = findViewById(R.id.btnBack);
+        btnReturn.setOnClickListener(this);
+
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
 
@@ -170,7 +179,58 @@ public class ARActivity extends ARBaseActivity
         mStrokes = new ArrayList<>();
         touchQueueSize = new AtomicInteger(0);
         touchQueue = new AtomicReferenceArray<>(TOUCH_QUEUE_SIZE);
-}
+
+        mDrawUiContainer = findViewById(R.id.draw_container);
+        mTrackingIndicator.addListener(new TrackingIndicator.ModeListener(){
+            @Override
+            public void onModeChange(){
+                TrackingIndicator.Mode mode = TrackingIndicator.Mode.VIEW;
+                if (mMode == Mode.DRAW){
+                    mode = TrackingIndicator.Mode.DRAW;
+                }
+                mTrackingIndicator.setMode(mode);
+            }
+        });
+        gestureDetector = new GestureDetector(this, new GestureDetector.OnGestureListener(){
+            @Override
+            public boolean onDown(MotionEvent e) {
+                Log.d(TAG, "onDown");
+                closeViewsOutsideTapTarget(e);
+                return false;
+            }
+            @Override
+            public void onShowPress(MotionEvent e) {
+                Log.d(TAG, "onShowPress");
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                Log.d(TAG, "onLongPress");
+                setMode(Mode.DRAW);
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                Log.d(TAG, "onSingleTapUp");
+                return false;
+            }
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                Log.d(TAG, "onScroll");
+                Log.d(TAG, "onScroll: "+distanceX);
+                Log.d(TAG, "onScroll: "+distanceX);
+                return false;
+            }
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                Log.d(TAG, "onFling");
+                return false;
+            }
+        });
+
+    }
 
     @Override
     protected void onStart() {
@@ -267,6 +327,9 @@ public class ARActivity extends ARBaseActivity
         }
 
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
+        if (!BuildConfig.SHOW_NAVIGATION) {
+            mOverflowButton.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -372,9 +435,7 @@ public class ARActivity extends ARBaseActivity
 
             // Update tracking states
             mTrackingIndicator.setTrackingStates(mFrame, mAnchor);
-            if (mAnchor == null) {
-                createAnchor();
-            }
+
 
             if (mTrackingIndicator.trackingState == TrackingState.TRACKING && !bHasTracked.get()) {
                 bHasTracked.set(true);
@@ -484,6 +545,8 @@ public class ARActivity extends ARBaseActivity
                 mLineShaderRenderer.upload();
             }
 
+            mCloudShaderRenderer.checkUpload();
+
             // Debug view
             if (mDebugEnabled) {
                 final long deltaTime = System.currentTimeMillis() - updateStartTime;
@@ -539,7 +602,10 @@ public class ARActivity extends ARBaseActivity
                 // If the anchor is set, set the modelMatrix of the line renderer to offset to the anchor
                 if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
                     mAnchor.getPose().toMatrix(mLineShaderRenderer.mModelMatrix, 0);
-                    Log.i("Anchor", "set modelMatrix");
+                    mCloudShaderRenderer.anchorTransform(mAnchor);
+
+
+                    //Log.i("Anchor", "set modelMatrix");
 
                     if (BuildConfig.DEBUG) {
                         mAnchor.getPose().toMatrix(cloudAnchorRenderer.mModelMatrix, 0);
@@ -547,11 +613,17 @@ public class ARActivity extends ARBaseActivity
                     }
                 }
 
+
                 // Render the lines
                 mLineShaderRenderer
                         .draw(viewmtx, projmtx, mScreenWidth, mScreenHeight,
                                 ARSettings.getNearClip(),
                                 ARSettings.getFarClip());
+
+                mCloudShaderRenderer.draw(viewmtx, projmtx, mScreenWidth, mScreenHeight,
+                        ARSettings.getNearClip(),
+                        ARSettings.getFarClip());
+
             }
 
             if (mDebugEnabled) {
@@ -579,6 +651,65 @@ public class ARActivity extends ARBaseActivity
     }
 
     /**
+     * addStroke adds a new stroke to the scene
+     */
+    private void addStroke() {
+        mLineWidthMax = mBrushSelector.getSelectedLineWidth().getWidth();
+
+        Stroke stroke = new Stroke();
+        stroke.localLine = true;
+        stroke.setLineWidth(mLineWidthMax);
+        mStrokes.add(stroke);
+
+        showStrokeDependentUI();
+
+        mTrackingIndicator.setDrawnInSession();
+    }
+
+    /**
+     * addPoint2f adds a point to the current stroke
+     *
+     * @param touchPoint a 2D point in screen space and is projected into 3D world space
+     */
+    private void addPoint2f(Vector2f... touchPoint) {
+        Vector3f[] newPoints = new Vector3f[touchPoint.length];
+        for (int i = 0; i < touchPoint.length; i++) {
+            newPoints[i] = LineUtils
+                    .GetWorldCoords(touchPoint[i], mScreenWidth, mScreenHeight, projmtx, viewmtx);
+        }
+
+        addPoint3f(newPoints);
+    }
+
+    /**
+     * addPoint3f adds a point to the current stroke
+     *
+     * @param newPoint a 3D point in world space
+     */
+    private void addPoint3f(Vector3f... newPoint) {
+        Vector3f point;
+        int index = mStrokes.size() - 1;
+
+        if (index < 0)
+            return;
+
+        for (int i = 0; i < newPoint.length; i++) {
+            if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
+                point = LineUtils.TransformPointToPose(newPoint[i], mAnchor.getPose());
+                mStrokes.get(index).add(point);
+                Log.i("ADD 3D Point", "With Anchor");
+            } else {
+                mStrokes.get(index).add(newPoint[i]);
+                Log.i("ADD 3D Point", "Without Anchor");
+            }
+        }
+
+        // update firebase database
+        //mPairSessionManager.updateStroke(mStrokes.get(index));
+        isDrawing = true;
+    }
+
+    /**
      * Clears the Datacollection of Strokes and sets the Line Renderer to clear and update itself
      * Designed to be executed on the GL Thread
      */
@@ -589,20 +720,35 @@ public class ARActivity extends ARBaseActivity
     }
 
 
-    /**
-     * onClickUndo handles the touch input on the GUI and sets the AtomicBoolean bUndo to be true
-     * the actual undo functionality is executed in the GL Thread
-     */
-    public void onClickUndo(View button) {
-
-        bUndo.set(true);
+    private void toggleOverflowMenu() {
+        if (mOverflowLayout.getVisibility() == View.VISIBLE) {
+            hideOverflowMenu();
+        } else {
+            showOverflowMenu();
+        }
     }
+
+    private void showOverflowMenu() {
+
+    }
+
+    private void hideOverflowMenu() {
+    }
+
 
     /**
      * onClickClear handle showing an AlertDialog to clear the drawing
      */
     private void onClickClear() {
         ClearDrawingDialog.newInstance(false).show(this);
+    }
+
+
+    /**
+     * onClickClear handle showing an AlertDialog to clear the drawing
+     */
+    private void onClickUpload() {
+        UploadDrawingDialog.newInstance(false).show(this);
     }
 
     // ------- Touch events
@@ -627,6 +773,13 @@ public class ARActivity extends ARBaseActivity
                 bTouchDown.set(false);
             }
             return false;
+        }
+
+        if (mMode == Mode.VIEW){
+
+            gestureDetector.onTouchEvent(tap);
+
+            return true;
         }
 
         if (mMode == Mode.DRAW) {
@@ -678,6 +831,7 @@ public class ARActivity extends ARBaseActivity
     public void onSurfaceDestroyed() {
         mBackgroundRenderer.clearGL();
         mLineShaderRenderer.clearGL();
+        mCloudShaderRenderer.clearGL();
     }
 
     @Override
@@ -701,13 +855,23 @@ public class ARActivity extends ARBaseActivity
     @Override
     public void onContextCreated() {
         mBackgroundRenderer.createOnGlThread(this);
+
+
+        //----Local Test-----
+        List<List<Stroke>> strokeList = createDummyStrokes();
+        List<Anchor> anchorList = createDummyAnchors();
+        mCloudShaderRenderer.initialize(strokeList, anchorList, 0.0f, mLineWidthMax);
         mSession.setCameraTextureName(mBackgroundRenderer.getTextureId());
         try {
             mLineShaderRenderer.createOnGlThread(ARActivity.this);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mCloudShaderRenderer.createOnGlThread(ARActivity.this);
+
         mLineShaderRenderer.bNeedsUpdate.set(true);
+        mCloudShaderRenderer.setNeedsUpdate();
     }
 
     @Override
@@ -728,10 +892,13 @@ public class ARActivity extends ARBaseActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mUndoButton.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                btnUndo.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
                 btnClear.setVisibility(
                         (mStrokes.size() > 0 || mSharedStrokes.size() > 0) ? View.VISIBLE
                                 : View.GONE);
+                btnSave.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                mBrushSelector.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                btnReturn.setVisibility(mMode == Mode.DRAW? View.VISIBLE : View.GONE);
                 mTrackingIndicator.setHasStrokes(mStrokes.size() > 0);
             }
         });
@@ -740,7 +907,32 @@ public class ARActivity extends ARBaseActivity
     @Override
     public void onClearDrawingConfirmed() {
         bClearDrawing.set(true);
+        if (bModeChange.get()){
+            setMode(Mode.VIEW);
+        }
+        bModeChange.set(false);
         showStrokeDependentUI();
+    }
+
+    @Override
+    public void onUploadDrawingConfirmed() {
+        bUploadDrawing.set(true);
+        saveStrokes();
+        mCloudShaderRenderer.update(this, mStrokes, mAnchor);
+        mCloudShaderRenderer.setNeedsUpdate();
+        setMode(Mode.VIEW);
+        clearDrawing();
+        showStrokeDependentUI();
+    }
+
+    /**
+     * onClickUndo handles the touch input on the GUI and sets the AtomicBoolean bUndo to be true
+     * the actual undo functionality is executed in the GL Thread
+     */
+    public void onClickUndo(View button) {
+
+        bUndo.set(true);
+
     }
 
     @Override
@@ -750,7 +942,18 @@ public class ARActivity extends ARBaseActivity
                 onClickClear();
                 break;
             case R.id.btnSave:
-                saveStrokes();
+                onClickUpload();
+                //saveStrokes();
+                break;
+            case R.id.btnBack:
+                if (mStrokes.size() > 0){
+                    bModeChange.set(true);
+                    onClickClear();
+                }
+                else{
+                    setMode(Mode.VIEW);
+                }
+
                 break;
         }
         mBrushSelector.close();
@@ -765,6 +968,11 @@ public class ARActivity extends ARBaseActivity
             mMode = mode;
 
             switch (mMode) {
+                case VIEW:
+                    showView(mDrawUiContainer);
+                    showView(mTrackingIndicator);
+                    mTrackingIndicator.setDrawPromptEnabled(false);
+                    break;
                 case DRAW:
                     showView(mDrawUiContainer);
                     showView(mTrackingIndicator);
@@ -783,7 +991,9 @@ public class ARActivity extends ARBaseActivity
                     mTrackingIndicator.setDrawPromptEnabled(false);
                     break;
             }
+            showStrokeDependentUI();
         }
+
     }
 
     public void createAnchor() {
@@ -811,7 +1021,6 @@ public class ARActivity extends ARBaseActivity
                     return;
                 }
 
-                //mPairSessionManager.onAnchorCreated();
                 if (mStrokes.size() > 0) {
                     for (int i = 0; i < mStrokes.size(); i++) {
                         mStrokes.get(i).offsetToPose(pose);
@@ -873,6 +1082,35 @@ public class ARActivity extends ARBaseActivity
             e.printStackTrace();
         }
         return null;
+    }
+
+    public List<List<Stroke>> createDummyStrokes(){
+
+        List<List<Stroke>> dummyStrokes = new ArrayList<>();
+
+        try{
+            List<Stroke> localStrokes = fetchStrokes();
+            Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
+            Log.i("Checkpointer", "Loaded!");
+            dummyStrokes.add(localStrokes);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return dummyStrokes;
+
+    }
+
+    public List<Anchor> createDummyAnchors(){
+        List<Anchor> dummyAnchors = new ArrayList<>();
+//        Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
+//                        .getPose()
+//                        .compose(Pose.makeTranslation(0, 0, -1f))
+//                        .extractTranslation());
+//        dummyAnchors.add(dummyAnchor);
+        return dummyAnchors;
+
     }
 
 }
