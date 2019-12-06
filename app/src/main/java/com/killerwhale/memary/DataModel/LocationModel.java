@@ -15,4 +15,5 @@ public class LocationModel {
         this.img = img;
         this.numPosts = numPosts;
     }
+
 }

@@ -21,11 +21,18 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.PlaceLikelihood;
+import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
+import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
+import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -45,7 +52,9 @@ import com.killerwhale.memary.R;
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -67,6 +76,7 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.CAMERA
     };
+    private static final int ACTION_SEARCH_NEARBY = 1995;
 
     // Firebase plug-ins
     private FirebaseFirestore db;
@@ -77,6 +87,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
     // Location
     private Location mLocation;
+    private Button btnSearch;
 
     // UI widgets
     private Button btnCancel;
@@ -142,6 +153,7 @@ public class PostCreateActivity extends AppCompatActivity {
         imgAttach = findViewById(R.id.imgAttach);
         btnRemove = findViewById(R.id.btnRemove);
         edtContent = findViewById(R.id.edtContent);
+        btnSearch = findViewById(R.id.btnSearch);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -188,6 +200,13 @@ public class PostCreateActivity extends AppCompatActivity {
                 setAddingImageEnabled(true);
             }
         });
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(PostCreateActivity.this, SearchNearbyActivity.class);
+                startActivityForResult(intent, ACTION_SEARCH_NEARBY);
+            }
+        });
     }
 
     @Override
@@ -211,6 +230,12 @@ public class PostCreateActivity extends AppCompatActivity {
                     localUri = data.getData();
                 }
                 imgAttach.setImageURI(localUri);
+            }
+        }
+        else if(requestCode == ACTION_SEARCH_NEARBY){
+            if(resultCode == RESULT_OK && data!= null){
+                String returnaddress = data.getStringExtra("address");
+                btnSearch.setText(returnaddress);
             }
         }
     }
