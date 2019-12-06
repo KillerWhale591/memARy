@@ -17,11 +17,13 @@ package com.killerwhale.memary.Activity;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -30,6 +32,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
@@ -40,6 +51,7 @@ import com.killerwhale.memary.ARComponent.Utils.BrushSelector;
 import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
+import com.killerwhale.memary.ARComponent.Utils.StrokeStorageHelper;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
@@ -57,16 +69,18 @@ import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -86,10 +100,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private static final String TAG = "ARPrimitiveActivity";
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
-    //private Fa mAnalytics;
 
     enum Mode {
-        DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
+        DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING
     }
 
     private Mode mMode = Mode.DRAW;
@@ -373,10 +386,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                                 .extractTranslation());
             }
 
-            // Notify the hostManager of all the anchor updates.
-            Collection<Anchor> updatedAnchors = mFrame.getUpdatedAnchors();
-
-
             // Update tracking states
             mTrackingIndicator.setTrackingStates(mFrame, mAnchor);
             if (mAnchor == null) {
@@ -595,17 +604,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         showStrokeDependentUI();
     }
 
-
-    /**
-     * onClickUndo handles the touch input on the GUI and sets the AtomicBoolean bUndo to be true
-     * the actual undo functionality is executed in the GL Thread
-     */
-    public void onClickUndo(View button) {
-
-        bUndo.set(true);
-
-    }
-
     /**
      * onClickClear handle showing an AlertDialog to clear the drawing
      */
@@ -815,6 +813,12 @@ public class ARPrimitiveActivity extends ARBaseActivity
 
     public void saveStrokes(){
         try {
+            for (Stroke s : mStrokes) {
+                Log.i("strokestring", "New stroke");
+                for (int i = 0; i < s.size(); i++) {
+                    Log.i("strokestring", s.get(i).toString());
+                }
+            }
             serializeStorkes(mStrokes);
             Toast.makeText(ARPrimitiveActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
             Log.i("Checkpointer", "Saved!");
@@ -830,35 +834,74 @@ public class ARPrimitiveActivity extends ARBaseActivity
             ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
             out.writeObject(mStrokes);
             out.close();
+            File file = new File(ARPrimitiveActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
+            Log.i("strokestring", file.getAbsolutePath());
+            Uri uri = Uri.fromFile(file);
+            StrokeStorageHelper helper = new StrokeStorageHelper();
+            helper.uploadStrokeFile(uri);
         } catch(IOException e) {
             e.printStackTrace();
+            Log.i("strokestring", "Saved failed");
         }
     }
 
-    public void loadStrokes(){
+    public void loadStrokes() {
+//        try {
+//            List<Stroke> newmStrokes = fetchStrokes();
+//            mStrokes = newmStrokes;
+//            Log.i("Checkpointer", "Loaded!");
+//            update();
+//        }
+//        catch (Exception e){
+//            e.printStackTrace();
+//        }
+        StorageReference strokeRef = FirebaseStorage.getInstance().getReference().child("strokes");
+        final StorageReference mStrokeRef = strokeRef.child("strokeFile.ser");
+        File localFile = null;
         try {
-            List<Stroke> newmStrokes = fetchStrokes();
-            mStrokes = newmStrokes;
-            Log.i("Checkpointer", "Loaded!");
-            update();
-        }
-        catch (Exception e){
+            localFile = File.createTempFile("strokeFile", "ser");
+            Log.i("strokestring", "Temp file success");
+        } catch (IOException e) {
             e.printStackTrace();
         }
+        if (localFile != null) {
+            final File finalLocalFile = localFile;
+            mStrokeRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    try {
+                        FileInputStream fileInputStream = new FileInputStream(finalLocalFile);
+                        ObjectInputStream in = new ObjectInputStream(fileInputStream);
+                        mStrokes = (List<Stroke>) in.readObject();
+                        in.close();
+                        Log.i("strokestring", "Success resolve");
+                        update();
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.i("strokestring", "Failed resolve");
+                }
+            });
+        }
+
     }
 
-    public List<Stroke> fetchStrokes() {
-        try{
-            FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
-            ObjectInputStream in = new ObjectInputStream(fileInputStream);
-            List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
-            in.close();
-            return fetchStrokes;
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    public List<Stroke> fetchStrokes() {
+//        try {
+//            FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
+//            ObjectInputStream in = new ObjectInputStream(fileInputStream);
+//            List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
+//            in.close();
+//            return fetchStrokes;
+//        }
+//        catch (Exception e){
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
 }
