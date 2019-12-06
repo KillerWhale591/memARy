@@ -40,7 +40,6 @@
         <activity
             android:name=".Activity.PostFeedActivity"
             android:screenOrientation="portrait" />
-        </activity>
         <activity
             android:name=".Activity.ARActivity"
             android:screenOrientation="portrait">

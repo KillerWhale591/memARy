@@ -34,9 +34,12 @@
     <string name="content_description_medium_brush">Medium Brush</string>
     <string name="content_description_small_brush">Small Brush</string>
     <string name="content_description_select_brush">Change Brush Size</string>
+    <string name="content_description_save">Upload</string>
     <string name="content_description_upload">Upload</string>
     <string name="content_description_memary_splash">memARy</string>
     <string name="content_description_draw">Draw</string>
+    <string name="content_description_close">Return</string>
+
 
     <!-- Permissions-->
     <string name="title_activity_permissions">Permissions Required</string>
@@ -58,6 +61,10 @@
     <string name="clear_confirmation_title_paired">Clear your drawings?</string>
     <string name="clear">Clear</string>
     <string name="cancel">Cancel</string>
+
+    <!-- Upload Drawing Dialog -->
+    <string name="upload_confirmation_message">Ready to Share?</string>
+    <string name="upload">Upload</string>
 
     <!-- Playback -->
     <string name="playback_share">Share</string>

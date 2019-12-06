@@ -6,9 +6,8 @@ package com.killerwhale.memary.Presenter;
  **/
 
 public class ARPresenter {
-    public static final int MODE_VIEW = 0;
-    public static final int MODE_DRAW = 1;
 
+    private int releaseToken = -1;
 
 
 

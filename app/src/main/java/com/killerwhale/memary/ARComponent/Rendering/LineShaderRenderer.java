@@ -95,7 +95,7 @@ public class LineShaderRenderer {
     private int mVbo = 0;
     private int mVboSize = 0;
 
-    private int mProgramName = 0;
+    private int mProgramName;
     private float mLineWidth = 0;
 
     private Vector3f mColor;
@@ -511,6 +511,8 @@ public class LineShaderRenderer {
 
         GLES20.glUseProgram(mProgramName);
 
+        ShaderUtil.checkGLError(TAG, "In draw");
+
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
@@ -589,6 +591,8 @@ public class LineShaderRenderer {
 
         GLES20.glDisable(GLES20.GL_BLEND);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+
+        ShaderUtil.checkGLError(TAG, "After draw");
 
     }
 
