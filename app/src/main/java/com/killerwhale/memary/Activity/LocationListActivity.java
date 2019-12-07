@@ -58,11 +58,14 @@ public class LocationListActivity extends AppCompatActivity {
                 switch (menuItem.getItemId()) {
                     case R.id.action_map:
                         startActivity(new Intent(getBaseContext(), MapActivity.class));
+                        finish();
                         break;
                     case R.id.action_posts:
                         startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
+                        finish();
                         break;
                     case R.id.action_profile:
+                        finish();
                         break;
                     default:
                         Log.i("nvBar", "Unhandled nav click");

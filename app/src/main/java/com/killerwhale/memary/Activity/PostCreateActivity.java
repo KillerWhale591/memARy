@@ -3,18 +3,21 @@ package com.killerwhale.memary.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -26,6 +29,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -44,6 +48,7 @@ import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
@@ -67,6 +72,7 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.CAMERA
     };
+    private static final int ACTION_SEARCH_NEARBY = 1995;
 
     // Firebase plug-ins
     private FirebaseFirestore db;
@@ -77,6 +83,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
     // Location
     private Location mLocation;
+    private Button btnSearch;
 
     // UI widgets
     private Button btnCancel;
@@ -142,6 +149,7 @@ public class PostCreateActivity extends AppCompatActivity {
         imgAttach = findViewById(R.id.imgAttach);
         btnRemove = findViewById(R.id.btnRemove);
         edtContent = findViewById(R.id.edtContent);
+        btnSearch = findViewById(R.id.btnSearch);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -161,6 +169,7 @@ public class PostCreateActivity extends AppCompatActivity {
                             PERMISSION_ALL);
                 } else {
                     // Permission has already been granted
+                    Log.i(TAG, "onClick: 1");
                     takePhoto();
                 }
             }
@@ -188,6 +197,13 @@ public class PostCreateActivity extends AppCompatActivity {
                 setAddingImageEnabled(true);
             }
         });
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(PostCreateActivity.this, SearchNearbyActivity.class);
+                startActivityForResult(intent, ACTION_SEARCH_NEARBY);
+            }
+        });
     }
 
     @Override
@@ -203,14 +219,20 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
-            if (resultCode == RESULT_OK) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable  Intent data) {
+        if (resultCode == RESULT_OK ) {
+            if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
-                if (data != null) {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
                     localUri = data.getData();
+                    Log.i(TAG, "onActivityResult: " + localUri.toString());
                 }
                 imgAttach.setImageURI(localUri);
+            }
+        } else if(requestCode == ACTION_SEARCH_NEARBY) {
+            if (data != null) {
+                String returnaddress = data.getStringExtra("address");
+                btnSearch.setText(returnaddress);
             }
         }
     }
@@ -219,6 +241,7 @@ public class PostCreateActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_ALL) {
             if (hasGrantedAll(grantResults)) {
+                Log.i(TAG, "onRequestPermissionsResult: 1" );
                 takePhoto();
             }
         }
@@ -277,10 +300,39 @@ public class PostCreateActivity extends AppCompatActivity {
 
     /**
      * Start a camera session to take photo
+     * ref: https://stackoverflow.com/questions/1910608/android-action-image-capture-intent
+     * ref:https://stackoverflow.com/questions/6448856/android-camera-intent-how-to-get-full-sized-photo
      */
     private void takePhoto() {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File photo;
+        Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+            // Marshmallow+
+            try {
+                // place where to store camera taken picture
+                photo = this.createTemporaryFile("picture", ".jpg");
+                photo.delete();
+                localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
+                Log.d(TAG, "takePhoto: " + localUri.toString());
+            } catch (Exception e) {
+                Log.v(TAG, "Can't create file to take picture!");
+                Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
+            }
+            i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
+            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
         startActivityForResult(i, REQUEST_CODE_IMAGE_CAPTURE);
+    }
+    private File createTemporaryFile(String part, String ext) throws Exception
+    {
+        File tempDir= Environment.getExternalStorageDirectory();
+        tempDir=new File(tempDir.getAbsolutePath()+"/.temp/");
+        if(!tempDir.exists())
+        {
+            tempDir.mkdirs();
+        }
+        return File.createTempFile(part, ext, tempDir);
     }
 
     /**
@@ -348,7 +400,8 @@ public class PostCreateActivity extends AppCompatActivity {
                     }
                 } else {
                     // Handle failures
-                    Log.e(TAG, "Upload failed.");
+                    Log.e(TAG, "Upload failed." + task.getException());
+
                 }
             }
         });

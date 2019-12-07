@@ -249,7 +249,7 @@ public class PostPresenter {
     private void addUserInfo(final PostFeedAdapter adapter) {
         for (final Post post : mPosts) {
             String uid = post.getUid();
-            if (uid != null) {
+            if (uid != null && !uid.isEmpty()) {
                 DocumentReference userRef = mDatabase.collection("users").document(uid);
                 userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
