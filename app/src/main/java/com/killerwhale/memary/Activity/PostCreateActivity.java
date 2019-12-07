@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -168,6 +169,7 @@ public class PostCreateActivity extends AppCompatActivity {
                             PERMISSION_ALL);
                 } else {
                     // Permission has already been granted
+                    Log.i(TAG, "onClick: 1");
                     takePhoto();
                 }
             }
@@ -221,10 +223,11 @@ public class PostCreateActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK ) {
             if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
-                Log.d(TAG,"onActivityResult: ");
-//                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-                    Log.d(TAG, "onActivityResult: "+ localUri.toString());
-                    imgAttach.setImageURI(localUri);
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                    localUri = data.getData();
+                    Log.i(TAG, "onActivityResult: " + localUri.toString());
+                }
+                imgAttach.setImageURI(localUri);
             }
         } else if(requestCode == ACTION_SEARCH_NEARBY) {
             if (data != null) {
@@ -238,6 +241,7 @@ public class PostCreateActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_ALL) {
             if (hasGrantedAll(grantResults)) {
+                Log.i(TAG, "onRequestPermissionsResult: 1" );
                 takePhoto();
             }
         }
@@ -302,20 +306,22 @@ public class PostCreateActivity extends AppCompatActivity {
     private void takePhoto() {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo;
-        try
-        {
-            // place where to store camera taken picture
-            photo = this.createTemporaryFile("picture", ".jpg");
-            photo.delete();
-            localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider",photo);
+        Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+            // Marshmallow+
+            try {
+                // place where to store camera taken picture
+                photo = this.createTemporaryFile("picture", ".jpg");
+                photo.delete();
+                localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
+                Log.d(TAG, "takePhoto: " + localUri.toString());
+            } catch (Exception e) {
+                Log.v(TAG, "Can't create file to take picture!");
+                Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
+            }
+            i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
+            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         }
-        catch(Exception e)
-        {
-            Log.v(TAG, "Can't create file to take picture!");
-            Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
-        }
-        i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
-        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivityForResult(i, REQUEST_CODE_IMAGE_CAPTURE);
     }
     private File createTemporaryFile(String part, String ext) throws Exception
@@ -394,7 +400,8 @@ public class PostCreateActivity extends AppCompatActivity {
                     }
                 } else {
                     // Handle failures
-                    Log.e(TAG, "Upload failed.");
+                    Log.e(TAG, "Upload failed." + task.getException());
+
                 }
             }
         });
