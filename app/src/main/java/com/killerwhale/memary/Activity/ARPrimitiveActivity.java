@@ -32,15 +32,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
@@ -71,7 +67,6 @@ import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceV
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -80,7 +75,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -124,6 +118,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private Anchor mAnchor;
     private List<Stroke> mStrokes;
     private BrushSelector mBrushSelector;
+    StrokeStorageHelper strokeHelper = new StrokeStorageHelper();
 
     private float[] projmtx = new float[16];
     private float[] viewmtx = new float[16];
@@ -481,7 +476,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 bUndo.set(false);
                 if (mStrokes.size() > 0) {
                     int index = mStrokes.size() - 1;
-//                    mPairSessionManager.undoStroke(mStrokes.get(index));
                     mStrokes.remove(index);
                     if (mStrokes.isEmpty()) {
                         showStrokeDependentUI();
@@ -496,7 +490,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 mLineShaderRenderer.setDistanceScale(distanceScale);
                 mLineShaderRenderer.setLineWidth(mLineWidthMax);
                 mLineShaderRenderer.clear();
-                mLineShaderRenderer.updateStrokes(mStrokes, mSharedStrokes);
+                mLineShaderRenderer.updateStrokes(mStrokes);
                 mLineShaderRenderer.upload();
             }
 
@@ -608,6 +602,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
      * onClickClear handle showing an AlertDialog to clear the drawing
      */
     private void onClickClear() {
+        mStrokes.clear();
         ClearDrawingDialog.newInstance(false).show(this);
     }
 
@@ -621,13 +616,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     public boolean onTouchEvent(MotionEvent tap) {
         int action = tap.getAction();
-        if (action == MotionEvent.ACTION_DOWN) {
-            closeViewsOutsideTapTarget(tap);
-        }
-
-        // do not accept touch events through the playback view
-        // or when we are not tracking
-        //if (mPlaybackView.isOpen() || !mTrackingIndicator.isTracking()) {
         if (!mTrackingIndicator.isTracking()) {
             if (bTouchDown.get()) {
                 bTouchDown.set(false);
@@ -755,10 +743,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 onClickClear();
                 break;
             case R.id.btnLoad:
-                loadStrokes();
+                downloadStrokes();
                 break;
             case R.id.btnSave:
-                saveStrokes();
+                uploadStrokes();
                 break;
 
         }
@@ -810,51 +798,30 @@ public class ARPrimitiveActivity extends ARBaseActivity
         finish();
     }
 
-
-    public void saveStrokes(){
+    /**
+     * Upload user created strokes to FireBase storage
+     */
+    public void uploadStrokes() {
         try {
-            for (Stroke s : mStrokes) {
-                Log.i("strokestring", "New stroke");
-                for (int i = 0; i < s.size(); i++) {
-                    Log.i("strokestring", s.get(i).toString());
-                }
-            }
-            serializeStorkes(mStrokes);
-            Toast.makeText(ARPrimitiveActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
-            Log.i("Checkpointer", "Saved!");
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
 
-    public void serializeStorkes(List<Stroke> mStrokes) throws IOException {
-        try {
-            FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getApplicationContext().MODE_PRIVATE);
+            FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
             ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
             out.writeObject(mStrokes);
             out.close();
             File file = new File(ARPrimitiveActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
-            Log.i("strokestring", file.getAbsolutePath());
             Uri uri = Uri.fromFile(file);
-            StrokeStorageHelper helper = new StrokeStorageHelper();
-            helper.uploadStrokeFile(uri);
-        } catch(IOException e) {
+            strokeHelper.uploadStrokeFile(uri);
+
+        } catch (IOException e) {
             e.printStackTrace();
-            Log.i("strokestring", "Saved failed");
+            Log.i(TAG, "Saved failed");
         }
     }
 
-    public void loadStrokes() {
-//        try {
-//            List<Stroke> newmStrokes = fetchStrokes();
-//            mStrokes = newmStrokes;
-//            Log.i("Checkpointer", "Loaded!");
-//            update();
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
+    /**
+     * Download strokes from FireBase storage
+     */
+    public void downloadStrokes() {
         StorageReference strokeRef = FirebaseStorage.getInstance().getReference().child("strokes");
         final StorageReference mStrokeRef = strokeRef.child("strokeFile.ser");
         File localFile = null;
@@ -864,6 +831,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // Fetch remote serializable to local file
         if (localFile != null) {
             final File finalLocalFile = localFile;
             mStrokeRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
@@ -874,34 +842,21 @@ public class ARPrimitiveActivity extends ARBaseActivity
                         ObjectInputStream in = new ObjectInputStream(fileInputStream);
                         mStrokes = (List<Stroke>) in.readObject();
                         in.close();
-                        Log.i("strokestring", "Success resolve");
-                        update();
+                        mLineShaderRenderer.clear();
+                        mLineShaderRenderer.updateStrokes(mStrokes);
+                        mLineShaderRenderer.bNeedsUpdate.set(true);
+                        Log.i("strokestring", mLineShaderRenderer.mNumPoints + "");
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
+                        Log.i("strokestring", "Failed resolve");
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.i("strokestring", "Failed resolve");
+                    Log.i("strokestring", "Failed download");
                 }
             });
         }
-
     }
-
-//    public List<Stroke> fetchStrokes() {
-//        try {
-//            FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
-//            ObjectInputStream in = new ObjectInputStream(fileInputStream);
-//            List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
-//            in.close();
-//            return fetchStrokes;
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
 }

@@ -1,6 +1,5 @@
 package com.killerwhale.memary.ARComponent.Utils;
 
-import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -8,95 +7,51 @@ import android.util.Log;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.killerwhale.memary.ARComponent.Model.Stroke;
+import com.killerwhale.memary.DataModel.ArDrawing;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 
 /**
  * Helper class for AR object storage
- * @author Boyang Zhou
  * @author Zeyu Fu
  */
 public class StrokeStorageHelper {
 
-    private Context context;
+    private static final String TAG = "strokestring";
+    private CollectionReference arRef;
 
-    public StrokeStorageHelper() { }
-
-    public StrokeStorageHelper(Context aContext, List<Stroke> strokes) {
-        context = aContext;
-    }
-
-    public void serializeStorkes(List<Stroke> mStrokes) {
-        try {
-            FileOutputStream fileOutputStream = this.context.openFileOutput("strokeFile.ser", context.MODE_PRIVATE);
-            ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
-            out.writeObject(mStrokes);
-            out.close();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+    /**
+     * Constructor
+     */
+    public StrokeStorageHelper() {
+        arRef = FirebaseFirestore.getInstance().collection("ar");
     }
 
     /**
-     * Helper method to deserialize Stroke objects
-     * @return The fetched object
+     * Download stroke file from FireBase storage
      */
-    public List<Stroke> fetchStrokes() {
-        try {
-            FileInputStream fileInputStream = this.context.openFileInput("strokeFile.ser");
-            ObjectInputStream in = new ObjectInputStream(fileInputStream);
-            List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
-            in.close();
-            return fetchStrokes;
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
-    }
+    public void downloadStrokeFile() {
 
+    }
 
     /**
-     * Helper method to evaluate whether the restore object is the same as the original one.
-     * @param newStrokes restore stroke list
-     * @param oldStrokes original stroke list
+     * Upload from local file uri to FireBase storage reference
+     * @param uri local file uri
      */
-    public void compareStrokes(List<Stroke> newStrokes, List<Stroke> oldStrokes) {
-        Stroke newStroke;
-        Stroke oldStroke;
-        boolean flag = true;
-
-        for(int i = 0; i < oldStrokes.size(); i++){
-            newStroke = newStrokes.get(i);
-            oldStroke = oldStrokes.get(i);
-            for(int j = 0; j < oldStroke.getPoints().size(); j++){
-                //here we compare all the coordinate of the points that construct a stroke.
-                boolean equal = (oldStroke.getPoints().get(j).getX() == newStroke.getPoints().get(j).getX()) &&
-                        (oldStroke.getPoints().get(j).getY() == newStroke.getPoints().get(j).getY()) &&
-                        (oldStroke.getPoints().get(j).getZ() == newStroke.getPoints().get(j).getZ());
-                flag = flag && equal;
-            }
-        }
-        Log.i("test equal", "equals result: " + flag);
-        Log.i("test equal", "Strokes count: " + oldStrokes.size());
-        Log.i("test equal", String.valueOf(newStrokes.get(0).getPoints().get(0).getX() == oldStrokes.get(0).getPoints().get(0).getX()));
-    }
-
     public void uploadStrokeFile(Uri uri) {
         StorageReference strokeRef = FirebaseStorage.getInstance().getReference().child("strokes");
-        final StorageReference mStrokeRef = strokeRef.child("strokeFile.ser");
+        final StorageReference mStrokeRef = strokeRef.child(UUID.randomUUID() + ".ser");
         UploadTask uploadTask = mStrokeRef.putFile(uri);
         Task<Uri> task = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
@@ -112,11 +67,36 @@ public class StrokeStorageHelper {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
                 if (task.isSuccessful()) {
-                    Log.i("strokestring", "Url: " + task.getResult().toString());
+                    if (task.getResult() != null) {
+                        String url = task.getResult().toString();
+                        Log.i(TAG, "Url: " + url);
+                        Map<String, Object> ar = getArObject(url);
+                        arRef.add(ar).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DocumentReference> task) {
+                                if (task.isSuccessful()) {
+                                    Log.i(TAG, "Write Success");
+                                } else {
+                                    Log.i(TAG, "Write Failed");
+                                }
+                            }
+                        });
+                    }
                 } else {
-                    Log.i("strokestring", "Store failed");
+                    Log.i(TAG, "Store failed");
                 }
             }
         });
+    }
+
+    /**
+     * Build a ar object and get map class
+     * @param url stroke file url
+     * @return map
+     */
+    private Map<String, Object> getArObject(String url) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        ArDrawing ar = new ArDrawing(user.getUid(), url);
+        return ar.getHashMap();
     }
 }
