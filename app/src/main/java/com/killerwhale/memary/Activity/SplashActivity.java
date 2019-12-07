@@ -29,29 +29,29 @@ public class SplashActivity extends AppCompatActivity implements PermissionsList
         decorView.setSystemUiVisibility(uiOptions);
         setContentView(R.layout.activity_splash);
         checkPermission();
-        Handler handler = new Handler();
-        Runnable jumpTo = new Runnable() {
-            @Override
-            public void run() {
-                mAuth = FirebaseAuth.getInstance();
-                FirebaseUser user = mAuth.getCurrentUser();
-                if (user != null) {
-                    Intent i = new Intent(getBaseContext(), MapActivity.class);
-                    startActivity(i);
-                    finish();
-                } else {
-                    Intent i = new Intent(getBaseContext(), SignInActivity.class);
-                    startActivity(i);
-                    finish();
-                }
-            }
-        };
-        handler.postDelayed(jumpTo, 2000);
+
+
     }
     public void checkPermission(){
         if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            Intent i = new Intent(getBaseContext(), MapActivity.class);
-            startActivity(i);
+            Handler handler = new Handler();
+            Runnable jumpTo = new Runnable() {
+                @Override
+                public void run() {
+                    mAuth = FirebaseAuth.getInstance();
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    if (user != null) {
+                        Intent i = new Intent(getBaseContext(), MapActivity.class);
+                        startActivity(i);
+                        finish();
+                    } else {
+                        Intent i = new Intent(getBaseContext(), SignInActivity.class);
+                        startActivity(i);
+                        finish();
+                    }
+                }
+            };
+            handler.postDelayed(jumpTo, 2000);
         }
         else {
             permissionsManager = new PermissionsManager(this);
