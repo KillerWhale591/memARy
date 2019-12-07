@@ -14,25 +14,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.PlaceLikelihood;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -42,19 +34,21 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.DataModel.User;
-import com.killerwhale.memary.Presenter.LocationListAdapter;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,7 +72,7 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA
     };
     private static final int ACTION_SEARCH_NEARBY = 1995;
-    private double[] latlng = {};
+    private double[] mLatLng = {};
 
     // Firebase plug-ins
     private FirebaseFirestore db;
@@ -88,8 +82,10 @@ public class PostCreateActivity extends AppCompatActivity {
     private String mUid = "";
 
     // Location
-    private Location mLocation;
+    private Location mPostLocation;
     private Button btnSearch;
+    private String mName = "";
+    private String mAddress = "";
 
     // UI widgets
     private Button btnCancel;
@@ -144,9 +140,9 @@ public class PostCreateActivity extends AppCompatActivity {
 
         // Location
         Intent i = getIntent();
-        mLocation = new Location("");
-        mLocation.setLatitude(i.getDoubleExtra(KEY_LATITUDE, 0));
-        mLocation.setLongitude(i.getDoubleExtra(KEY_LONGITUDE, 0));
+        mPostLocation = new Location("");
+        mPostLocation.setLatitude(i.getDoubleExtra(KEY_LATITUDE, 0));
+        mPostLocation.setLongitude(i.getDoubleExtra(KEY_LONGITUDE, 0));
 
         // UI init.
         btnCancel = findViewById(R.id.btnCancel);
@@ -184,26 +180,27 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setEditingEnabled(false);
-                if (latlng == null) {
+                if (mLatLng == null && mName.equals("")) {
                     if (imgAttach.getVisibility() == View.VISIBLE) {
                         if (localUri != null) {
                             uploadImageAndPost(localUri);
                         }
                     } else {
-                        if (mLocation != null) {
-                            submitPost(mLocation);
+                        if (mPostLocation != null) {
+                            submitPost(mPostLocation);
                         }
                     }
                 }
                 else {
+                    // tagged
                     if (imgAttach.getVisibility() == View.VISIBLE) {
                         if (localUri != null) {
-                            uploadImageAndPostAndLocation(localUri, latlng);
+                            uploadImageAndPostAndLocation(localUri, mLatLng);
                         }
                     } else {
-                        if (mLocation != null) {
-                            submitPostAndLocation(mLocation, latlng);
-                        }
+                        Log.i(TAG, "tagged loc");
+                            submitPostAndLocation(mPostLocation, mLatLng);
+
                     }
                 }
 
@@ -250,9 +247,11 @@ public class PostCreateActivity extends AppCompatActivity {
         }
         else if(requestCode == ACTION_SEARCH_NEARBY){
             if(resultCode == RESULT_OK && data!= null){
-                String returnaddress = data.getStringExtra("address");
-                latlng = data.getDoubleArrayExtra("latlng");
-                btnSearch.setText(returnaddress);
+                mName = data.getStringExtra("name");
+                mLatLng = data.getDoubleArrayExtra("latlng");Log.i(TAG, mLatLng[0] +"");
+                mAddress = data.getStringExtra("address");
+
+                btnSearch.setText(mName + mAddress);
             }
         }
     }
@@ -389,8 +388,8 @@ public class PostCreateActivity extends AppCompatActivity {
                     if (downloadUri != null) {
                         Log.i(TAG, downloadUri.toString());
                         remoteUrl = downloadUri.toString();
-                        if (mLocation != null) {
-                            submitPost(mLocation);
+                        if (mPostLocation != null) {
+                            submitPost(mPostLocation);
                         }
                     }
                 } else {
@@ -452,26 +451,132 @@ public class PostCreateActivity extends AppCompatActivity {
         }
     }
 
+
+
+    /**
+     * Upload image to FireBase storage and get url
+     * @param uri image file uri
+     */
+    private void uploadImageAndPostAndLocation(Uri uri, final double[] mLatLng) {
+
+        final StorageReference postImgRef = mImagesRef.child(UUID.randomUUID() + ".jpg");
+        UploadTask uploadTask = postImgRef.putFile(uri);
+
+
+
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw Objects.requireNonNull(task.getException());
+                }
+                // Continue with the task to get the download URL
+                return postImgRef.getDownloadUrl();
+            }
+        });
+
+
+
+        urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    if (downloadUri != null) {
+                        Log.i(TAG, downloadUri.toString());
+                        remoteUrl = downloadUri.toString();
+                        if (mPostLocation != null) {
+                            submitPostAndLocation(mPostLocation, mLatLng);
+                        }
+                    }
+                } else {
+                    // Handle failures
+                    Log.e(TAG, "Upload failed.");
+                }
+            }
+        });
+    }
+
+
+
+
     /**
      * Submit the post with all the data fields
      * @param location current location
      */
-    private void submitPostAndLocation(Location location, double[] latlng) {
-        String text = edtContent.getText().toString();
+    private void submitPostAndLocation(final Location location, final double[] latlng) {
+        final String text = edtContent.getText().toString();
         int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
         final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
         Timestamp time = new Timestamp(Calendar.getInstance().getTime());
         // Create a new post
-        Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
-        Map<String, Object> post = newPost.getHashMap();
+        final Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
+        final Map<String, Object> post = newPost.getHashMap();
         if (db != null) {
             mPostRef.add(post)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
                         public void onSuccess(final DocumentReference documentReference) {
                             Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
-                            // Log.i(TAG, documentReference.getId());
+                            Log.i(TAG, documentReference.getId());
                             geoFirestore.setLocation(documentReference.getId(), geo);
+                            final String postId = documentReference.getId();
+
+                            db.collection("location")
+                                    .whereEqualTo("name", mName)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                                            boolean found = false;
+                                            for (DocumentSnapshot doc : documents) {
+                                                if (doc != null) {
+                                                    found = true;
+                                                    ArrayList<String> posts = (ArrayList<String>) doc.get(LocationModel.FIELD_POST);
+                                                    posts.add(postId);
+                                                    String locationId = doc.getId();
+                                                    db.collection("location").document(locationId)
+                                                            .update(LocationModel.FIELD_POST, posts)
+                                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                @Override
+                                                                public void onSuccess(Void aVoid) {
+                                                                    Log.i(TAG, "DocumentSnapshot successfully updated!");
+                                                                }
+                                                            })
+                                                            .addOnFailureListener(new OnFailureListener() {
+                                                                @Override
+                                                                public void onFailure(@NonNull Exception e) {
+                                                                    Log.i(TAG, "Error updating document", e);
+                                                                }
+                                                            });
+                                                }
+                                            }
+                                            if (!found) {
+                                                GeoPoint geoPoint = new GeoPoint(mLatLng[0], mLatLng[1]);
+                                                ArrayList<String> posts = new ArrayList<>();
+                                                posts.add(postId);
+                                                LocationModel locationModel = new LocationModel(mName, mAddress, geoPoint, posts);
+                                                HashMap<String, Object> uploadMap = locationModel.getLocationMap();
+                                                db.collection("location")
+                                                        .add(uploadMap)
+                                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                            @Override
+                                                            public void onSuccess(DocumentReference documentReference) {
+                                                                Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                Log.w(TAG, "Error adding document", e);
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    });
+
+
                             if (!mUid.isEmpty()) {
                                 final DocumentReference userRef = db.collection("users").document(mUid);
                                 userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -491,6 +596,8 @@ public class PostCreateActivity extends AppCompatActivity {
                                     }
                                 });
                             }
+
+
                             finish();
                         }
                     })
