@@ -6,9 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,25 +17,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.model.PlaceLikelihood;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
-import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
-import com.google.android.libraries.places.api.net.PlacesClient;
+
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -57,14 +48,8 @@ import com.killerwhale.memary.R;
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -233,23 +218,16 @@ public class PostCreateActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable  Intent data) {
-        if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
-            if (resultCode == RESULT_OK ) {
+        if (resultCode == RESULT_OK ) {
+            if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
                 Log.d(TAG,"onActivityResult: ");
 //                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
                     Log.d(TAG, "onActivityResult: "+ localUri.toString());
-                    try {
-                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), localUri);
-                        Log.d(TAG, "onActivityResult: "+ bitmap.toString());
-                        imgAttach.setImageBitmap(bitmap);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
+                    imgAttach.setImageURI(localUri);
             }
-        }
-        else if(requestCode == ACTION_SEARCH_NEARBY){
-            if(resultCode == RESULT_OK && data!= null){
+        } else if(requestCode == ACTION_SEARCH_NEARBY) {
+            if (data != null) {
                 String returnaddress = data.getStringExtra("address");
                 btnSearch.setText(returnaddress);
             }

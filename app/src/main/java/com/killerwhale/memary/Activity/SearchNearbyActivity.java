@@ -2,7 +2,6 @@ package com.killerwhale.memary.Activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -11,8 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListAdapter;
+
 import android.widget.ListView;
 
 import com.google.android.gms.common.api.ApiException;
@@ -28,11 +26,13 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.R;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+/**
+ * Activity for search nearby location
+ * @author Xiaoyan
+ */
 public class SearchNearbyActivity extends AppCompatActivity {
 
     private PlacesClient placesClient;
@@ -90,9 +90,6 @@ public class SearchNearbyActivity extends AppCompatActivity {
                     Log.i("TAG", String.format("Place '%s' has likelihood: %f",
                             placeLikelihood.getPlace().getName(),
                             placeLikelihood.getLikelihood()));
-//                    LocationModel LM = new LocationModel(placeLikelihood.getPlace().getName(),
-//                            placeLikelihood.getPlace().getAddress(),0,0,0);
-//                    nearbyArray.add(LM);
                     nearbyAddressArray.add(placeLikelihood.getPlace().getName());
                 }
             }
