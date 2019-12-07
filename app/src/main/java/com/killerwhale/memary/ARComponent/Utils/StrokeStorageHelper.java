@@ -1,5 +1,6 @@
 package com.killerwhale.memary.ARComponent.Utils;
 
+import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -7,16 +8,21 @@ import android.util.Log;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.ArDrawing;
 
+import org.imperiumlabs.geofirestore.GeoFirestore;
+
+import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -30,12 +36,19 @@ public class StrokeStorageHelper {
 
     private static final String TAG = "strokestring";
     private CollectionReference arRef;
+    private GeoFirestore geoFirestore;
+    private Location mLocation;
 
     /**
      * Constructor
      */
     public StrokeStorageHelper() {
         arRef = FirebaseFirestore.getInstance().collection("ar");
+        geoFirestore = new GeoFirestore(arRef);
+    }
+
+    public void setLocation(Location location) {
+        mLocation = location;
     }
 
     /**
@@ -75,6 +88,10 @@ public class StrokeStorageHelper {
                             @Override
                             public void onComplete(@NonNull Task<DocumentReference> task) {
                                 if (task.isSuccessful()) {
+                                    String id = task.getResult().getId();
+                                    if (mLocation != null) {
+                                        geoFirestore.setLocation(id, new GeoPoint(mLocation.getLatitude(), mLocation.getLongitude()));
+                                    }
                                     Log.i(TAG, "Write Success");
                                 } else {
                                     Log.i(TAG, "Write Failed");
@@ -96,7 +113,12 @@ public class StrokeStorageHelper {
      */
     private Map<String, Object> getArObject(String url) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        ArDrawing ar = new ArDrawing(user.getUid(), url);
+        Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+        ArDrawing ar = new ArDrawing(user.getUid(), url, time);
         return ar.getHashMap();
+    }
+
+    public void searchNearbyAr() {
+
     }
 }

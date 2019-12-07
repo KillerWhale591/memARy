@@ -17,6 +17,7 @@ package com.killerwhale.memary.Activity;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.location.Location;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
@@ -32,6 +33,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FileDownloadTask;
@@ -91,6 +97,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
         ErrorDialog.Listener,ClearDrawingDialog.Listener{
 
+    private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final String TAG = "ARPrimitiveActivity";
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
@@ -119,6 +126,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private List<Stroke> mStrokes;
     private BrushSelector mBrushSelector;
     StrokeStorageHelper strokeHelper = new StrokeStorageHelper();
+
+    // Location
+    private FusedLocationProviderClient FLPC;
+    private LocationRequest locationRequest;
 
     private float[] projmtx = new float[16];
     private float[] viewmtx = new float[16];
@@ -187,6 +198,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     protected void onStart() {
         super.onStart();
+        FLPC = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(INTERVAL_LOC_REQUEST);
     }
 
     @Override
@@ -652,13 +667,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         return false;
     }
 
-    private void closeViewsOutsideTapTarget(MotionEvent tap) {
-        if (isOutsideViewBounds(mBrushSelector, (int) tap.getRawX(), (int) tap.getRawY())
-                && mBrushSelector.isOpen()) {
-            mBrushSelector.close();
-        }
-    }
-
     private boolean isOutsideViewBounds(View view, int x, int y) {
         Rect outRect = new Rect();
         int[] location = new int[2];
@@ -802,6 +810,22 @@ public class ARPrimitiveActivity extends ARBaseActivity
      * Upload user created strokes to FireBase storage
      */
     public void uploadStrokes() {
+        // Get post location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    strokeHelper.setLocation(location);
+                }
+            }
+        });
+        // Upload to FireBase
         try {
 
             FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
