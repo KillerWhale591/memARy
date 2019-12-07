@@ -47,6 +47,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.DataModel.User;
+import com.killerwhale.memary.Presenter.LocationListAdapter;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
@@ -77,6 +78,7 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA
     };
     private static final int ACTION_SEARCH_NEARBY = 1995;
+    private double[] latlng = {};
 
     // Firebase plug-ins
     private FirebaseFirestore db;
@@ -182,15 +184,29 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setEditingEnabled(false);
-                if (imgAttach.getVisibility() == View.VISIBLE) {
-                    if (localUri != null) {
-                        uploadImageAndPost(localUri);
-                    }
-                } else {
-                    if (mLocation != null) {
-                        submitPost(mLocation);
+                if (latlng == null) {
+                    if (imgAttach.getVisibility() == View.VISIBLE) {
+                        if (localUri != null) {
+                            uploadImageAndPost(localUri);
+                        }
+                    } else {
+                        if (mLocation != null) {
+                            submitPost(mLocation);
+                        }
                     }
                 }
+                else {
+                    if (imgAttach.getVisibility() == View.VISIBLE) {
+                        if (localUri != null) {
+                            uploadImageAndPostAndLocation(localUri, latlng);
+                        }
+                    } else {
+                        if (mLocation != null) {
+                            submitPostAndLocation(mLocation, latlng);
+                        }
+                    }
+                }
+
             }
         });
 
@@ -235,6 +251,7 @@ public class PostCreateActivity extends AppCompatActivity {
         else if(requestCode == ACTION_SEARCH_NEARBY){
             if(resultCode == RESULT_OK && data!= null){
                 String returnaddress = data.getStringExtra("address");
+                latlng = data.getDoubleArrayExtra("latlng");
                 btnSearch.setText(returnaddress);
             }
         }
@@ -349,6 +366,8 @@ public class PostCreateActivity extends AppCompatActivity {
         final StorageReference postImgRef = mImagesRef.child(UUID.randomUUID() + ".jpg");
         UploadTask uploadTask = postImgRef.putFile(uri);
 
+
+
         Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
@@ -359,6 +378,9 @@ public class PostCreateActivity extends AppCompatActivity {
                 return postImgRef.getDownloadUrl();
             }
         });
+
+
+
         urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
@@ -392,8 +414,7 @@ public class PostCreateActivity extends AppCompatActivity {
         Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
         Map<String, Object> post = newPost.getHashMap();
         if (db != null) {
-            db.collection("posts")
-                    .add(post)
+            mPostRef.add(post)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
                         public void onSuccess(final DocumentReference documentReference) {
@@ -430,4 +451,58 @@ public class PostCreateActivity extends AppCompatActivity {
                     });
         }
     }
+
+    /**
+     * Submit the post with all the data fields
+     * @param location current location
+     */
+    private void submitPostAndLocation(Location location, double[] latlng) {
+        String text = edtContent.getText().toString();
+        int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
+        final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+        Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+        // Create a new post
+        Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
+        Map<String, Object> post = newPost.getHashMap();
+        if (db != null) {
+            mPostRef.add(post)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(final DocumentReference documentReference) {
+                            Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
+                            // Log.i(TAG, documentReference.getId());
+                            geoFirestore.setLocation(documentReference.getId(), geo);
+                            if (!mUid.isEmpty()) {
+                                final DocumentReference userRef = db.collection("users").document(mUid);
+                                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot doc = task.getResult();
+                                            Map<String, Object> data = doc.getData();
+                                            if (data != null) {
+                                                Object userPosts = data.get(User.FIELD_POSTS);
+                                                if (userPosts != null) {
+                                                    ((ArrayList<String>) userPosts).add(documentReference.getId());
+                                                    userRef.set(data);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error adding document", e);
+                        }
+                    });
+        }
+    }
+
+
+
 }

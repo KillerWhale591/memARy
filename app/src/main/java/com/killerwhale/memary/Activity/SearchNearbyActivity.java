@@ -2,7 +2,6 @@ package com.killerwhale.memary.Activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -11,8 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListAdapter;
+import android.widget.DatePicker;
 import android.widget.ListView;
 
 import com.google.android.gms.common.api.ApiException;
@@ -28,9 +26,9 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.R;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class SearchNearbyActivity extends AppCompatActivity {
@@ -40,6 +38,7 @@ public class SearchNearbyActivity extends AppCompatActivity {
     private ArrayAdapter<String> nearbyAdapter;
     private ArrayList<LocationModel> nearbyArray = new ArrayList<>();
     private ArrayList<String> nearbyAddressArray = new ArrayList<>();
+    private HashMap<String, double[]> addressNameLatLng = new HashMap<>();
 
 
     @Override
@@ -48,11 +47,11 @@ public class SearchNearbyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search_nearby);
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "YOUR_KEY_HERE");
+            Places.initialize(getApplicationContext(), "AIzaSyCcwwdxW14lLy_YpXScbJW0-TbaQYPJUDQ");
         }
 // Create a new Places client instance.
         placesClient = Places.createClient(this);
-        startSearch();
+        startSearch(addressNameLatLng);
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
@@ -64,8 +63,11 @@ public class SearchNearbyActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         String add = (String)parent.getItemAtPosition(position);
+                        double[] loc = addressNameLatLng.get(add);
+                        Log.i("gg", String.valueOf(loc[0]) + String.valueOf(loc[1]));
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("address", add);
+                        resultIntent.putExtra("latlng", loc);
                         setResult(Activity.RESULT_OK, resultIntent);
                         finish();
                     }
@@ -76,8 +78,8 @@ public class SearchNearbyActivity extends AppCompatActivity {
 
 
     }
-    private void startSearch(){
-        List<Place.Field> fields = Arrays.asList(Place.Field.NAME, Place.Field.ID);
+    private void startSearch(final HashMap<String, double[]> map){
+        List<Place.Field> fields = Arrays.asList(Place.Field.NAME, Place.Field.ID, Place.Field.LAT_LNG);
 // Construct a request object, passing the place ID and fields array.
         FindCurrentPlaceRequest request =
                 FindCurrentPlaceRequest.builder(fields).build();
@@ -87,12 +89,19 @@ public class SearchNearbyActivity extends AppCompatActivity {
             @Override
             public void onSuccess(FindCurrentPlaceResponse response) {
                 for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
+                    String name = placeLikelihood.getPlace().getName();
+                    com.google.android.gms.maps.model.LatLng loc = placeLikelihood.getPlace().getLatLng();
+                    double lat = loc.latitude;
+                    double lng = loc.longitude;
+                    double[] latlng = {lat, lng};
                     Log.i("TAG", String.format("Place '%s' has likelihood: %f",
-                            placeLikelihood.getPlace().getName(),
+                            name,
                             placeLikelihood.getLikelihood()));
+//                    Log.i("TAG", String.valueOf(latlng[0]) + String.valueOf(latlng[1]));
 //                    LocationModel LM = new LocationModel(placeLikelihood.getPlace().getName(),
 //                            placeLikelihood.getPlace().getAddress(),0,0,0);
 //                    nearbyArray.add(LM);
+                    map.put(name, latlng);
                     nearbyAddressArray.add(placeLikelihood.getPlace().getName());
                 }
             }
