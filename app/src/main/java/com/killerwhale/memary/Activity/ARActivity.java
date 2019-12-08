@@ -431,23 +431,29 @@ public class ARActivity extends ARBaseActivity
             }
 
             if (bInitCloudRenderer.get()){
-                //----Local Test-----
                 List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
-                //mCloudAnchors = createDummyAnchors(ARSettings.getMaxCloudStrokesNum());
                 Anchor randomAnchor;
                 long l = System.currentTimeMillis();
                 Random random = new Random(l);
                 for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
                     float ox = random.nextFloat() / 10;
                     float oy = random.nextFloat() * (float) 1.25;
-                    float oz = random.nextFloat() * (float) 1.5;
-                    float symbol = random.nextFloat() / 2;
-                    if (symbol > 0.5){
+                    float oz = random.nextFloat() * (float) 2;
+                    float symbolx = random.nextFloat() / 2;
+                    float symboly = random.nextFloat() / 2;
+                    float symbolz = random.nextFloat() / 2;
+                    if (symbolx > 0.5){
+                        ox = -ox;
+                    }
+                    if (symboly > 0.5){
+                        oy = -oy;
+                    }
+                    if (symbolz > 0.5){
                         oz = -oz;
                     }
                     randomAnchor =  mSession.createAnchor(
                             mFrame.getCamera().getPose()
-                                    .compose(Pose.makeTranslation(ox, oy, -2f + oz))
+                                    .compose(Pose.makeTranslation(ox, oy, -1.75f + oz))
                                     .extractTranslation());
                     mCloudAnchors.add(randomAnchor);
                 }
