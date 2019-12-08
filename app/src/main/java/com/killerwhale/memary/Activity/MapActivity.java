@@ -122,6 +122,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private static final String INFO_WINDOW_LAYER = "info-window-layer";
     private static final String PROPERTY_SELECTED = "selected";
+    private static final String TAG = "MAP";
     private FeatureCollection featureCollection;
     private GeoJsonSource source;
     private int formalSelectLocationIndex = -1;
@@ -156,14 +157,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         break;
                     case R.id.action_posts:
                         startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
+                        finish();
                         break;
                     case R.id.action_places:
                         startActivity(new Intent(getBaseContext(), LocationListActivity.class));
+                        finish();
                         break;
                     case R.id.action_profile:
+                        startActivity(new Intent(getBaseContext(), ProfileActivity.class));
+                        finish();
                         break;
                     default:
-                        Log.i("TAG", "Unhandled nav click");
+                        Log.i(TAG, "Unhandled nav click");
 
                 }
                 return true;
