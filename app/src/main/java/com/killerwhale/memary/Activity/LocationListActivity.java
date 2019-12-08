@@ -21,6 +21,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.GeoPoint;
+import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.Presenter.LocationListAdapter;
 import com.killerwhale.memary.R;
 
@@ -83,7 +84,6 @@ public class LocationListActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         // Location
-        // Location
         FusedLocationProviderClient FLPC = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -105,25 +105,16 @@ public class LocationListActivity extends AppCompatActivity {
         });
         llAdapter.init();
         llAdapter.queryByName(llAdapter);
-//        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-//        @Override
-//        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//            Intent intent = new Intent(LocationListActivity.this, MapActivity.class);
-//            intent.putExtra("lat", 41.0);
-//            intent.putExtra("long", -72.0);
-//            startActivity(intent);
-//        }
-//
-//        });
         locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                GeoPoint geoPoint = (GeoPoint) parent.getItemAtPosition(position);
+                GeoPoint geoPoint = ((LocationModel) parent.getItemAtPosition(position)).getGeoPoint();
                 double lati = geoPoint.getLatitude();
                 double longti = geoPoint.getLongitude();
                 Intent i = new Intent(getBaseContext(), MapActivity.class);
                 i.putExtra("lat", lati);
                 i.putExtra("long", longti);
+                i.putExtra("name", ((LocationModel) parent.getItemAtPosition(position)).getLocation());
                 startActivity(i);
             }
         });
