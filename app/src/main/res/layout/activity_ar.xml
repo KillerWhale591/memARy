@@ -132,8 +132,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/brush_selector" />
 
-
-
     </android.support.constraint.ConstraintLayout>
 
     <!-- Sharing -->

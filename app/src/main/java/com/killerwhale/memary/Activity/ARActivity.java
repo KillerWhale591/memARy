@@ -45,6 +45,7 @@ import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
+
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
@@ -996,9 +997,9 @@ public class ARActivity extends ARBaseActivity
         float oz = random.nextFloat() / 100;
 
         Anchor offsetAnchor= mSession.createAnchor(mFrame.getCamera()
-                .getPose()
-                .compose(Pose.makeTranslation(0, 0.0001f, -1.5f))
-                .extractTranslation());
+                          .getPose()
+                          .compose(Pose.makeTranslation(0, 0.0001f, -1.5f))
+                          .extractTranslation());
 
         return offsetAnchor;
 
@@ -1084,9 +1085,9 @@ public class ARActivity extends ARBaseActivity
     public List<Anchor> createDummyAnchors(){
         List<Anchor> dummyAnchors = new ArrayList<>();
         Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
-                .getPose()
-                .compose(Pose.makeTranslation(0, 0, -1f))
-                .extractTranslation());
+                        .getPose()
+                        .compose(Pose.makeTranslation(0, 0, -1f))
+                        .extractTranslation());
         dummyAnchors.add(dummyAnchor);
         return dummyAnchors;
 
