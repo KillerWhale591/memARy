@@ -172,13 +172,13 @@ public class StrokeStorageHelper {
      * @param location current user location
      * @param radius search radius
      */
-    public void searchNearbyAr(Location location, double radius) {
+    public void searchNearbyAr(Location location, double radius, long limit) {
         GeoPoint currentGeo = new GeoPoint(location.getLatitude(), location.getLongitude());
         GeoQuery geoQuery = geoFirestore.queryAtLocation(currentGeo, radius);
         ArrayList<Query> arQueries = geoQuery.getQueries();
         for (final Query query : arQueries) {
             if (query != null) {
-                query.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                query.limit(limit).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                         List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
