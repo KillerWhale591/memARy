@@ -7,7 +7,9 @@ import java.util.HashMap;
 
 
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class LocationModel {
 
@@ -16,20 +18,17 @@ public class LocationModel {
     public String location;
     public String address;
     public float distance;
-    public int img;
     public int numPosts;
     public ArrayList<String> posts;
     private GeoPoint geoPoint;
-    private String image;
     private static final float METERS_TO_MILES = 1609.3f;
     private static final float MINIMUM_DISTANCE = 0.1f;
     private static final String SUFFIX_MILES = " miles away";
 
-    public LocationModel(String location, String address, float distance, int img, int numPosts) {
+    public LocationModel(String location, String address, float distance, int numPosts) {
         this.location = location;
         this.address = address;
         this.distance = distance;
-        this.img = img;
         this.numPosts = numPosts;
     }
 
@@ -45,9 +44,9 @@ public class LocationModel {
         HashMap LocationData = (HashMap) map;
         this.address = (String) LocationData.get("address");
         this.geoPoint = (GeoPoint) LocationData.get("geopoint");
-        this.image = (String) LocationData.get("image");
         this.location = (String) LocationData.get("name");
-        this.numPosts = ((Long)LocationData.get("posts")).intValue();
+        if (LocationData.get("posts") == null) this.numPosts = 0;
+        else this.numPosts = ((List) Objects.requireNonNull(LocationData.get("posts"))).size();
     }
 
 

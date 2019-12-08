@@ -23,8 +23,10 @@
         <item>Brookline, MA 02446</item>
         <item>175 Tremont St, Boston, MA 02111</item>
     </string-array>
-    <string name="mapbox_access_token">YOUR_KEY_HERE</string>
-    <string name="google_places_access_token">YOUR_KEY_HERE</string>
+    <string name="mapbox_access_token">key1</string>
+    <string name="google_places_access_token">key2</string>
+    <string name="google_login_token">key3</string>
+
 
     <!-- Image and ImageButton Content Descriptions for Accessibility-->
     <string name="content_description_undo">Undo</string>
