@@ -26,14 +26,12 @@ android {
             applicationIdSuffix "sandbox"
             versionNameSuffix "-sandbox"
             buildConfigField "boolean", "GLOBAL", "true"
-            buildConfigField "boolean", "DEBUG", "true"
             buildConfigField "boolean", "SHOW_NAVIGATION", "false"
             resValue "string", "ApiKey", API_KEY
         }
         production {
             dimension "mode"
             buildConfigField "boolean", "GLOBAL", "false"
-            buildConfigField "boolean", "DEBUG", "false"
             buildConfigField "boolean", "SHOW_NAVIGATION", "true"
             resValue "string", "ApiKey", API_KEY
         }

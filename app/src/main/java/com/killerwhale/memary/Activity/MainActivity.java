@@ -74,8 +74,6 @@ public class MainActivity extends AppCompatActivity implements PermissionsListen
         btnARActivity = (Button) findViewById(R.id.btnARActivity);
 
         btnARActivity = (Button) findViewById(R.id.btnARActivity);
-        btnARDrawActivity = (Button) findViewById(R.id.btnARDrawActivity);
-        btnARPrimitiveActivity = (Button) findViewById(R.id.btnARPrimitive);
 
         findViewById(R.id.btnPostFeed).setOnClickListener(new View.OnClickListener() {
             @Override

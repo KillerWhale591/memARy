@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by kaitlynanderson on 2/7/18.
- * Custom Utils for showing curly line while not tracking
+ * Custom View for showing curly line while not tracking
  */
 
 public class TrackingIndicator extends ConstraintLayout {
@@ -99,6 +99,12 @@ public class TrackingIndicator extends ConstraintLayout {
     private boolean mShowPairedSessionDrawPrompt = false;
 
     private boolean anchorTrackingMessageEnabled = false;
+
+    public enum Mode {
+        DRAW, VIEW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
+    };
+
+    Mode mMode = Mode.VIEW;
 
 
     public TrackingIndicator(Context context) {
@@ -193,14 +199,16 @@ public class TrackingIndicator extends ConstraintLayout {
                         announceForAccessibility(getContext().getString(R.string.tracking_indicator_text_anchor_not_tracking));
                         break;
                     case STATE_DRAW_PROMPT:
-                        mDrawPrompt.setPromptText(false);
-                        showDrawPrompt();
-                        stopTrackingAnimation();
-                        fadeOutView(mImageView);
-                        fadeOutView(mAnchorNotTrackingTextView);
-                        fadeOutView(mNotTrackingTextView);
-                        fadeOutView(mNotTrackingEscalatedTextView);
-                        announceForAccessibility(getContext().getString(R.string.draw_prompt));
+                        if (mMode == Mode.DRAW){
+                            mDrawPrompt.setPromptText(false);
+                            showDrawPrompt();
+                            stopTrackingAnimation();
+                            fadeOutView(mImageView);
+                            fadeOutView(mAnchorNotTrackingTextView);
+                            fadeOutView(mNotTrackingTextView);
+                            fadeOutView(mNotTrackingEscalatedTextView);
+                            announceForAccessibility(getContext().getString(R.string.draw_prompt));
+                        }
                         break;
                     case STATE_DRAW_PROMPT_PAIRED:
                         mDrawPrompt.setPromptText(true);
@@ -366,6 +374,7 @@ public class TrackingIndicator extends ConstraintLayout {
     }
 
     private List<DisplayListener> listeners = new ArrayList<>();
+    private List<ModeListener> modeListeners = new ArrayList<>();
 
     public void addListener(DisplayListener displayListener) {
         if (displayListener != null) {
@@ -378,6 +387,14 @@ public class TrackingIndicator extends ConstraintLayout {
             }
         }
 
+    }
+
+    public void addListener(ModeListener modeListener){
+        if (modeListener != null) {
+            modeListeners.add(modeListener);
+
+            modeListener.onModeChange();
+        }
     }
 
     public void removeListener(DisplayListener displayListener) {
@@ -394,10 +411,18 @@ public class TrackingIndicator extends ConstraintLayout {
                 || state == STATE_NOT_TRACKING_ANCHOR;
     }
 
+    public void setMode(Mode mode){
+        mMode = mode;
+    }
+
     public interface DisplayListener {
 
         void onErrorDisplaying();
 
         void onErrorRemoved();
+    }
+
+    public interface ModeListener{
+        void onModeChange();
     }
 }

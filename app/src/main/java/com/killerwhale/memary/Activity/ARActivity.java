@@ -22,20 +22,22 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
+import com.killerwhale.memary.ARComponent.Renderer.LineShaderRendererGroup;
 import com.killerwhale.memary.ARComponent.Renderer.LineUtils;
 import com.killerwhale.memary.ARComponent.Renderer.PointCloudRenderer;
 import com.killerwhale.memary.ARComponent.Utils.BrushSelector;
@@ -43,11 +45,6 @@ import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
@@ -58,14 +55,13 @@ import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.NotTrackingException;
-import com.killerwhale.memary.ARComponent.View.UploadDrawingDialog;
-import com.killerwhale.memary.ARComponent.View.ARSettings;
+import com.killerwhale.memary.ARComponent.Utils.UploadDrawingDialog;
+import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 import com.killerwhale.memary.BuildConfig;
 import com.killerwhale.memary.R;
-import com.killerwhale.memary.ARComponent.View.SessionHelper;
+import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -156,6 +152,7 @@ public class ARActivity extends ARBaseActivity
     private long mRenderDuration;
     private GestureDetector gestureDetector;
 
+
     /**
      * Setup the app when main activity is created
      */
@@ -187,6 +184,7 @@ public class ARActivity extends ARBaseActivity
         btnReturn.setOnClickListener(this);
         btnRefresh = findViewById(R.id.btnRefresh);
         btnRefresh.setOnClickListener(this);
+
 
 
 
@@ -272,6 +270,7 @@ public class ARActivity extends ARBaseActivity
     protected void onResume() {
         super.onResume();
 
+
         // ARCore requires camera permissions to operate. If we did not yet obtain runtime
         // permission on Android M and above, now is a good time to ask the user for it.
 
@@ -335,8 +334,6 @@ public class ARActivity extends ARBaseActivity
 
         mSurfaceView.resume();
 
-        mSurfaceView.resume();
-
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -350,7 +347,10 @@ public class ARActivity extends ARBaseActivity
             showStrokeDependentUI();
         }
 
+
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
+
+
     }
 
     /**
@@ -371,61 +371,6 @@ public class ARActivity extends ARBaseActivity
         super.onPause();
     }
 
-
-    /**
-     * addStroke adds a new stroke to the scene
-     */
-    private void addStroke() {
-        mLineWidthMax = mBrushSelector.getSelectedLineWidth().getWidth();
-
-        Stroke stroke = new Stroke();
-        stroke.localLine = true;
-        stroke.setLineWidth(mLineWidthMax);
-        mStrokes.add(stroke);
-        showStrokeDependentUI();
-
-        mTrackingIndicator.setDrawnInSession();
-    }
-
-    /**
-     * addPoint2f adds a point to the current stroke
-     *
-     * @param touchPoint a 2D point in screen space and is projected into 3D world space
-     */
-    private void addPoint2f(Vector2f... touchPoint) {
-        Vector3f[] newPoints = new Vector3f[touchPoint.length];
-        for (int i = 0; i < touchPoint.length; i++) {
-            newPoints[i] = LineUtils
-                    .GetWorldCoords(touchPoint[i], mScreenWidth, mScreenHeight, projmtx, viewmtx);
-        }
-
-        addPoint3f(newPoints);
-    }
-
-    /**
-     * addPoint3f adds a point to the current stroke
-     *
-     * @param newPoint a 3D point in world space
-     */
-    private void addPoint3f(Vector3f... newPoint) {
-        Vector3f point;
-        int index = mStrokes.size() - 1;
-
-        if (index < 0)
-            return;
-
-        for (int i = 0; i < newPoint.length; i++) {
-            if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
-                point = LineUtils.TransformPointToPose(newPoint[i], mAnchor.getPose());
-                mStrokes.get(index).add(point);
-                Log.i("ADD 3D Point", "With Anchor");
-            } else {
-                mStrokes.get(index).add(newPoint[i]);
-                Log.i("ADD 3D Point", "Without Anchor");
-            }
-        }
-        isDrawing = true;
-    }
 
     /**
      * update() is executed on the GL Thread.
@@ -463,6 +408,7 @@ public class ARActivity extends ARBaseActivity
 
             // Notify the hostManager of all the anchor updates.
             Collection<Anchor> updatedAnchors = mFrame.getUpdatedAnchors();
+
 
             // Update tracking states
             mTrackingIndicator.setTrackingStates(mFrame, mAnchor);
@@ -543,6 +489,9 @@ public class ARActivity extends ARBaseActivity
                 }
             }
 
+//            for (int i = 0; i < mStrokes.size(); i++) {
+//                mStrokes.get(i).update();
+//            }
             boolean renderNeedsUpdate = false;
             for (Stroke stroke : mSharedStrokes.values()) {
                 if (stroke.update()) {
@@ -840,6 +789,7 @@ public class ARActivity extends ARBaseActivity
         return !outRect.contains(x, y);
     }
 
+
     @Override
     public void onSurfaceDestroyed() {
         mBackgroundRenderer.clearGL();
@@ -854,6 +804,7 @@ public class ARActivity extends ARBaseActivity
         cloudAnchorRenderer = new AnchorRenderer();
         pointCloud.createOnGlThread(/*context=*/ this);
     }
+
 
     @Override
     public void onSurfaceChanged(int width, int height) {
@@ -946,10 +897,12 @@ public class ARActivity extends ARBaseActivity
 
     }
 
+
     public void onClickRefresh(){
         mCloudShaderRenderer.clear();
         mCloudShaderRenderer.setNeedsUpdate();
     }
+
 
     @Override
     public void onClick(View v) {
@@ -977,6 +930,7 @@ public class ARActivity extends ARBaseActivity
 
         }
         mBrushSelector.close();
+
     }
 
 
@@ -1042,9 +996,9 @@ public class ARActivity extends ARBaseActivity
         float oz = random.nextFloat() / 100;
 
         Anchor offsetAnchor= mSession.createAnchor(mFrame.getCamera()
-                          .getPose()
-                          .compose(Pose.makeTranslation(0, 0.0001f, -1.5f))
-                          .extractTranslation());
+                .getPose()
+                .compose(Pose.makeTranslation(0, 0.0001f, -1.5f))
+                .extractTranslation());
 
         return offsetAnchor;
 
@@ -1052,9 +1006,10 @@ public class ARActivity extends ARBaseActivity
 
 
     @Override
-    public void exitApp(){
+    public void exitApp() {
         finish();
     }
+
 
     public void saveStrokes(){
         try {
@@ -1068,12 +1023,14 @@ public class ARActivity extends ARBaseActivity
     }
 
     public void serializeStorkes(List<Stroke> mStrokes) throws IOException {
-        try {
+        try{
+            //File outFile = new File(Environment.getExternalStorageDirectory(), "appSaveStroke.data");
+            //ObjectOutput out = new ObjectOutputStream(new FileOutputStream(outFile));
             FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getApplicationContext().MODE_PRIVATE);
             ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
             out.writeObject(mStrokes);
             out.close();
-        } catch(IOException e) {
+        }catch(IOException e){
             e.printStackTrace();
         }
     }
@@ -1082,6 +1039,7 @@ public class ARActivity extends ARBaseActivity
         try {
             List<Stroke> newmStrokes = fetchStrokes();
             mStrokes = newmStrokes;
+            Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
             Log.i("Checkpointer", "Loaded!");
             update();
         }
@@ -1090,7 +1048,7 @@ public class ARActivity extends ARBaseActivity
         }
     }
 
-    public List<Stroke> fetchStrokes() {
+    public List<Stroke> fetchStrokes() throws IOException, ClassNotFoundException {
         try{
             FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
             ObjectInputStream in = new ObjectInputStream(fileInputStream);
@@ -1126,9 +1084,9 @@ public class ARActivity extends ARBaseActivity
     public List<Anchor> createDummyAnchors(){
         List<Anchor> dummyAnchors = new ArrayList<>();
         Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
-                        .getPose()
-                        .compose(Pose.makeTranslation(0, 0, -1f))
-                        .extractTranslation());
+                .getPose()
+                .compose(Pose.makeTranslation(0, 0, -1f))
+                .extractTranslation());
         dummyAnchors.add(dummyAnchor);
         return dummyAnchors;
 

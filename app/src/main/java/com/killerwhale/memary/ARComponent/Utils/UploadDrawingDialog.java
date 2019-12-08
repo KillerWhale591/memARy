@@ -1,18 +1,4 @@
-// Copyright 2018 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package com.killerwhale.memary.ARComponent.View;
+package com.killerwhale.memary.ARComponent.Utils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -23,23 +9,25 @@ import android.view.WindowManager;
 
 import com.killerwhale.memary.R;
 
+
 /**
- * Created by Kat on 12/4/17.
- * Dialog brought up when user selects clear drawing
+ * Author: Qili Zeng (qzeng@bu.edu)
+ * With reference to: justaline APP by Google
+ * Dialog brought up when user selects to upload their drawing
  */
 
-public class ClearDrawingDialog extends BaseDialog {
+public class UploadDrawingDialog extends BaseDialog {
 
     private Listener mListener;
 
-    private static final String ARG_PAIRED_SESSION = "pairedSession";
+    private static final String DRAWING_SESSION = "drawingSession";
 
-    public static ClearDrawingDialog newInstance(boolean paired) {
-        ClearDrawingDialog dialog = new ClearDrawingDialog();
+    public static UploadDrawingDialog newInstance(boolean paired) {
+        UploadDrawingDialog dialog = new UploadDrawingDialog();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();
-        args.putBoolean(ARG_PAIRED_SESSION, paired);
+        args.putBoolean(DRAWING_SESSION, paired);
         dialog.setArguments(args);
 
         return dialog;
@@ -49,7 +37,7 @@ public class ClearDrawingDialog extends BaseDialog {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         int titleRes = -1;
-        int messageRes = R.string.clear_confirmation_message;
+        int messageRes = R.string.upload_confirmation_message;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
                 .setMessage(messageRes);
@@ -57,11 +45,11 @@ public class ClearDrawingDialog extends BaseDialog {
         if (titleRes > -1) builder.setTitle(titleRes);
 
         // Set up the buttons
-        builder.setPositiveButton(R.string.clear, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.upload, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (mListener != null) {
-                    mListener.onClearDrawingConfirmed();
+                    mListener.onUploadDrawingConfirmed();
                 }
                 dialog.dismiss();
             }
@@ -106,6 +94,6 @@ public class ClearDrawingDialog extends BaseDialog {
 
     public interface Listener {
 
-        void onClearDrawingConfirmed();
+        void onUploadDrawingConfirmed();
     }
 }

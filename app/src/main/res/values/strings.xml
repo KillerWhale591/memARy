@@ -26,43 +26,9 @@
     <string name="mapbox_access_token">YOUR_KEY_HERE</string>
     <string name="google_places_access_token">YOUR_KEY_HERE</string>
 
-    <!-- Image and ImageButton Content Descriptions for Accessibility-->
-    <string name="content_description_undo">Undo</string>
-    <string name="content_description_overflow_menu">More options</string>
-    <string name="content_description_large_brush">Large Brush</string>
-    <string name="content_description_medium_brush">Medium Brush</string>
-    <string name="content_description_small_brush">Small Brush</string>
-    <string name="content_description_select_brush">Change Brush Size</string>
-    <string name="content_description_upload">Upload</string>
-    <string name="content_description_memary_splash">memARy</string>
-    <string name="content_description_draw">Draw</string>
-
-    <!-- Permissions-->
-    <string name="title_activity_permissions">Permissions Required</string>
-    <string name="initial_permissions_required">Camera permissions is required</string>
-    <string name="ask_me_again">Try again</string>
-    <string name="open_system_permissions">Open System Permissions</string>
-    <string name="storage_permission_rationale">We need storage permission to save your video</string>
-    <string name="ok">OK</string>
-    <string name="action_unavailable">Action unavailable</string>
-
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <!-- Image and ImageButton Content Descriptions for Accessibility-->
-    <string name="content_description_undo">Undo</string>
-    <string name="content_description_overflow_menu">More options</string>
-    <string name="content_description_large_brush">Large Brush</string>
-    <string name="content_description_medium_brush">Medium Brush</string>
-    <string name="content_description_small_brush">Small Brush</string>
-    <string name="content_description_select_brush">Change Brush Size</string>
-    <string name="content_description_save">Upload</string>
-    <string name="content_description_upload">Upload</string>
-    <string name="content_description_memary_splash">memARy</string>
-    <string name="content_description_draw">Draw</string>
-    <string name="content_description_close">Return</string>
-    <string name="content_description_refresh">Refresh</string>
-
 
     <!-- Permissions-->
     <string name="title_activity_permissions">Permissions Required</string>
@@ -73,46 +39,5 @@
     <string name="ok">OK</string>
     <string name="action_unavailable">Action unavailable</string>
 
-
-    <!-- More menu -->
-    <string name="menu_about">About</string>
-    <string name="menu_share_app">Share App</string>
-    <string name="menu_clear">Clear Drawing</string>
-
-    <!-- Clear Drawing Dialog -->
-    <string name="clear_confirmation_message">Clear your drawing?</string>
-    <string name="clear_confirmation_title_paired">Clear your drawings?</string>
-    <string name="clear">Clear</string>
-    <string name="cancel">Cancel</string>
-
-    <!-- Upload Drawing Dialog -->
-    <string name="upload_confirmation_message">Ready to Share?</string>
-    <string name="upload">Upload</string>
-
-    <!-- Playback -->
-    <string name="playback_share">Share</string>
-    <string name="playback_share_text">#justaline</string>
-    <string name="playback_save">Save</string>
-
-    <!-- Searching for surfaces -->
-    <string name="tracking_indicator_text_looking">Looking for a place for your line</string>
-    <string name="tracking_indicator_text_cant_find">Can\'t find a place for your line</string>
-    <string name="tracking_indicator_text_anchor_not_tracking">Hmm… We can\'t find your\ndrawings.
-        Try going back to\nwhere you started.</string>
-
-    <!-- Draw prompt -->
-    <string name="draw_prompt">press your finger\nand move around</string>
-    <string name="draw_prompt_paired">Start drawing with\nyour partner</string>
-
-    <!-- Errors -->
-    <string name="upload_failed">Sorry, we couldn\'t upload your video. Please try again.</string>
-    <string name="error_camera_not_available">Sorry, something went wrong. Please try again.</string>
-    <string name="error_resuming_session">Sorry, something went wrong</string>
-
-    <!-- AR Core errors -->
-    <string name="ar_not_supported">AR isn\'t supported on your phone</string>
-    <string name="install_arcore">Please install ARCore</string>
-    <string name="update_arcore">Please update ARCore</string>
-    <string name="update_app">Please update this app</string>
 </resources>
 

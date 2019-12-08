@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.google.ar.core.Anchor;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
-import com.killerwhale.memary.ARComponent.View.ARSettings;
+import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 
 import java.io.IOException;
 import java.util.ArrayList;
