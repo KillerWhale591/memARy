@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="arNumber_list_preference">
-        <item>"1"</item>
-        <item>"3"</item>
         <item>"5"</item>
+        <item>"15"</item>
+        <item>"25"</item>
     </array>
 
     <array name="arNumber_value_list_preference">
-        <item>"1"</item>
-        <item>"3"</item>
         <item>"5"</item>
+        <item>"15"</item>
+        <item>"25"</item>
     </array>
 
     <array name="postDistance_list_preference">

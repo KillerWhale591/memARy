@@ -29,7 +29,7 @@ public class Preference {
         // Set all app preference
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(aContext);
         postDistance = Double.parseDouble(sharedPreferences.getString("postDistancePreference", "1"));
-        arNumber = Long.parseLong(sharedPreferences.getString("arNumberPreference", "1"));
+        arNumber = Long.parseLong(sharedPreferences.getString("arNumberPreference", "5"));
         //
     }
 }

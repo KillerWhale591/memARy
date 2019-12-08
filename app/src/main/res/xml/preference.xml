@@ -26,6 +26,6 @@
         android:entries="@array/arNumber_list_preference"
         android:entryValues="@array/arNumber_value_list_preference"
         android:dialogTitle="Please choose a number"
-        android:defaultValue="1"/>
+        android:defaultValue="5"/>
     </PreferenceCategory>
 </PreferenceScreen>
