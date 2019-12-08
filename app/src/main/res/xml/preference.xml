@@ -10,19 +10,22 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Posts">
-        <EditTextPreference
-            android:key="edittext_preference"
+        <ListPreference
+            android:key="postDistancePreference"
             android:title="Distance for post search"
-            android:dialogTitle="Please enter a distance"
-            android:defaultValue="10"/>
+            android:entries="@array/postDistance_list_preference"
+            android:entryValues="@array/postDistance_value_list_preference"
+            android:dialogTitle="Please choose a distance"
+            android:defaultValue="1"/>
     </PreferenceCategory>
 
     <PreferenceCategory android:title="AR">
     <ListPreference
-        android:key="list_preference"
+        android:key="arNumberPreference"
         android:title="Number of AR objects"
-        android:entries="@array/entries_list_preference"
-        android:entryValues="@array/entries_value_list_preference"
-        android:dialogTitle="Please choose a number" />
+        android:entries="@array/arNumber_list_preference"
+        android:entryValues="@array/arNumber_value_list_preference"
+        android:dialogTitle="Please choose a number"
+        android:defaultValue="1"/>
     </PreferenceCategory>
 </PreferenceScreen>
