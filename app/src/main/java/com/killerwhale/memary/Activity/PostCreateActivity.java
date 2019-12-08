@@ -232,7 +232,7 @@ public class PostCreateActivity extends AppCompatActivity {
             }
         } else if(requestCode == ACTION_SEARCH_NEARBY) {
             if (data != null) {
-                String returnaddress = data.getStringExtra("address");
+                String returnaddress = data.getStringExtra("name");
                 //keep the edtlocation, you can add other bundle below
                 edtLocation.setText(returnaddress);
                 edtLocation.setVisibility(View.VISIBLE);
