@@ -271,7 +271,7 @@ public class PostCreateActivity extends AppCompatActivity {
                     mLatLng = data.getDoubleArrayExtra("latlng");
                     Log.i(TAG, mLatLng[0] + "");
                     mAddress = data.getStringExtra("address");
-                    txtLocation.setText(mName + mAddress);
+                    txtLocation.setText(mName + " " + mAddress);
                     txtLocation.setVisibility(View.VISIBLE);
                 }
             }
