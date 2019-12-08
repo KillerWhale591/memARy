@@ -57,7 +57,7 @@ public class LineShaderRendererGroup {
         }
 
         for (int i=0; i<cloudStrokes.size(); i++){
-            mRenderers.get(i).updateStrokes(cloudStrokes.get(i), mSharedStrokes);
+            mRenderers.get(i).updateStrokes(cloudStrokes.get(i));
             mRenderers.get(i).upload();
             mRendererStatus.set(i, true);
         }
@@ -91,7 +91,7 @@ public class LineShaderRendererGroup {
     public void update(Context context, List<Stroke> userStrokes, Anchor userAnchor){
         mRenderers.get(mtoken).clear();
         userAnchor.getPose().toMatrix(mRenderers.get(mtoken).mModelMatrix, 0);
-        mRenderers.get(mtoken).updateStrokes(userStrokes, mSharedStrokes);
+        mRenderers.get(mtoken).updateStrokes(userStrokes);
         mRenderers.get(mtoken).upload();
         mRendererStatus.set(mtoken, true);
         mtoken = (mtoken + 1) % QUEUE_MAX_NUM;
@@ -130,7 +130,7 @@ public class LineShaderRendererGroup {
     public void clear(){
         for (int i=0; i<QUEUE_MAX_NUM; i++){
             mRenderers.get(i).clear();
-            mRenderers.get(i).updateStrokes(mPlaceholderStroke, mSharedStrokes);
+            mRenderers.get(i).updateStrokes(mPlaceholderStroke);
         }
         resetRendererStatus();
     }

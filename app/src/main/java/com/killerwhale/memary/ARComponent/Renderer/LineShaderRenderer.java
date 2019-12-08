@@ -285,16 +285,13 @@ public class LineShaderRenderer {
      * @param strokes a ArrayList of ArrayLists of Vector3fs in world space.  The outer ArrayList
      *                contains the strokes, while the inner ArrayList contains the Vertex of each Line
      */
-    public void updateStrokes(List<Stroke> strokes, Map<String, Stroke> sharedStrokes) {
+    public void updateStrokes(List<Stroke> strokes) {
         mNumPoints = 0;
 
         for (Stroke l : strokes) {
             mNumPoints += l.size() * 2 + 2;
         }
 
-        for (Stroke l : sharedStrokes.values()) {
-            mNumPoints += l.size() * 2 + 2;
-        }
 
         ensureCapacity(mNumPoints);
 
@@ -304,9 +301,6 @@ public class LineShaderRenderer {
             offset = addLine(l, offset);
         }
 
-        for (Stroke l : sharedStrokes.values()) {
-            offset = addLine(l, offset);
-        }
         mNumBytes = offset;
     }
 

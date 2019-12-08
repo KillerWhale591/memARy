@@ -22,6 +22,7 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.StrictMode;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -32,6 +33,15 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.location.Location;
+import android.net.Uri;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+
 
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
@@ -45,6 +55,9 @@ import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
+import com.killerwhale.memary.ARComponent.Utils.StrokeStorageHelper;
+import com.killerwhale.memary.ARComponent.Listener.OnArDownloadedListener;
+import com.killerwhale.memary.ARComponent.Listener.OnStrokeUrlCompleteListener;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
@@ -63,6 +76,7 @@ import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -90,10 +104,11 @@ import javax.vecmath.Vector3f;
 
 public class ARActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
-        ErrorDialog.Listener,ClearDrawingDialog.Listener, UploadDrawingDialog.Listener {
+        ErrorDialog.Listener,ClearDrawingDialog.Listener, UploadDrawingDialog.Listener,
+        OnStrokeUrlCompleteListener, OnArDownloadedListener{
 
     private static final String TAG = "ARActivity";
-    private static final boolean JOIN_GLOBAL_ROOM = BuildConfig.GLOBAL;
+    private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
 
@@ -152,6 +167,11 @@ public class ARActivity extends ARBaseActivity
     private boolean mDebugEnabled = false;
     private long mRenderDuration;
     private GestureDetector gestureDetector;
+    StrokeStorageHelper strokeHelper;
+
+    // Location
+    private FusedLocationProviderClient FLPC;
+    private LocationRequest locationRequest;
 
 
     /**
@@ -186,7 +206,7 @@ public class ARActivity extends ARBaseActivity
         btnRefresh = findViewById(R.id.btnRefresh);
         btnRefresh.setOnClickListener(this);
 
-
+        strokeHelper = new StrokeStorageHelper(this);
 
 
         // set up brush selector
@@ -257,6 +277,11 @@ public class ARActivity extends ARBaseActivity
     @Override
     protected void onStart() {
         super.onStart();
+        FLPC = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(INTERVAL_LOC_REQUEST);
+
     }
 
     @Override
@@ -277,7 +302,7 @@ public class ARActivity extends ARBaseActivity
 
         // Check if ARCore is installed/up-to-date
         int message = -1;
-        bInitCloudRenderer.set(true);
+        //bInitCloudRenderer.set(true);
         Exception exception = null;
         try {
             if (mSession == null) {
@@ -348,7 +373,7 @@ public class ARActivity extends ARBaseActivity
             showStrokeDependentUI();
         }
 
-
+        downloadStrokes();
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
 
 
@@ -396,19 +421,12 @@ public class ARActivity extends ARBaseActivity
                                 .compose(Pose.makeTranslation(0, 0, -1f))
                                 .extractTranslation());
             }
+//
+//            if (bInitCloudRenderer.get()){
+//                //----Local Test-----
+//                downloadStrokes();
+//            }
 
-            if (bInitCloudRenderer.get()){
-                //----Local Test-----
-                List<List<Stroke>> strokeList = createDummyStrokes();
-                List<Anchor> anchorList = createDummyAnchors();
-                mCloudShaderRenderer.initialize(strokeList, anchorList);
-                mCloudShaderRenderer.setNeedsUpdate();
-                mCloudShaderRenderer.checkUpload();
-                bInitCloudRenderer.set(false);
-            }
-
-            // Notify the hostManager of all the anchor updates.
-            Collection<Anchor> updatedAnchors = mFrame.getUpdatedAnchors();
 
 
             // Update tracking states
@@ -522,7 +540,7 @@ public class ARActivity extends ARBaseActivity
                 mLineShaderRenderer.setDistanceScale(distanceScale);
                 mLineShaderRenderer.setLineWidth(mLineWidthMax);
                 mLineShaderRenderer.clear();
-                mLineShaderRenderer.updateStrokes(mStrokes, mSharedStrokes);
+                mLineShaderRenderer.updateStrokes(mStrokes);
                 mLineShaderRenderer.upload();
             }
 
@@ -878,7 +896,7 @@ public class ARActivity extends ARBaseActivity
     @Override
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
-        saveStrokes();
+        uploadStrokes();
         Anchor offsetAnchor = setAnchorOffset(mAnchor);
         mCloudShaderRenderer.setNeedsUpdate();
         mCloudShaderRenderer.update(this, mStrokes, offsetAnchor);
@@ -1012,85 +1030,109 @@ public class ARActivity extends ARBaseActivity
     }
 
 
-    public void saveStrokes(){
-        try {
-            serializeStorkes(mStrokes);
-            Toast.makeText(ARActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
-            Log.i("Checkpointer", "Saved!");
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void serializeStorkes(List<Stroke> mStrokes) throws IOException {
-        try{
-            //File outFile = new File(Environment.getExternalStorageDirectory(), "appSaveStroke.data");
-            //ObjectOutput out = new ObjectOutputStream(new FileOutputStream(outFile));
-            FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getApplicationContext().MODE_PRIVATE);
-            ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
-            out.writeObject(mStrokes);
-            out.close();
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void loadStrokes(){
-        try {
-            List<Stroke> newmStrokes = fetchStrokes();
-            mStrokes = newmStrokes;
-            Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
-            Log.i("Checkpointer", "Loaded!");
-            update();
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public List<Stroke> fetchStrokes() throws IOException, ClassNotFoundException {
-        try{
-            FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
-            ObjectInputStream in = new ObjectInputStream(fileInputStream);
-            List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
-            in.close();
-            Log.i("Checkpointer", "Loaded!");
-            return fetchStrokes;
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public List<List<Stroke>> createDummyStrokes(){
-
-        List<List<Stroke>> dummyStrokes = new ArrayList<>();
-
-        try{
-            List<Stroke> localStrokes = fetchStrokes();
-            //Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
-            Log.i("Checkpointer", "Loaded!");
-            dummyStrokes.add(localStrokes);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return dummyStrokes;
-
-    }
-
-    public List<Anchor> createDummyAnchors(){
+    public List<Anchor> createDummyAnchors(int numAnchors){
         List<Anchor> dummyAnchors = new ArrayList<>();
-        Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
-                        .getPose()
-                        .compose(Pose.makeTranslation(0, 0, -1f))
-                        .extractTranslation());
-        dummyAnchors.add(dummyAnchor);
+        for (int i=0; i<numAnchors; i++){
+            dummyAnchors.add(mAnchor);
+        }
+//        Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
+//                        .getPose()
+//                        .compose(Pose.makeTranslation(0, 0, -1f))
+//                        .extractTranslation());
+//        dummyAnchors.add(dummyAnchor);
         return dummyAnchors;
 
     }
 
+    /**
+     * Download strokes from FireBase storage
+     */
+
+    public void downloadStrokes() {
+        // Get current location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    // Modify policy: downloadable input stream
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+                    // Search in 1KM
+                    strokeHelper.searchNearbyAr(location, 1);
+                }
+            }
+        });
+    }
+
+    /**
+     * Upload user created strokes to FireBase storage
+     */
+
+    public void uploadStrokes() {
+        // Get current location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    strokeHelper.setLocation(location);
+                    // Upload to FireBase
+                    try {
+
+                        FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
+                        ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
+                        out.writeObject(mStrokes);
+                        out.close();
+                        File file = new File(ARActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
+                        Uri uri = Uri.fromFile(file);
+                        strokeHelper.uploadStrokeFile(uri);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.i(TAG, "Saved failed");
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Callback of {@link OnStrokeUrlCompleteListener}
+     */
+    @Override
+    public void startDownloadStrokes() {
+        strokeHelper.downloadStrokeFiles();
+    }
+
+
+    /**
+     * Callback of {@link OnArDownloadedListener}
+     * @param ar all nearby ar objects
+     */
+    @Override
+    public void setStrokeList(List<List<Stroke>> ar) {
+        // Handle all ar object here
+        //
+        //
+        // For test: render first ar object
+        mStrokes = ar.get(0);
+        List<List<Stroke>> ListmCloudStrokes = ar.subList(0, ARSettings.getMaxCloudStrokesNum());
+        List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
+        mCloudAnchors = createDummyAnchors(ARSettings.getMaxCloudStrokesNum());
+        mCloudShaderRenderer.initialize(ListmCloudStrokes, mCloudAnchors);
+        mCloudShaderRenderer.setNeedsUpdate();
+        mCloudShaderRenderer.checkUpload();
+        //bInitCloudRenderer.set(false);
+    }
 }
