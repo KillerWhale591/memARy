@@ -161,6 +161,7 @@ public class ARActivity extends ARBaseActivity
     private AtomicBoolean bModeChange = new AtomicBoolean(false);
     private AtomicBoolean bNewStroke = new AtomicBoolean(false);
     private AtomicBoolean bInitCloudRenderer = new AtomicBoolean(false);
+    private AtomicBoolean bRefreshCloudRenderer = new AtomicBoolean(false);
     private static final int MAX_UNTRACKED_FRAMES = 5;
     private int mFramesNotTracked = 0;
     private Map<String, Stroke> mSharedStrokes = new HashMap<>();
@@ -302,7 +303,7 @@ public class ARActivity extends ARBaseActivity
 
         // Check if ARCore is installed/up-to-date
         int message = -1;
-        //bInitCloudRenderer.set(true);
+
         Exception exception = null;
         try {
             if (mSession == null) {
@@ -373,9 +374,10 @@ public class ARActivity extends ARBaseActivity
             showStrokeDependentUI();
         }
 
-        downloadStrokes();
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
 
+        downloadStrokes();
+        bInitCloudRenderer.set(true);
 
     }
 
@@ -421,11 +423,41 @@ public class ARActivity extends ARBaseActivity
                                 .compose(Pose.makeTranslation(0, 0, -1f))
                                 .extractTranslation());
             }
-//
-//            if (bInitCloudRenderer.get()){
-//                //----Local Test-----
-//                downloadStrokes();
-//            }
+
+            if (bRefreshCloudRenderer.get()){
+                mCloudShaderRenderer.setNeedsUpdate();
+                mCloudShaderRenderer.checkUpload();
+                bRefreshCloudRenderer.set(false);
+            }
+
+            if (bInitCloudRenderer.get()){
+                //----Local Test-----
+                List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
+                //mCloudAnchors = createDummyAnchors(ARSettings.getMaxCloudStrokesNum());
+                Anchor randomAnchor;
+                long l = System.currentTimeMillis();
+                Random random = new Random(l);
+                for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
+                    float ox = random.nextFloat() / 100;
+                    float oy = random.nextFloat() / 100;
+                    float oz = random.nextFloat() / 2;
+                    float symbol = random.nextFloat() / 2;
+                    if (symbol > 0.5){
+                        oz = -oz;
+                    }
+                    randomAnchor =  mSession.createAnchor(
+                            mFrame.getCamera().getPose()
+                                    .compose(Pose.makeTranslation(ox, oy, -1.5f + oz))
+                                    .extractTranslation());
+                    mCloudAnchors.add(randomAnchor);
+                }
+
+                mCloudShaderRenderer.initAnchors(mCloudAnchors);
+                mCloudShaderRenderer.setNeedsUpdate();
+                mCloudShaderRenderer.checkUpload();
+                bInitCloudRenderer.set(false);
+                bRefreshCloudRenderer.set(true);
+            }
 
 
 
@@ -897,9 +929,9 @@ public class ARActivity extends ARBaseActivity
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
         uploadStrokes();
-        Anchor offsetAnchor = setAnchorOffset(mAnchor);
+        //Anchor offsetAnchor = setAnchorOffset(mAnchor);
         mCloudShaderRenderer.setNeedsUpdate();
-        mCloudShaderRenderer.update(this, mStrokes, offsetAnchor);
+        mCloudShaderRenderer.update(mStrokes, mAnchor);
         mCloudShaderRenderer.setNeedsUpdate();
         setMode(Mode.VIEW);
         clearDrawing();
@@ -919,6 +951,8 @@ public class ARActivity extends ARBaseActivity
 
     public void onClickRefresh(){
         mCloudShaderRenderer.clear();
+        downloadStrokes();
+        bInitCloudRenderer.set(true);
         mCloudShaderRenderer.setNeedsUpdate();
     }
 
@@ -980,25 +1014,6 @@ public class ARActivity extends ARBaseActivity
     private void showView(View toShow) {
         toShow.setVisibility(View.VISIBLE);
         toShow.animate().alpha(1).start();
-    }
-
-    private void hideView(final View toHide) {
-        toHide.animate().alpha(0).withEndAction(new Runnable() {
-            @Override
-            public void run() {
-                toHide.setVisibility(View.GONE);
-            }
-        }).start();
-    }
-
-    public void enableView(View toEnable) {
-        toEnable.setEnabled(true);
-        toEnable.animate().alpha(1f);
-    }
-
-    public void disableView(View toDisable) {
-        toDisable.setEnabled(false);
-        toDisable.animate().alpha(.5f);
     }
 
 
@@ -1126,13 +1141,16 @@ public class ARActivity extends ARBaseActivity
         //
         //
         // For test: render first ar object
-        mStrokes = ar.get(0);
-        List<List<Stroke>> ListmCloudStrokes = ar.subList(0, ARSettings.getMaxCloudStrokesNum());
-        List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
-        mCloudAnchors = createDummyAnchors(ARSettings.getMaxCloudStrokesNum());
-        mCloudShaderRenderer.initialize(ListmCloudStrokes, mCloudAnchors);
+        //mStrokes = ar.get(0);
+        List<List<Stroke>> ListmCloudStrokes = new ArrayList<>();
+        long l = System.currentTimeMillis();
+        Random random = new Random(l);
+        for (int i=0; i < ARSettings.getMaxCloudStrokesNum(); i++){
+            ListmCloudStrokes.add(ar.get(random.nextInt(ar.size())));
+        }
+        mCloudShaderRenderer.initStrokes(ListmCloudStrokes);
         mCloudShaderRenderer.setNeedsUpdate();
         mCloudShaderRenderer.checkUpload();
-        //bInitCloudRenderer.set(false);
+        bInitCloudRenderer.set(true);
     }
 }

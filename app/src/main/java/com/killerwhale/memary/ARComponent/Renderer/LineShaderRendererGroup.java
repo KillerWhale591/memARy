@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.vecmath.Vector3f;
+
 /**
  * Author: Qili Zeng (qzeng@bu.edu)
  * For rendering multiple AR Object
@@ -21,6 +23,8 @@ import java.util.Random;
 public class LineShaderRendererGroup {
 
     private int QUEUE_MAX_NUM = 2;
+    private long l = System.currentTimeMillis();
+    private Random random;
     private boolean flushflag = false;
     private int mtoken = 1;
     private List<LineShaderRenderer> mRenderers;
@@ -32,6 +36,7 @@ public class LineShaderRendererGroup {
 
     public LineShaderRendererGroup(float distanceScale, float LineWidthMax) {
         mPlaceholderStroke = new ArrayList<>();
+        Random random = new Random(l);
         QUEUE_MAX_NUM = ARSettings.getMaxCloudStrokesNum() + 1;
         mRendererStatus = new ArrayList<>(QUEUE_MAX_NUM);
         mRenderers  = new ArrayList<>(QUEUE_MAX_NUM);
@@ -49,21 +54,26 @@ public class LineShaderRendererGroup {
 
     }
 
-    public void initialize(List<List<Stroke>> cloudStrokes, List<Anchor> cloudAnchors){
 
+    public void initStrokes(List<List<Stroke>> cloudStrokes){
+        for (int i=0; i<cloudStrokes.size(); i++){
+            mRenderers.get(i).updateStrokes(cloudStrokes.get(i));
+            mRenderers.get(i).setColor(getRandomColor());
+            mRendererStatus.set(i, true);
+            mRenderers.get(i).upload();
+        }
+
+        mtoken = cloudStrokes.size();
+
+    }
+
+    public void initAnchors(List<Anchor> cloudAnchors){
         mAnchors = cloudAnchors;
         for (int i=0; i<mAnchors.size(); i++){
             mAnchors.get(i).getPose().toMatrix(mRenderers.get(i).mModelMatrix, 0);
         }
-
-        for (int i=0; i<cloudStrokes.size(); i++){
-            mRenderers.get(i).updateStrokes(cloudStrokes.get(i));
-            mRenderers.get(i).upload();
-            mRendererStatus.set(i, true);
-        }
-
-        mtoken = cloudStrokes.size();
     }
+
 
     public void setNeedsUpdate(){
         for (int i=0; i<mRenderers.size(); i++){
@@ -88,19 +98,15 @@ public class LineShaderRendererGroup {
         }
     }
 
-    public void update(Context context, List<Stroke> userStrokes, Anchor userAnchor){
+    public void update(List<Stroke> userStrokes, Anchor userAnchor){
+
         mRenderers.get(mtoken).clear();
         userAnchor.getPose().toMatrix(mRenderers.get(mtoken).mModelMatrix, 0);
         mRenderers.get(mtoken).updateStrokes(userStrokes);
+        mRenderers.get(mtoken).setColor(ARSettings.getColor());
         mRenderers.get(mtoken).upload();
         mRendererStatus.set(mtoken, true);
         mtoken = (mtoken + 1) % QUEUE_MAX_NUM;
-    }
-
-    public void anchorTransform(Anchor mAnchor){
-        for (int i=0; i<QUEUE_MAX_NUM; i++){
-            mAnchor.getPose().toMatrix(mRenderers.get(i).mModelMatrix, 0);
-        }
     }
 
     public void createOnGlThread(Context context){
@@ -124,7 +130,15 @@ public class LineShaderRendererGroup {
         //float oy = random.nextFloat();
         float oz = random.nextFloat();
 
+    }
 
+    public Vector3f getRandomColor(){
+
+        float r = random.nextFloat();
+        float g = random.nextFloat();
+        float b = random.nextFloat();
+        Vector3f color = new Vector3f(r, g, b);
+        return color;
     }
 
     public void clear(){
