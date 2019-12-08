@@ -47,7 +47,7 @@ public class ARSettings {
 
     private static final int smoothingCount = 1500;
 
-    private static final int numCloudStrokes = 5;
+    private static final int numCloudStrokes = 15;
 
     public enum LineWidth {
         SMALL(0.006f),

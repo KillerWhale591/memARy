@@ -438,16 +438,16 @@ public class ARActivity extends ARBaseActivity
                 long l = System.currentTimeMillis();
                 Random random = new Random(l);
                 for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
-                    float ox = random.nextFloat() / 100;
-                    float oy = random.nextFloat() / 100;
-                    float oz = random.nextFloat() / 2;
+                    float ox = random.nextFloat() / 10;
+                    float oy = random.nextFloat() * (float) 1.25;
+                    float oz = random.nextFloat() * (float) 1.5;
                     float symbol = random.nextFloat() / 2;
                     if (symbol > 0.5){
                         oz = -oz;
                     }
                     randomAnchor =  mSession.createAnchor(
                             mFrame.getCamera().getPose()
-                                    .compose(Pose.makeTranslation(ox, oy, -1.5f + oz))
+                                    .compose(Pose.makeTranslation(ox, oy, -2f + oz))
                                     .extractTranslation());
                     mCloudAnchors.add(randomAnchor);
                 }
