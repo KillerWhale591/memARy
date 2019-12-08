@@ -20,7 +20,7 @@
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.killerwhale.memary.Activity.ARPrimitiveActivity">
+    tools:context="com.killerwhale.memary.Activity.ARActivity">
 
     <!-- surface view-->
     <com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView
