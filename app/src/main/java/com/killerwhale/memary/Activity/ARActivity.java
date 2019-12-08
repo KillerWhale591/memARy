@@ -1079,7 +1079,7 @@ public class ARActivity extends ARBaseActivity
                     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                     StrictMode.setThreadPolicy(policy);
                     // Search in 1KM
-                    strokeHelper.searchNearbyAr(location, 1);
+                    strokeHelper.searchNearbyAr(location, 1, ARSettings.getMaxCloudStrokesNum());
                 }
             }
         });

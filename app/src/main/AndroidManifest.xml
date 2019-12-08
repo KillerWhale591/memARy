@@ -50,9 +50,6 @@
             android:name=".Activity.ARActivity"
             android:screenOrientation="portrait">
         </activity>
-        <activity
-            android:name=".Activity.ARTestActivity"
-            android:screenOrientation="portrait"></activity>
         <activity android:name=".Activity.LocationListActivity" />
         <activity android:name=".Activity.MainActivity">
             <intent-filter>
