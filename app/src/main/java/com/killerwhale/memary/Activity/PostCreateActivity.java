@@ -84,6 +84,8 @@ public class PostCreateActivity extends AppCompatActivity {
     // Location
     private Location mLocation;
     private ImageButton btnSearch;
+    private String mName;
+    private String mAddress;
 
     // UI widgets
     private Button btnCancel;
@@ -96,6 +98,7 @@ public class PostCreateActivity extends AppCompatActivity {
     // Post variables
     private Uri localUri;
     private String remoteUrl = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,9 +235,10 @@ public class PostCreateActivity extends AppCompatActivity {
             }
         } else if(requestCode == ACTION_SEARCH_NEARBY) {
             if (data != null) {
-                String returnaddress = data.getStringExtra("name");
+                mName = data.getStringExtra("name");
+                mAddress = data.getStringExtra("address");
                 //keep the edtlocation, you can add other bundle below
-                edtLocation.setText(returnaddress);
+                edtLocation.setText(mName + mAddress);
                 edtLocation.setVisibility(View.VISIBLE);
                 //TODO: for BOYANG ZHOU
             }
