@@ -11,6 +11,7 @@ public class MainApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Preference.setPreferences(this);
         Fresco.initialize(this);
     }
 }
