@@ -232,6 +232,7 @@ public class PostCreateActivity extends AppCompatActivity {
         } else if(requestCode == ACTION_SEARCH_NEARBY) {
             if (data != null) {
                 String returnaddress = data.getStringExtra("address");
+                Log.i(TAG, "onActivityResult: "+ returnaddress);
                 btnSearch.setText(returnaddress);
             }
         }

@@ -27,6 +27,7 @@ import com.killerwhale.memary.R;
 public class LocationListActivity extends AppCompatActivity {
 
     private static final long INTERVAL_LOC_REQUEST = 5000;
+    private static final String TAG = "NAV";
 
     private ListView locationList;
     private FirebaseFirestore db;
@@ -62,13 +63,15 @@ public class LocationListActivity extends AppCompatActivity {
                         break;
                     case R.id.action_posts:
                         startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
-                        finish();
+                        break;
+                    case R.id.action_places:
                         break;
                     case R.id.action_profile:
+                        startActivity(new Intent(getBaseContext(), ProfileActivity.class));
                         finish();
                         break;
                     default:
-                        Log.i("nvBar", "Unhandled nav click");
+                        Log.i(TAG, "Unhandled nav click");
 
                 }
                 return true;

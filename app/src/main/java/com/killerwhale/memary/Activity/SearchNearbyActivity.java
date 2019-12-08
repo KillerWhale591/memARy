@@ -29,10 +29,7 @@ import com.killerwhale.memary.R;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-/**
- * Activity for search nearby location
- * @author Xiaoyan
- */
+
 public class SearchNearbyActivity extends AppCompatActivity {
 
     private PlacesClient placesClient;
@@ -90,6 +87,9 @@ public class SearchNearbyActivity extends AppCompatActivity {
                     Log.i("TAG", String.format("Place '%s' has likelihood: %f",
                             placeLikelihood.getPlace().getName(),
                             placeLikelihood.getLikelihood()));
+//                    LocationModel LM = new LocationModel(placeLikelihood.getPlace().getName(),
+//                            placeLikelihood.getPlace().getAddress(),0,0,0);
+//                    nearbyArray.add(LM);
                     nearbyAddressArray.add(placeLikelihood.getPlace().getName());
                 }
             }
