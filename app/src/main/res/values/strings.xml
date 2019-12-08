@@ -24,7 +24,7 @@
         <item>175 Tremont St, Boston, MA 02111</item>
     </string-array>
     <string name="mapbox_access_token">YOUR_KEY_HERE</string>
-    <string name="google_places_access_token">AIzaSyAoVpLlV7bJ2XKgrWyOxTmgtBcrER9m8jk</string>
+    <string name="google_places_access_token">YOUR_KEY_HERE</string>
 
     <!-- Image and ImageButton Content Descriptions for Accessibility-->
     <string name="content_description_undo">Undo</string>
