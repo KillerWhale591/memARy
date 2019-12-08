@@ -1,17 +1,17 @@
-package com.killerwhale.memary.ARComponent.Rendering;
+package com.killerwhale.memary.ARComponent.Renderer;
 
 import android.content.Context;
-import android.opengl.GLSurfaceView;
 
 import com.google.ar.core.Anchor;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
-import com.killerwhale.memary.ARSettings;
+import com.killerwhale.memary.ARComponent.View.ARSettings;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Author: Qili Zeng (qzeng@bu.edu)
@@ -65,6 +65,7 @@ public class LineShaderRendererGroup {
         }
     }
 
+
     public void checkUpload(){
         for (int i=0; i<mRenderers.size(); i++){
             if (mRenderers.get(i).bNeedsUpdate.get()){
@@ -110,6 +111,20 @@ public class LineShaderRendererGroup {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void setRandomOffset(Anchor anchor){
+        float x = anchor.getPose().tx();
+        //float y = anchor.getPose().ty();
+        float z = anchor.getPose().tz();
+
+        long l = System.currentTimeMillis();
+        Random random = new Random(l);
+        float ox = random.nextFloat();
+        //float oy = random.nextFloat();
+        float oz = random.nextFloat();
+
+
     }
 
     public void clear(){

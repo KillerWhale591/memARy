@@ -28,7 +28,7 @@
  * limitations under the License.
  */
 
-package com.killerwhale.memary.ARComponent.Rendering;
+package com.killerwhale.memary.ARComponent.Renderer;
 
 import android.opengl.GLES20;
 import android.opengl.Matrix;

@@ -14,16 +14,13 @@
 
 package com.killerwhale.memary.ARComponent.Model;
 
-import com.killerwhale.memary.ARSettings;
-import com.killerwhale.memary.ARComponent.Model.BiquadFilter;
-import com.killerwhale.memary.ARComponent.Rendering.LineUtils;
+import com.killerwhale.memary.ARComponent.View.ARSettings;
+import com.killerwhale.memary.ARComponent.Renderer.LineUtils;
 import com.google.ar.core.Pose;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.vecmath.Vector3f;
 

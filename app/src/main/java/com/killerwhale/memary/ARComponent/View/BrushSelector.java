@@ -22,9 +22,7 @@ import android.util.Pair;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.accessibility.AccessibilityEvent;
 
-import com.killerwhale.memary.ARSettings;
 import com.killerwhale.memary.R;
 
 /**
