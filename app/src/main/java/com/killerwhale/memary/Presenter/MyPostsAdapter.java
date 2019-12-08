@@ -98,7 +98,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
                         });
 
                 db.collection("location")
-                        .whereEqualTo("geopoint", deletePost.getLocation())
+                        .whereArrayContains("posts", deletePost.getPostId())
                         .get()
                         .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                             @Override

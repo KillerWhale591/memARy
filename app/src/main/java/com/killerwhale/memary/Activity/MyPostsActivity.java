@@ -3,6 +3,7 @@ package com.killerwhale.memary.Activity;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -15,6 +16,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.killerwhale.memary.DataModel.Post;
@@ -63,9 +65,10 @@ public class MyPostsActivity extends AppCompatActivity {
         }
         rvManager = new LinearLayoutManager(this);
         myPosts.setLayoutManager(rvManager);
+        myPosts.addItemDecoration(new DividerItemDecoration(myPosts.getContext(), DividerItemDecoration.VERTICAL));
 
         db.collection("posts")
-                .whereEqualTo("uid", Uid)
+                .whereEqualTo("uid", Uid).orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
