@@ -17,11 +17,14 @@ package com.killerwhale.memary.Activity;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.location.Location;
+import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.StrictMode;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -30,7 +33,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.killerwhale.memary.ARComponent.Listener.OnArDownloadedListener;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
+import com.killerwhale.memary.ARComponent.Listener.OnStrokeUrlCompleteListener;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
@@ -40,6 +51,7 @@ import com.killerwhale.memary.ARComponent.Utils.BrushSelector;
 import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
+import com.killerwhale.memary.ARComponent.Utils.StrokeStorageHelper;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
@@ -57,13 +69,11 @@ import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,15 +91,16 @@ import javax.vecmath.Vector3f;
 
 public class ARPrimitiveActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
-        ErrorDialog.Listener,ClearDrawingDialog.Listener{
+        ErrorDialog.Listener, ClearDrawingDialog.Listener,
+        OnStrokeUrlCompleteListener, OnArDownloadedListener {
 
+    private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final String TAG = "ARPrimitiveActivity";
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
-    //private Fa mAnalytics;
 
     enum Mode {
-        DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
+        DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING
     }
 
     private Mode mMode = Mode.DRAW;
@@ -111,6 +122,11 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private Anchor mAnchor;
     private List<Stroke> mStrokes;
     private BrushSelector mBrushSelector;
+    StrokeStorageHelper strokeHelper;
+
+    // Location
+    private FusedLocationProviderClient FLPC;
+    private LocationRequest locationRequest;
 
     private float[] projmtx = new float[16];
     private float[] viewmtx = new float[16];
@@ -164,6 +180,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
 
+        // Set up stroke helper
+        strokeHelper = new StrokeStorageHelper(this);
+
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
 
@@ -179,6 +198,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     protected void onStart() {
         super.onStart();
+        FLPC = LocationServices.getFusedLocationProviderClient(this);
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(INTERVAL_LOC_REQUEST);
     }
 
     @Override
@@ -373,10 +396,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                                 .extractTranslation());
             }
 
-            // Notify the hostManager of all the anchor updates.
-            Collection<Anchor> updatedAnchors = mFrame.getUpdatedAnchors();
-
-
             // Update tracking states
             mTrackingIndicator.setTrackingStates(mFrame, mAnchor);
             if (mAnchor == null) {
@@ -472,7 +491,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 bUndo.set(false);
                 if (mStrokes.size() > 0) {
                     int index = mStrokes.size() - 1;
-//                    mPairSessionManager.undoStroke(mStrokes.get(index));
                     mStrokes.remove(index);
                     if (mStrokes.isEmpty()) {
                         showStrokeDependentUI();
@@ -487,7 +505,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 mLineShaderRenderer.setDistanceScale(distanceScale);
                 mLineShaderRenderer.setLineWidth(mLineWidthMax);
                 mLineShaderRenderer.clear();
-                mLineShaderRenderer.updateStrokes(mStrokes, mSharedStrokes);
+                mLineShaderRenderer.updateStrokes(mStrokes);
                 mLineShaderRenderer.upload();
             }
 
@@ -595,21 +613,11 @@ public class ARPrimitiveActivity extends ARBaseActivity
         showStrokeDependentUI();
     }
 
-
-    /**
-     * onClickUndo handles the touch input on the GUI and sets the AtomicBoolean bUndo to be true
-     * the actual undo functionality is executed in the GL Thread
-     */
-    public void onClickUndo(View button) {
-
-        bUndo.set(true);
-
-    }
-
     /**
      * onClickClear handle showing an AlertDialog to clear the drawing
      */
     private void onClickClear() {
+        mStrokes.clear();
         ClearDrawingDialog.newInstance(false).show(this);
     }
 
@@ -623,13 +631,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
     @Override
     public boolean onTouchEvent(MotionEvent tap) {
         int action = tap.getAction();
-        if (action == MotionEvent.ACTION_DOWN) {
-            closeViewsOutsideTapTarget(tap);
-        }
-
-        // do not accept touch events through the playback view
-        // or when we are not tracking
-        //if (mPlaybackView.isOpen() || !mTrackingIndicator.isTracking()) {
         if (!mTrackingIndicator.isTracking()) {
             if (bTouchDown.get()) {
                 bTouchDown.set(false);
@@ -664,13 +665,6 @@ public class ARPrimitiveActivity extends ARBaseActivity
         }
 
         return false;
-    }
-
-    private void closeViewsOutsideTapTarget(MotionEvent tap) {
-        if (isOutsideViewBounds(mBrushSelector, (int) tap.getRawX(), (int) tap.getRawY())
-                && mBrushSelector.isOpen()) {
-            mBrushSelector.close();
-        }
     }
 
     private boolean isOutsideViewBounds(View view, int x, int y) {
@@ -757,10 +751,10 @@ public class ARPrimitiveActivity extends ARBaseActivity
                 onClickClear();
                 break;
             case R.id.btnLoad:
-                loadStrokes();
+                downloadStrokes();
                 break;
             case R.id.btnSave:
-                saveStrokes();
+                uploadStrokes();
                 break;
 
         }
@@ -812,53 +806,91 @@ public class ARPrimitiveActivity extends ARBaseActivity
         finish();
     }
 
+    /**
+     * Upload user created strokes to FireBase storage
+     */
+    public void uploadStrokes() {
+        // Get current location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    strokeHelper.setLocation(location);
+                    // Upload to FireBase
+                    try {
 
-    public void saveStrokes(){
-        try {
-            serializeStorkes(mStrokes);
-            Toast.makeText(ARPrimitiveActivity.this,"Strokes saved",Toast.LENGTH_SHORT);
-            Log.i("Checkpointer", "Saved!");
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
+                        FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
+                        ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
+                        out.writeObject(mStrokes);
+                        out.close();
+                        File file = new File(ARPrimitiveActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
+                        Uri uri = Uri.fromFile(file);
+                        strokeHelper.uploadStrokeFile(uri);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.i(TAG, "Saved failed");
+                    }
+                }
+            }
+        });
     }
 
-    public void serializeStorkes(List<Stroke> mStrokes) throws IOException {
-        try {
-            FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getApplicationContext().MODE_PRIVATE);
-            ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
-            out.writeObject(mStrokes);
-            out.close();
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
+
+    /**
+     * Download strokes from FireBase storage
+     */
+    public void downloadStrokes() {
+        // Get current location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    // Modify policy: downloadable input stream
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+                    // Search in 1KM
+                    strokeHelper.searchNearbyAr(location, 1);
+                }
+            }
+        });
     }
 
-    public void loadStrokes(){
-        try {
-            List<Stroke> newmStrokes = fetchStrokes();
-            mStrokes = newmStrokes;
-            Log.i("Checkpointer", "Loaded!");
-            update();
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+    /**
+     * Callback of {@link OnStrokeUrlCompleteListener}
+     */
+    @Override
+    public void startDownloadStrokes() {
+        strokeHelper.downloadStrokeFiles();
     }
 
-    public List<Stroke> fetchStrokes() {
-        try{
-            FileInputStream fileInputStream = getApplicationContext().openFileInput("strokeFile.ser");
-            ObjectInputStream in = new ObjectInputStream(fileInputStream);
-            List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
-            in.close();
-            return fetchStrokes;
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
-    }
 
+    /**
+     * Callback of {@link OnArDownloadedListener}
+     * @param ar all nearby ar objects
+     */
+    @Override
+    public void setStrokeList(List<List<Stroke>> ar) {
+        // Handle all ar object here
+        //
+        //
+        // For test: render first ar object
+        mStrokes = ar.get(0);
+        mLineShaderRenderer.clear();
+        mLineShaderRenderer.updateStrokes(mStrokes);
+        mLineShaderRenderer.bNeedsUpdate.set(true);
+        Log.i("strokestring", mLineShaderRenderer.mNumPoints + "");
+    }
 }

@@ -6,11 +6,107 @@
     android:layout_height="match_parent"
     tools:context=".Activity.ProfileActivity">
 
-    <fragment
-        android:id="@+id/fragment"
-        android:name="com.killerwhale.memary.View.SettingsFragment"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:background="@color/cardview_dark_background"
+            android:padding="20dp">
+
+            <com.facebook.drawee.view.SimpleDraweeView
+                android:id="@+id/icUserInfoAvatar"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_centerInParent="true"
+                app:placeholderImage="@drawable/user_icon"
+                app:roundWithOverlayColor="@color/cardview_dark_background"
+                app:roundedCornerRadius="80dp"
+                app:roundingBorderColor="@color/colorWhite"
+                app:roundingBorderWidth="2dp" />
+
+            <ImageButton
+                android:id="@+id/btnCamera"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentBottom="true"
+                android:background="@null"
+                android:src="@drawable/camera_icon" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/txtUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="Username"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Username"
+                    android:textAlignment="textEnd"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btnWrite"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:tint="@color/colorBlack"
+                    app:srcCompat="@drawable/ic_create" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnMyPosts"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:background="@null"
+                android:text="my posts"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnSetting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:background="@null"
+                android:text="Settings"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
     <FrameLayout
         android:id="@+id/navLayout"
