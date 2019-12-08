@@ -24,7 +24,7 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import android.os.StrictMode;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -38,12 +38,10 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.FileDownloadTask;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+import com.killerwhale.memary.ARComponent.Listener.OnArDownloadedListener;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
+import com.killerwhale.memary.ARComponent.Listener.OnStrokeUrlCompleteListener;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
@@ -72,10 +70,8 @@ import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +91,8 @@ import javax.vecmath.Vector3f;
 
 public class ARPrimitiveActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
-        ErrorDialog.Listener,ClearDrawingDialog.Listener{
+        ErrorDialog.Listener, ClearDrawingDialog.Listener,
+        OnStrokeUrlCompleteListener, OnArDownloadedListener {
 
     private static final long INTERVAL_LOC_REQUEST = 5000;
     private static final String TAG = "ARPrimitiveActivity";
@@ -125,7 +122,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
     private Anchor mAnchor;
     private List<Stroke> mStrokes;
     private BrushSelector mBrushSelector;
-    StrokeStorageHelper strokeHelper = new StrokeStorageHelper();
+    StrokeStorageHelper strokeHelper;
 
     // Location
     private FusedLocationProviderClient FLPC;
@@ -182,6 +179,9 @@ public class ARPrimitiveActivity extends ARBaseActivity
         btnSave.setOnClickListener(this);
         btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
+
+        // Set up stroke helper
+        strokeHelper = new StrokeStorageHelper(this);
 
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
@@ -810,7 +810,7 @@ public class ARPrimitiveActivity extends ARBaseActivity
      * Upload user created strokes to FireBase storage
      */
     public void uploadStrokes() {
-        // Get post location
+        // Get current location
         FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -822,65 +822,75 @@ public class ARPrimitiveActivity extends ARBaseActivity
             public void onSuccess(Location location) {
                 if (location != null) {
                     strokeHelper.setLocation(location);
+                    // Upload to FireBase
+                    try {
+
+                        FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
+                        ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
+                        out.writeObject(mStrokes);
+                        out.close();
+                        File file = new File(ARPrimitiveActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
+                        Uri uri = Uri.fromFile(file);
+                        strokeHelper.uploadStrokeFile(uri);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.i(TAG, "Saved failed");
+                    }
                 }
             }
         });
-        // Upload to FireBase
-        try {
-
-            FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
-            ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
-            out.writeObject(mStrokes);
-            out.close();
-            File file = new File(ARPrimitiveActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
-            Uri uri = Uri.fromFile(file);
-            strokeHelper.uploadStrokeFile(uri);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.i(TAG, "Saved failed");
-        }
     }
+
 
     /**
      * Download strokes from FireBase storage
      */
     public void downloadStrokes() {
-        StorageReference strokeRef = FirebaseStorage.getInstance().getReference().child("strokes");
-        final StorageReference mStrokeRef = strokeRef.child("strokeFile.ser");
-        File localFile = null;
-        try {
-            localFile = File.createTempFile("strokeFile", "ser");
-            Log.i("strokestring", "Temp file success");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // Fetch remote serializable to local file
-        if (localFile != null) {
-            final File finalLocalFile = localFile;
-            mStrokeRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    try {
-                        FileInputStream fileInputStream = new FileInputStream(finalLocalFile);
-                        ObjectInputStream in = new ObjectInputStream(fileInputStream);
-                        mStrokes = (List<Stroke>) in.readObject();
-                        in.close();
-                        mLineShaderRenderer.clear();
-                        mLineShaderRenderer.updateStrokes(mStrokes);
-                        mLineShaderRenderer.bNeedsUpdate.set(true);
-                        Log.i("strokestring", mLineShaderRenderer.mNumPoints + "");
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                        Log.i("strokestring", "Failed resolve");
-                    }
+        // Get current location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    // Modify policy: downloadable input stream
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+                    // Search in 1KM
+                    strokeHelper.searchNearbyAr(location, 1);
                 }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.i("strokestring", "Failed download");
-                }
-            });
-        }
+            }
+        });
+    }
+
+    /**
+     * Callback of {@link OnStrokeUrlCompleteListener}
+     */
+    @Override
+    public void startDownloadStrokes() {
+        strokeHelper.downloadStrokeFiles();
+    }
+
+
+    /**
+     * Callback of {@link OnArDownloadedListener}
+     * @param ar all nearby ar objects
+     */
+    @Override
+    public void setStrokeList(List<List<Stroke>> ar) {
+        // Handle all ar object here
+        //
+        //
+        // For test: render first ar object
+        mStrokes = ar.get(0);
+        mLineShaderRenderer.clear();
+        mLineShaderRenderer.updateStrokes(mStrokes);
+        mLineShaderRenderer.bNeedsUpdate.set(true);
+        Log.i("strokestring", mLineShaderRenderer.mNumPoints + "");
     }
 }
