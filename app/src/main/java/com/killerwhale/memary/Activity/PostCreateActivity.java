@@ -21,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -94,7 +95,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
-    private EditText edtLocation;
+    private TextView txtLocation;
     // Post variables
     private Uri localUri;
     private String remoteUrl = "";
@@ -153,7 +154,7 @@ public class PostCreateActivity extends AppCompatActivity {
         btnRemove = findViewById(R.id.btnRemove);
         btnSearch = findViewById(R.id.btnSearch);
         edtContent = findViewById(R.id.edtContent);
-        edtLocation =findViewById(R.id.edtLocation);
+        txtLocation =findViewById(R.id.txtLocation);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -232,15 +233,16 @@ public class PostCreateActivity extends AppCompatActivity {
                     Log.i(TAG, "onActivityResult: " + localUri.toString());
                 }
                 imgAttach.setImageURI(localUri);
-            }
-        } else if(requestCode == ACTION_SEARCH_NEARBY) {
-            if (data != null) {
-                mName = data.getStringExtra("name");
-                mAddress = data.getStringExtra("address");
-                //keep the edtlocation, you can add other bundle below
-                edtLocation.setText(mName + mAddress);
-                edtLocation.setVisibility(View.VISIBLE);
-                //TODO: for BOYANG ZHOU
+            } else if (requestCode == ACTION_SEARCH_NEARBY) {
+                if (data != null) {
+                    Log.i(TAG, "onActivityResult: 1");
+                    mName = data.getStringExtra("name");
+                    mAddress = data.getStringExtra("address");
+                    //keep the edtlocation, you can add other bundle below
+                    txtLocation.setText(mName + mAddress);
+                    txtLocation.setVisibility(View.VISIBLE);
+                    //TODO: for BOYANG ZHOU
+                }
             }
         }
     }

@@ -100,17 +100,19 @@
                 android:id="@+id/imgAttach"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:layout_below="@+id/edtLocation"
+                android:layout_below="@+id/txtLocation"
                 android:layout_marginTop="10dp"
                 android:visibility="gone"
                 fresco:placeholderImage="@android:color/darker_gray"/>
-            <EditText
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Location"
                 android:layout_below="@id/edtContent"
+                android:visibility="gone"
+                android:layout_marginEnd="40dp"
                 android:textColor="@color/colorPrimaryDark"
-                android:id="@+id/edtLocation"
+                android:id="@+id/txtLocation"
                 />
 
             <ImageButton
