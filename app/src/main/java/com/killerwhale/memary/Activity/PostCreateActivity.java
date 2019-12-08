@@ -36,6 +36,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -46,12 +47,14 @@ import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import java.util.UUID;
 
 /**
@@ -78,7 +81,9 @@ public class PostCreateActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private StorageReference mImagesRef;
     private CollectionReference mPostRef;
+    private CollectionReference mLocationRef;
     private GeoFirestore geoFirestore;
+    private GeoFirestore locGeoFirestore;
     private String mUid = "";
 
     // Location
@@ -113,7 +118,9 @@ public class PostCreateActivity extends AppCompatActivity {
         db.setFirestoreSettings(settings);
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
         mPostRef = db.collection("posts");
+        mLocationRef = db.collection("location");
         geoFirestore = new GeoFirestore(mPostRef);
+        locGeoFirestore = new GeoFirestore(mLocationRef);
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             mUid = user.getUid();
@@ -535,7 +542,7 @@ public class PostCreateActivity extends AppCompatActivity {
                                                     found = true;
                                                     ArrayList<String> posts = (ArrayList<String>) doc.get(LocationModel.FIELD_POST);
                                                     posts.add(postId);
-                                                    String locationId = doc.getId();
+                                                    final String locationId = doc.getId();
                                                     db.collection("location").document(locationId)
                                                             .update(LocationModel.FIELD_POST, posts)
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -564,6 +571,7 @@ public class PostCreateActivity extends AppCompatActivity {
                                                             @Override
                                                             public void onSuccess(DocumentReference documentReference) {
                                                                 Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                                                                locGeoFirestore.setLocation(documentReference.getId(), new GeoPoint(mLatLng[0], mLatLng[1]));
                                                             }
                                                         })
                                                         .addOnFailureListener(new OnFailureListener() {
