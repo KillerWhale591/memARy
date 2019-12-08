@@ -15,17 +15,17 @@
             android:title="Lock Portrait Mode" />
     </PreferenceCategory>
 
-    <EditTextPreference
-        android:key="edittext_preference"
-        android:title="@string/title_edittext_preference"
-        android:summary="@string/summary_edittext_preference"
-        android:dialogTitle="@string/dialog_title_edittext_preference" />
+<!--    <EditTextPreference-->
+<!--        android:key="edittext_preference"-->
+<!--        android:title="@string/title_edittext_preference"-->
+<!--        android:summary="@string/summary_edittext_preference"-->
+<!--        android:dialogTitle="@string/dialog_title_edittext_preference" />-->
 
-    <ListPreference
-        android:key="list_preference"
-        android:title="@string/title_list_preference"
-        android:summary="@string/summary_list_preference"
-        android:entries="@array/entries_list_preference"
-        android:entryValues="@array/entryvalues_list_preference"
-        android:dialogTitle="@string/dialog_title_list_preference" />
+<!--    <ListPreference-->
+<!--        android:key="list_preference"-->
+<!--        android:title="@string/title_list_preference"-->
+<!--        android:summary="@string/summary_list_preference"-->
+<!--        android:entries="@array/entries_list_preference"-->
+<!--        android:entryValues="@array/entryvalues_list_preference"-->
+<!--        android:dialogTitle="@string/dialog_title_list_preference" />-->
 </PreferenceScreen>
