@@ -74,12 +74,13 @@
 
                 <ImageButton
                     android:id="@+id/btnWrite"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_marginLeft="5dp"
                     android:layout_weight="1"
                     android:background="@null"
-                    app:srcCompat="@drawable/write_icon" />
+                    android:tint="@color/colorBlack"
+                    app:srcCompat="@drawable/ic_create" />
 
             </LinearLayout>
 

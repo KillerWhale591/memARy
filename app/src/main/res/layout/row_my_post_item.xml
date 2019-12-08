@@ -57,10 +57,11 @@
 
         <ImageButton
             android:id="@+id/btnDelete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:background="@null"
-            app:srcCompat="@drawable/delete_icon" />
+            android:tint="@color/colorDelete"
+            app:srcCompat="@drawable/ic_delete_24dp" />
     </LinearLayout>
 
 </LinearLayout>
