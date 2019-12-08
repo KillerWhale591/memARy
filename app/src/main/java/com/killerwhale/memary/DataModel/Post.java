@@ -47,6 +47,7 @@ public class Post {
     private String mImageUrl;
     private GeoPoint mGeoPoint;
     private Timestamp mPostTime;
+    private String PostId;
 
     /**
      * Constructor of a Post
@@ -77,6 +78,10 @@ public class Post {
         mImageUrl = (String) postData.get(FIELD_IMAGE);
         mGeoPoint = (GeoPoint) postData.get(FIELD_LOCATION);
         mPostTime = (Timestamp) postData.get(FIELD_TIMESTAMP);
+    }
+
+    public void setPostId(String postId){
+        this.PostId = postId;
     }
 
     public void setType(int type) {
@@ -140,6 +145,8 @@ public class Post {
     public String getAvatar() {
         return mAvatar;
     }
+
+    public String getPostId(){return PostId;}
 
     /**
      * Transfer from Post to HashMap
