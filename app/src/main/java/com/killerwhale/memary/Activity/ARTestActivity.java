@@ -89,13 +89,13 @@ import javax.vecmath.Vector3f;
  * This is a basic implementation of Offline AR functions
  */
 
-public class ARActivity extends ARBaseActivity
+public class ARTestActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
         ErrorDialog.Listener, ClearDrawingDialog.Listener,
         OnStrokeUrlCompleteListener, OnArDownloadedListener {
 
     private static final long INTERVAL_LOC_REQUEST = 5000;
-    private static final String TAG = "ARActivity";
+    private static final String TAG = "ARTestActivity";
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
 
@@ -706,7 +706,7 @@ public class ARActivity extends ARBaseActivity
         mBackgroundRenderer.createOnGlThread(this);
         mSession.setCameraTextureName(mBackgroundRenderer.getTextureId());
         try {
-            mLineShaderRenderer.createOnGlThread(ARActivity.this);
+            mLineShaderRenderer.createOnGlThread(ARTestActivity.this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -829,7 +829,7 @@ public class ARActivity extends ARBaseActivity
                         ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
                         out.writeObject(mStrokes);
                         out.close();
-                        File file = new File(ARActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
+                        File file = new File(ARTestActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
                         Uri uri = Uri.fromFile(file);
                         strokeHelper.uploadStrokeFile(uri);
 
