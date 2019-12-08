@@ -1,13 +1,14 @@
 package com.killerwhale.memary.Activity;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -69,7 +70,6 @@ import java.util.UUID;
  * Activity for editing and posting new post
  * @author Zeyu Fu
  */
-@RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
 public class PostCreateActivity extends AppCompatActivity {
 
     private static final String TAG = "NewPostTest";
@@ -84,7 +84,7 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA
     };
     private static final int ACTION_SEARCH_NEARBY = 1995;
-    private double[] mLatLng = {};
+    private double[] mLatLng = null;
 
     // Firebase plug-ins
     private FirebaseFirestore db;
@@ -127,6 +127,7 @@ public class PostCreateActivity extends AppCompatActivity {
                 .build();
         db.setFirestoreSettings(settings);
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
+        mName = "";
         mPostRef = db.collection("posts");
         mLocationRef = db.collection("location");
         geoFirestore = new GeoFirestore(mPostRef);
@@ -258,21 +259,21 @@ public class PostCreateActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK ) {
             if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
                     localUri = data.getData();
                     Log.i(TAG, "onActivityResult: " + localUri.toString());
                 }
                 imgAttach.setImageURI(localUri);
-            }
-        }
-        else if(requestCode == ACTION_SEARCH_NEARBY){
-            if(resultCode == RESULT_OK && data!= null){
-                Log.i(TAG, "onActivityResult: 1");
-                mName = data.getStringExtra("name");
-                mLatLng = data.getDoubleArrayExtra("latlng");Log.i(TAG, mLatLng[0] +"");
-                mAddress = data.getStringExtra("address");
-                txtLocation.setText(mName + mAddress);
-                txtLocation.setVisibility(View.VISIBLE);
+            } else if (requestCode == ACTION_SEARCH_NEARBY) {
+                if (data != null) {
+                    Log.i(TAG, "onActivityResult: 1");
+                    mName = data.getStringExtra("name");
+                    mLatLng = data.getDoubleArrayExtra("latlng");
+                    Log.i(TAG, mLatLng[0] + "");
+                    mAddress = data.getStringExtra("address");
+                    txtLocation.setText(mName + mAddress);
+                    txtLocation.setVisibility(View.VISIBLE);
+                }
             }
         }
     }
@@ -347,16 +348,34 @@ public class PostCreateActivity extends AppCompatActivity {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo;
         Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
             // Marshmallow+
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                Log.v(TAG,"Permission is granted");
+                //File write logic here
+            }else{
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2991);
+
+            }
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                Log.v(TAG,"Permission is granted");
+                //File write logic here
+            }else{
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2992);
+
+            }
             try {
                 // place where to store camera taken picture
+
                 photo = this.createTemporaryFile("picture", ".jpg");
                 photo.delete();
                 localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
-                Log.d(TAG, "takePhoto: " + localUri.toString());
+                Log.v(TAG, "takePhoto: " + localUri.toString());
             } catch (Exception e) {
                 Log.v(TAG, "Can't create file to take picture!");
+                e.printStackTrace();
+                Log.v(TAG, "takePhoto: "+ e.getCause());
+                Log.v(TAG, "takePhoto: "+ e.getMessage());
                 Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
             }
             i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);

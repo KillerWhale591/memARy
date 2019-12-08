@@ -23,9 +23,9 @@
         <item>Brookline, MA 02446</item>
         <item>175 Tremont St, Boston, MA 02111</item>
     </string-array>
-    <string name="mapbox_access_token">key1</string>
-    <string name="google_places_access_token">key2</string>
-    <string name="google_login_token">key3</string>
+    <string name="mapbox_access_token">pk.eyJ1IjoiY2d4eTE5OTUwOSIsImEiOiJjazN3anlxaHAwdWd0M25vMmQyaHQ4NHlzIn0.-F-DIhluh784HQMt75qeoA</string>
+    <string name="google_places_access_token">AIzaSyAxpnsZ8YBhIUHSQtZgI7tTe0UTJ9rCtcs</string>
+    <string name="google_login_token">5903042593-rgq4fi280h8prib2e0mdcshpqt01jund.apps.googleusercontent.com</string>
 
 
     <!-- Image and ImageButton Content Descriptions for Accessibility-->
