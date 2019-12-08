@@ -83,7 +83,7 @@ public class PostCreateActivity extends AppCompatActivity {
 
     // Location
     private Location mLocation;
-    private Button btnSearch;
+    private ImageButton btnSearch;
 
     // UI widgets
     private Button btnCancel;
@@ -92,7 +92,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
-
+    private EditText edtLocation;
     // Post variables
     private Uri localUri;
     private String remoteUrl = "";
@@ -148,8 +148,9 @@ public class PostCreateActivity extends AppCompatActivity {
         btnSubmit = findViewById(R.id.btnSubmit);
         imgAttach = findViewById(R.id.imgAttach);
         btnRemove = findViewById(R.id.btnRemove);
-        edtContent = findViewById(R.id.edtContent);
         btnSearch = findViewById(R.id.btnSearch);
+        edtContent = findViewById(R.id.edtContent);
+        edtLocation =findViewById(R.id.edtLocation);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -232,8 +233,10 @@ public class PostCreateActivity extends AppCompatActivity {
         } else if(requestCode == ACTION_SEARCH_NEARBY) {
             if (data != null) {
                 String returnaddress = data.getStringExtra("address");
-                Log.i(TAG, "onActivityResult: "+ returnaddress);
-                btnSearch.setText(returnaddress);
+                //keep the edtlocation, you can add other bundle below
+                edtLocation.setText(returnaddress);
+                edtLocation.setVisibility(View.VISIBLE);
+                //TODO: for BOYANG ZHOU
             }
         }
     }

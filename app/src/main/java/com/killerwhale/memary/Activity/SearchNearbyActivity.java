@@ -45,7 +45,7 @@ public class SearchNearbyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search_nearby);
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "YOUR_KEY_HERE");
+            Places.initialize(getApplicationContext(), getString(R.string.google_places_access_token));
         }
 // Create a new Places client instance.
         placesClient = Places.createClient(this);
