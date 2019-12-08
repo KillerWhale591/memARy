@@ -271,7 +271,7 @@ public class PostCreateActivity extends AppCompatActivity {
                     mLatLng = data.getDoubleArrayExtra("latlng");
                     Log.i(TAG, mLatLng[0] + "");
                     mAddress = data.getStringExtra("address");
-                    txtLocation.setText(mName + " " + mAddress);
+                    txtLocation.setText(mName + ", " + mAddress);
                     txtLocation.setVisibility(View.VISIBLE);
                 }
             }
@@ -361,7 +361,7 @@ public class PostCreateActivity extends AppCompatActivity {
                 Log.v(TAG,"Permission is granted");
                 //File write logic here
             }else{
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2992);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2992);
 
             }
             try {
