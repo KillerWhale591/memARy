@@ -292,7 +292,6 @@ public class LineShaderRenderer {
             mNumPoints += l.size() * 2 + 2;
         }
 
-
         ensureCapacity(mNumPoints);
 
         int offset = 0;

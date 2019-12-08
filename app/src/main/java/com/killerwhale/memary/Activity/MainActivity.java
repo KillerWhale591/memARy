@@ -15,8 +15,6 @@ import com.killerwhale.memary.R;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
 
-import org.w3c.dom.Text;
-
 import java.util.List;
 
 /**

@@ -4,6 +4,8 @@
     <string name="menu_one">Sort by distance</string>
     <string name="menu_two">Sort by number of posts</string>
     <string name="menu_three">Sort by location name</string>
+    <string name="title_edittext_preference">Distance for post search</string>
+    <string name="dialog_title_edittext_preference">Please enter a distance</string>
     <string-array name="location">
         <item>Photonics Center</item>
         <item>Mugar Memorial Library</item>
@@ -23,8 +25,11 @@
         <item>Brookline, MA 02446</item>
         <item>175 Tremont St, Boston, MA 02111</item>
     </string-array>
+
     <string name="mapbox_access_token">YOUR_KEY_HERE</string>
     <string name="google_places_access_token">YOUR_KEY_HERE</string>
+    <string name="google_login_token">YOUR_KEY_HERE</string>
+
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

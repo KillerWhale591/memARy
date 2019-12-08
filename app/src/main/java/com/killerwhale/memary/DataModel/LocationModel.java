@@ -1,43 +1,64 @@
 package com.killerwhale.memary.DataModel;
 
 import android.location.Location;
-import android.widget.ListView;
-
 import com.google.firebase.firestore.GeoPoint;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class LocationModel {
+
+    public static final String FIELD_POST = "posts";
 
     public String location;
     public String address;
     public float distance;
-    public int img;
-    private String image;
-    public Integer numPosts;
+    public int numPosts;
+    public ArrayList<String> posts;
     private GeoPoint geoPoint;
     private static final float METERS_TO_MILES = 1609.3f;
     private static final float MINIMUM_DISTANCE = 0.1f;
     private static final String SUFFIX_MILES = " miles away";
 
-    public LocationModel(String location, String address, float distance, int img, int numPosts) {
+    public LocationModel(String location, String address, float distance, int numPosts) {
         this.location = location;
         this.address = address;
         this.distance = distance;
-        this.img = img;
         this.numPosts = numPosts;
     }
+
+    public LocationModel(String name, String address, GeoPoint geoPoint, ArrayList<String> posts) {
+        this.location = name;
+        this.address = address;
+        this.posts = posts;
+        this.geoPoint = geoPoint;
+    }
+
 
     public LocationModel(Map<String, Object> map){
         HashMap LocationData = (HashMap) map;
         this.address = (String) LocationData.get("address");
         this.geoPoint = (GeoPoint) LocationData.get("geopoint");
-        this.image = (String) LocationData.get("image");
         this.location = (String) LocationData.get("name");
-        this.numPosts = ((Long)LocationData.get("posts")).intValue();
+        if (LocationData.get("posts") == null) this.numPosts = 0;
+        else this.numPosts = ((List) Objects.requireNonNull(LocationData.get("posts"))).size();
     }
+
+
+    public HashMap<String, Object> getLocationMap(){
+        HashMap<String, Object> hashMap = new HashMap<>();
+        hashMap.put("address", address);
+        hashMap.put("name", location);
+        hashMap.put("posts", posts);
+        hashMap.put("geopoint", geoPoint);
+        return hashMap;
+    }
+
 
     public String getLocation() {
         return location;

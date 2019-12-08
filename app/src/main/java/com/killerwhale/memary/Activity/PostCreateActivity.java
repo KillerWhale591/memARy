@@ -1,9 +1,9 @@
 package com.killerwhale.memary.Activity;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
@@ -40,18 +40,22 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.DataModel.User;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -74,16 +78,19 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA
     };
     private static final int ACTION_SEARCH_NEARBY = 1995;
+    private double[] mLatLng = null;
 
     // Firebase plug-ins
     private FirebaseFirestore db;
     private StorageReference mImagesRef;
     private CollectionReference mPostRef;
+    private CollectionReference mLocationRef;
     private GeoFirestore geoFirestore;
+    private GeoFirestore locGeoFirestore;
     private String mUid = "";
 
     // Location
-    private Location mLocation;
+    private Location mPostLocation;
     private ImageButton btnSearch;
     private String mName;
     private String mAddress;
@@ -114,8 +121,11 @@ public class PostCreateActivity extends AppCompatActivity {
                 .build();
         db.setFirestoreSettings(settings);
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
+        mName = "";
         mPostRef = db.collection("posts");
+        mLocationRef = db.collection("location");
         geoFirestore = new GeoFirestore(mPostRef);
+        locGeoFirestore = new GeoFirestore(mLocationRef);
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             mUid = user.getUid();
@@ -142,9 +152,9 @@ public class PostCreateActivity extends AppCompatActivity {
 
         // Location
         Intent i = getIntent();
-        mLocation = new Location("");
-        mLocation.setLatitude(i.getDoubleExtra(KEY_LATITUDE, 0));
-        mLocation.setLongitude(i.getDoubleExtra(KEY_LONGITUDE, 0));
+        mPostLocation = new Location("");
+        mPostLocation.setLatitude(i.getDoubleExtra(KEY_LATITUDE, 0));
+        mPostLocation.setLongitude(i.getDoubleExtra(KEY_LONGITUDE, 0));
 
         // UI init.
         btnCancel = findViewById(R.id.btnCancel);
@@ -184,15 +194,29 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setEditingEnabled(false);
-                if (imgAttach.getVisibility() == View.VISIBLE) {
-                    if (localUri != null) {
-                        uploadImageAndPost(localUri);
+                if (mLatLng == null && mName.equals("")) {
+                    if (imgAttach.getVisibility() == View.VISIBLE) {
+                        if (localUri != null) {
+                            uploadImageAndPost(localUri);
+                        }
+                    } else {
+                        if (mPostLocation != null) {
+                            submitPost(mPostLocation);
+                        }
                     }
                 } else {
-                    if (mLocation != null) {
-                        submitPost(mLocation);
+                    // tagged
+                    if (imgAttach.getVisibility() == View.VISIBLE) {
+                        if (localUri != null) {
+                            uploadImageAndPostAndLocation(localUri, mLatLng);
+                        }
+                    } else {
+                        Log.i(TAG, "tagged loc");
+                            submitPostAndLocation(mPostLocation, mLatLng);
+
                     }
                 }
+
             }
         });
 
@@ -228,20 +252,16 @@ public class PostCreateActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK ) {
             if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
-                    localUri = data.getData();
-                    Log.i(TAG, "onActivityResult: " + localUri.toString());
-                }
                 imgAttach.setImageURI(localUri);
             } else if (requestCode == ACTION_SEARCH_NEARBY) {
                 if (data != null) {
                     Log.i(TAG, "onActivityResult: 1");
                     mName = data.getStringExtra("name");
+                    mLatLng = data.getDoubleArrayExtra("latlng");
+                    Log.i(TAG, mLatLng[0] + "");
                     mAddress = data.getStringExtra("address");
-                    //keep the edtlocation, you can add other bundle below
-                    txtLocation.setText(mName + mAddress);
+                    txtLocation.setText(mName + ", " + mAddress);
                     txtLocation.setVisibility(View.VISIBLE);
-                    //TODO: for BOYANG ZHOU
                 }
             }
         }
@@ -317,21 +337,37 @@ public class PostCreateActivity extends AppCompatActivity {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo;
         Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
-            // Marshmallow+
-            try {
-                // place where to store camera taken picture
-                photo = this.createTemporaryFile("picture", ".jpg");
-                photo.delete();
-                localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
-                Log.d(TAG, "takePhoto: " + localUri.toString());
-            } catch (Exception e) {
-                Log.v(TAG, "Can't create file to take picture!");
-                Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
-            }
-            i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
-            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        // Marshmallow+
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Log.v(TAG,"Permission is granted");
+            //File write logic here
+        }else{
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2991);
+
         }
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Log.v(TAG,"Permission is granted");
+            //File write logic here
+        }else{
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2992);
+
+        }
+        try {
+            // place where to store camera taken picture
+
+            photo = this.createTemporaryFile("picture", ".jpg");
+            photo.delete();
+            localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
+            Log.v(TAG, "takePhoto: " + localUri.toString());
+        } catch (Exception e) {
+            Log.v(TAG, "Can't create file to take picture!");
+            e.printStackTrace();
+            Log.v(TAG, "takePhoto: "+ e.getCause());
+            Log.v(TAG, "takePhoto: "+ e.getMessage());
+            Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
+        }
+        i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
+        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivityForResult(i, REQUEST_CODE_IMAGE_CAPTURE);
     }
     private File createTemporaryFile(String part, String ext) throws Exception
@@ -386,6 +422,8 @@ public class PostCreateActivity extends AppCompatActivity {
         final StorageReference postImgRef = mImagesRef.child(UUID.randomUUID() + ".jpg");
         UploadTask uploadTask = postImgRef.putFile(uri);
 
+
+
         Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
@@ -396,6 +434,9 @@ public class PostCreateActivity extends AppCompatActivity {
                 return postImgRef.getDownloadUrl();
             }
         });
+
+
+
         urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
@@ -404,8 +445,8 @@ public class PostCreateActivity extends AppCompatActivity {
                     if (downloadUri != null) {
                         Log.i(TAG, downloadUri.toString());
                         remoteUrl = downloadUri.toString();
-                        if (mLocation != null) {
-                            submitPost(mLocation);
+                        if (mPostLocation != null) {
+                            submitPost(mPostLocation);
                         }
                     }
                 } else {
@@ -430,8 +471,7 @@ public class PostCreateActivity extends AppCompatActivity {
         Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
         Map<String, Object> post = newPost.getHashMap();
         if (db != null) {
-            db.collection("posts")
-                    .add(post)
+            mPostRef.add(post)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
                         public void onSuccess(final DocumentReference documentReference) {
@@ -457,6 +497,166 @@ public class PostCreateActivity extends AppCompatActivity {
                                     }
                                 });
                             }
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w(TAG, "Error adding document", e);
+                        }
+                    });
+        }
+    }
+
+
+
+    /**
+     * Upload image to FireBase storage and get url
+     * @param uri image file uri
+     */
+    private void uploadImageAndPostAndLocation(Uri uri, final double[] mLatLng) {
+
+        final StorageReference postImgRef = mImagesRef.child(UUID.randomUUID() + ".jpg");
+        UploadTask uploadTask = postImgRef.putFile(uri);
+
+
+
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if (!task.isSuccessful()) {
+                    throw Objects.requireNonNull(task.getException());
+                }
+                // Continue with the task to get the download URL
+                return postImgRef.getDownloadUrl();
+            }
+        });
+
+
+
+        urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if (task.isSuccessful()) {
+                    Uri downloadUri = task.getResult();
+                    if (downloadUri != null) {
+                        Log.i(TAG, downloadUri.toString());
+                        remoteUrl = downloadUri.toString();
+                        if (mPostLocation != null) {
+                            submitPostAndLocation(mPostLocation, mLatLng);
+                        }
+                    }
+                } else {
+                    // Handle failures
+                    Log.e(TAG, "Upload failed.");
+                }
+            }
+        });
+    }
+
+
+
+
+    /**
+     * Submit the post with all the data fields
+     * @param location current location
+     */
+    private void submitPostAndLocation(final Location location, final double[] latlng) {
+        final String text = edtContent.getText().toString();
+        int type = remoteUrl.isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
+        final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+        Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+        // Create a new post
+        final Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
+        final Map<String, Object> post = newPost.getHashMap();
+        if (db != null) {
+            mPostRef.add(post)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(final DocumentReference documentReference) {
+                            Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
+                            Log.i(TAG, documentReference.getId());
+                            geoFirestore.setLocation(documentReference.getId(), geo);
+                            final String postId = documentReference.getId();
+
+                            db.collection("location")
+                                    .whereEqualTo("name", mName)
+                                    .get()
+                                    .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                                            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                                            boolean found = false;
+                                            for (DocumentSnapshot doc : documents) {
+                                                if (doc != null) {
+                                                    found = true;
+                                                    ArrayList<String> posts = (ArrayList<String>) doc.get(LocationModel.FIELD_POST);
+                                                    posts.add(postId);
+                                                    final String locationId = doc.getId();
+                                                    db.collection("location").document(locationId)
+                                                            .update(LocationModel.FIELD_POST, posts)
+                                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                @Override
+                                                                public void onSuccess(Void aVoid) {
+                                                                    Log.i(TAG, "DocumentSnapshot successfully updated!");
+                                                                }
+                                                            })
+                                                            .addOnFailureListener(new OnFailureListener() {
+                                                                @Override
+                                                                public void onFailure(@NonNull Exception e) {
+                                                                    Log.i(TAG, "Error updating document", e);
+                                                                }
+                                                            });
+                                                }
+                                            }
+                                            if (!found) {
+                                                GeoPoint geoPoint = new GeoPoint(mLatLng[0], mLatLng[1]);
+                                                ArrayList<String> posts = new ArrayList<>();
+                                                posts.add(postId);
+                                                LocationModel locationModel = new LocationModel(mName, mAddress, geoPoint, posts);
+                                                HashMap<String, Object> uploadMap = locationModel.getLocationMap();
+                                                db.collection("location")
+                                                        .add(uploadMap)
+                                                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                            @Override
+                                                            public void onSuccess(DocumentReference documentReference) {
+                                                                Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                                                                locGeoFirestore.setLocation(documentReference.getId(), new GeoPoint(mLatLng[0], mLatLng[1]));
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                Log.w(TAG, "Error adding document", e);
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    });
+
+
+                            if (!mUid.isEmpty()) {
+                                final DocumentReference userRef = db.collection("users").document(mUid);
+                                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot doc = task.getResult();
+                                            Map<String, Object> data = doc.getData();
+                                            if (data != null) {
+                                                Object userPosts = data.get(User.FIELD_POSTS);
+                                                if (userPosts != null) {
+                                                    ((ArrayList<String>) userPosts).add(documentReference.getId());
+                                                    userRef.set(data);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+
+
                             finish();
                         }
                     })
