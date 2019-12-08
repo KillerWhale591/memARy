@@ -27,12 +27,14 @@ public class ProfileActivity extends AppCompatActivity {
                 switch (menuItem.getItemId()) {
                     case R.id.action_map:
                         startActivity(new Intent(getBaseContext(), MapActivity.class));
+                        finish();
                         break;
                     case R.id.action_posts:
                         startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
                         break;
                     case R.id.action_places:
                         startActivity(new Intent(getBaseContext(), LocationListActivity.class));
+                        finish();
                         break;
                     case R.id.action_profile:
                         break;
@@ -43,5 +45,12 @@ public class ProfileActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navBar.setSelectedItemId(R.id.action_profile);
+
     }
 }
