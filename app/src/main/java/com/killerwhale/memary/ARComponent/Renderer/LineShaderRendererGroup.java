@@ -36,7 +36,7 @@ public class LineShaderRendererGroup {
 
     public LineShaderRendererGroup(float distanceScale, float LineWidthMax) {
         mPlaceholderStroke = new ArrayList<>();
-        Random random = new Random(l);
+        random = new Random(l);
         QUEUE_MAX_NUM = ARSettings.getMaxCloudStrokesNum() + 1;
         mRendererStatus = new ArrayList<>(QUEUE_MAX_NUM);
         mRenderers  = new ArrayList<>(QUEUE_MAX_NUM);
