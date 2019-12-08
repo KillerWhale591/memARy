@@ -81,7 +81,7 @@ public class Post {
     }
 
     public void setPostId(String postId){
-        this.PostId = PostId;
+        this.PostId = postId;
     }
 
     public void setType(int type) {

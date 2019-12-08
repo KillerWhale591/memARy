@@ -82,6 +82,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
             public void onClick(View v) {
                 final Post deletePost = posts.get(position);
                 posts.remove(position);
+                System.out.println(deletePost.getPostId());
                 db.collection("posts").document(deletePost.getPostId())
                         .delete()
                         .addOnSuccessListener(new OnSuccessListener<Void>() {

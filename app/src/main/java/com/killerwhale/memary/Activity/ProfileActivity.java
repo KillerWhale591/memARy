@@ -81,7 +81,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if (task.isSuccessful()) {
                             DocumentSnapshot document = task.getResult();
-                            if (document.exists()) {
+                            if (document != null) {
                                 String avatarString = (String) document.get("avatar");
                                 if (avatarString != null) {
                                     icUserInfoAvatar.setImageURI(Uri.parse(avatarString));
