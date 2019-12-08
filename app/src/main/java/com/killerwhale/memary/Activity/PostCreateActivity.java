@@ -21,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -83,7 +84,9 @@ public class PostCreateActivity extends AppCompatActivity {
 
     // Location
     private Location mLocation;
-    private Button btnSearch;
+    private ImageButton btnSearch;
+    private String mName;
+    private String mAddress;
 
     // UI widgets
     private Button btnCancel;
@@ -92,10 +95,11 @@ public class PostCreateActivity extends AppCompatActivity {
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
-
+    private TextView txtLocation;
     // Post variables
     private Uri localUri;
     private String remoteUrl = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,8 +152,9 @@ public class PostCreateActivity extends AppCompatActivity {
         btnSubmit = findViewById(R.id.btnSubmit);
         imgAttach = findViewById(R.id.imgAttach);
         btnRemove = findViewById(R.id.btnRemove);
-        edtContent = findViewById(R.id.edtContent);
         btnSearch = findViewById(R.id.btnSearch);
+        edtContent = findViewById(R.id.edtContent);
+        txtLocation =findViewById(R.id.txtLocation);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -228,12 +233,16 @@ public class PostCreateActivity extends AppCompatActivity {
                     Log.i(TAG, "onActivityResult: " + localUri.toString());
                 }
                 imgAttach.setImageURI(localUri);
-            }
-        } else if(requestCode == ACTION_SEARCH_NEARBY) {
-            if (data != null) {
-                String returnaddress = data.getStringExtra("address");
-                Log.i(TAG, "onActivityResult: "+ returnaddress);
-                btnSearch.setText(returnaddress);
+            } else if (requestCode == ACTION_SEARCH_NEARBY) {
+                if (data != null) {
+                    Log.i(TAG, "onActivityResult: 1");
+                    mName = data.getStringExtra("name");
+                    mAddress = data.getStringExtra("address");
+                    //keep the edtlocation, you can add other bundle below
+                    txtLocation.setText(mName + mAddress);
+                    txtLocation.setVisibility(View.VISIBLE);
+                    //TODO: for BOYANG ZHOU
+                }
             }
         }
     }

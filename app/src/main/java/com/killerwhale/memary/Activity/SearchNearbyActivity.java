@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-
 import android.widget.ListView;
 
 import com.google.android.gms.common.api.ApiException;
@@ -28,6 +27,7 @@ import com.killerwhale.memary.R;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class SearchNearbyActivity extends AppCompatActivity {
@@ -37,6 +37,8 @@ public class SearchNearbyActivity extends AppCompatActivity {
     private ArrayAdapter<String> nearbyAdapter;
     private ArrayList<LocationModel> nearbyArray = new ArrayList<>();
     private ArrayList<String> nearbyAddressArray = new ArrayList<>();
+    private HashMap<String, double[]> nameLatLng = new HashMap<>();
+    private HashMap<String, String> nameAddress = new HashMap<>();
 
 
     @Override
@@ -45,52 +47,68 @@ public class SearchNearbyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search_nearby);
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "YOUR_KEY_HERE");
+            Places.initialize(getApplicationContext(), getString(R.string.google_places_access_token));
         }
 // Create a new Places client instance.
         placesClient = Places.createClient(this);
-        startSearch();
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                Log.d("TAG", "onCreate: " + nearbyAddressArray.size());
-                nearbyList = (ListView) findViewById(R.id.NearbyList);
-                nearbyAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1, nearbyAddressArray);
-                nearbyList.setAdapter(nearbyAdapter);
-                nearbyList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        String add = (String)parent.getItemAtPosition(position);
-                        Intent resultIntent = new Intent();
-                        resultIntent.putExtra("address", add);
-                        setResult(Activity.RESULT_OK, resultIntent);
-                        finish();
-                    }
-                });
-            }
-        }, 4000);
 
+
+
+        startSearch(nameLatLng, nameAddress);
+
+
+
+        Handler handler = new Handler();
+        Log.d("TAG", "onCreate: " + nearbyAddressArray.size());
+        nearbyList = (ListView) findViewById(R.id.NearbyList);
+        nearbyAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1, nearbyAddressArray);
+        nearbyList.setAdapter(nearbyAdapter);
+        nearbyList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String add = (String)parent.getItemAtPosition(position);
+                double[] loc = nameLatLng.get(add);
+                String address = nameAddress.get(add);
+//                Log.i("gg", String.valueOf(loc[0]) + String.valueOf(loc[1]));
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("name", add);
+                resultIntent.putExtra("latlng", loc);
+                resultIntent.putExtra("address", address);
+                setResult(Activity.RESULT_OK, resultIntent);
+                finish();
+            }
+        });
 
 
     }
-    private void startSearch(){
-        List<Place.Field> fields = Arrays.asList(Place.Field.NAME, Place.Field.ID);
-// Construct a request object, passing the place ID and fields array.
+    private void startSearch(final HashMap<String, double[]> latlngMap, final HashMap<String, String> addressMap){
+        List<Place.Field> fields = Arrays.asList(Place.Field.NAME, Place.Field.ID, Place.Field.LAT_LNG, Place.Field.ADDRESS);
+        // Construct a request object, passing the place ID and fields array.
         FindCurrentPlaceRequest request =
                 FindCurrentPlaceRequest.builder(fields).build();
-        Log.d("TAG", "startSearch: ");
+//        Log.d("TAG", "startSearch: ");
         Task<FindCurrentPlaceResponse> task = placesClient.findCurrentPlace(request);
         task.addOnSuccessListener( new OnSuccessListener<FindCurrentPlaceResponse>() {
             @Override
             public void onSuccess(FindCurrentPlaceResponse response) {
                 for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
-                    Log.i("TAG", String.format("Place '%s' has likelihood: %f",
-                            placeLikelihood.getPlace().getName(),
-                            placeLikelihood.getLikelihood()));
+                    String name = placeLikelihood.getPlace().getName();
+                    com.google.android.gms.maps.model.LatLng loc = placeLikelihood.getPlace().getLatLng();
+                    String address = placeLikelihood.getPlace().getAddress();
+                    double lat = loc.latitude;
+                    double lng = loc.longitude;
+                    double[] latlng = {lat, lng};
+//                    Log.i("TAG", String.format("Place '%s' has likelihood: %f",
+//                            name,
+//                            placeLikelihood.getLikelihood()));
+//                    Log.i("TAG", String.valueOf(latlng[0]) + String.valueOf(latlng[1]));
 //                    LocationModel LM = new LocationModel(placeLikelihood.getPlace().getName(),
 //                            placeLikelihood.getPlace().getAddress(),0,0,0);
 //                    nearbyArray.add(LM);
+                    latlngMap.put(name, latlng);
+                    addressMap.put(name, address);
                     nearbyAddressArray.add(placeLikelihood.getPlace().getName());
+                    nearbyAdapter.notifyDataSetChanged();
                 }
             }
         });
@@ -104,4 +122,5 @@ public class SearchNearbyActivity extends AppCompatActivity {
             }
         });
     }
+
 }
