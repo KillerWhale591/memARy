@@ -1,16 +1,21 @@
 package com.killerwhale.memary.Presenter;
 
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.killerwhale.memary.DataModel.Post;
+import com.killerwhale.memary.DataModel.User;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 import org.imperiumlabs.geofirestore.GeoQuery;
@@ -32,6 +37,7 @@ public class PostPresenter {
     private static final int LIMIT_POST = 10;
 
     private ArrayList<Post> mPosts = new ArrayList<>();
+    private FirebaseFirestore mDatabase;
     private CollectionReference mPostRef;
     private GeoFirestore geoFirestore;
     private ArrayList<Query> geoQueries;
@@ -48,6 +54,7 @@ public class PostPresenter {
      */
     public PostPresenter(FirebaseFirestore db) {
         this.nextTimeQuery = null;
+        this.mDatabase = db;
         this.mPostRef = db.collection("posts");
         this.mMode = MODE_RECENT;
     }
@@ -59,6 +66,7 @@ public class PostPresenter {
      */
     public PostPresenter(FirebaseFirestore db, Location location, double radius) {
         this.nextGeoQuery = null;
+        this.mDatabase = db;
         this.mLocation = location;
         this.mPostRef = db.collection("posts");
         this.geoFirestore = new GeoFirestore(mPostRef);
@@ -116,13 +124,13 @@ public class PostPresenter {
                         if (documents.size() > 0) {
                             for (DocumentSnapshot document : documents) {
                                 Log.i(TAG, document.getId());
-                                mPosts.add(new Post(document.getData()));
+                                Post post = new Post(document.getData());
+                                mPosts.add(post);
                             }
                             if (refresh) {
                                 adapter.updateAndStopRefresh();
-                            } else {
-                                adapter.updateView();
                             }
+                            addUserInfo(adapter);
                             // Construct a new query starting at this document,
                             // get the next 10 posts.
                             DocumentSnapshot lastVisible = documents.get(queryDocumentSnapshots.size() - 1);
@@ -156,14 +164,14 @@ public class PostPresenter {
                                     for (DocumentSnapshot document : documents) {
                                         if (document != null) {
                                             Log.i(TAG, document.getId());
-                                            mPosts.add(new Post(document.getData()));
+                                            Post post = new Post(document.getData());
+                                            mPosts.add(post);
                                         }
                                     }
                                     if (refresh) {
                                         adapter.updateAndStopRefresh();
-                                    } else {
-                                        adapter.updateView();
                                     }
+                                    addUserInfo(adapter);
                                     allGeoQuery = query;
                                     DocumentSnapshot last = documents
                                             .get(queryDocumentSnapshots.size() - 1);
@@ -175,6 +183,10 @@ public class PostPresenter {
         }
     }
 
+    /**
+     * Load 10 more posts by recent time
+     * @param adapter adapter
+     */
     private void loadMoreByTime(final PostFeedAdapter adapter) {
         if (nextTimeQuery != null) {
             nextTimeQuery.get()
@@ -185,9 +197,10 @@ public class PostPresenter {
                             if (documents.size() > 0) {
                                 for (DocumentSnapshot document : documents) {
                                     Log.i(TAG, document.getId());
-                                    mPosts.add(new Post(document.getData()));
+                                    Post post = new Post(document.getData());
+                                    mPosts.add(post);
                                 }
-                                adapter.updateView();
+                                addUserInfo(adapter);
                                 // Construct a new query starting at this document,
                                 // get the next 10 posts.
                                 DocumentSnapshot lastVisible = queryDocumentSnapshots.getDocuments()
@@ -202,6 +215,10 @@ public class PostPresenter {
         }
     }
 
+    /**
+     * Load 10 more posts by nearby
+     * @param adapter adapter
+     */
     private void loadMoreByDistance(final PostFeedAdapter adapter) {
         if (nextGeoQuery != null) {
             nextGeoQuery.get()
@@ -213,14 +230,43 @@ public class PostPresenter {
                             if (documents.size() > 0) {
                                 for (DocumentSnapshot document : documents) {
                                     Log.i(TAG, document.getId());
-                                    mPosts.add(new Post(document.getData()));
+                                    Post post = new Post(document.getData());
+                                    mPosts.add(post);
                                 }
-                                adapter.updateView();
+                                addUserInfo(adapter);
                                 DocumentSnapshot last = documents.get(queryDocumentSnapshots.size() - 1);
                                 nextGeoQuery = allGeoQuery.startAfter(last).limit(LIMIT_POST);
                             }
                         }
                     });
+        }
+    }
+
+    /**
+     * Add username and avatar to a post and update view
+     * @param adapter adapter
+     */
+    private void addUserInfo(final PostFeedAdapter adapter) {
+        for (final Post post : mPosts) {
+            String uid = post.getUid();
+            if (uid != null && !uid.isEmpty()) {
+                DocumentReference userRef = mDatabase.collection("users").document(uid);
+                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc != null) {
+                                String username = (String) doc.get(User.FIELD_USERNAME);
+                                String avatar = (String) doc.get(User.FIELD_AVATAR);
+                                post.setUsername(username);
+                                post.setAvatar(avatar);
+                                adapter.updateView();
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 }

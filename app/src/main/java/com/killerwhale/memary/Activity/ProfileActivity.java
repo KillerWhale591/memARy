@@ -114,12 +114,14 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
                 switch (menuItem.getItemId()) {
                     case R.id.action_map:
                         startActivity(new Intent(getBaseContext(), MapActivity.class));
+                        finish();
                         break;
                     case R.id.action_posts:
                         startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
                         break;
                     case R.id.action_places:
                         startActivity(new Intent(getBaseContext(), LocationListActivity.class));
+                        finish();
                         break;
                     case R.id.action_profile:
                         break;
@@ -176,12 +178,6 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
                 startActivity(new Intent(getBaseContext(), SettingActivity.class));
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        navBar.setSelectedItemId(R.id.action_profile);
     }
 
     private void uploadAvatar(Uri uri){
@@ -251,5 +247,12 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
     @Override
     public void sendUsername(String username) {
         updateUsersUsername(username);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navBar.setSelectedItemId(R.id.action_profile);
+
     }
 }

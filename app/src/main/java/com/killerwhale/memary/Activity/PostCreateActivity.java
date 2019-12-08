@@ -3,12 +3,16 @@ package com.killerwhale.memary.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -25,9 +30,13 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+
 import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
@@ -35,10 +44,13 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.Post;
+import com.killerwhale.memary.DataModel.User;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
@@ -61,15 +73,20 @@ public class PostCreateActivity extends AppCompatActivity {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.CAMERA
     };
+    private static final int ACTION_SEARCH_NEARBY = 1995;
 
     // Firebase plug-ins
     private FirebaseFirestore db;
     private StorageReference mImagesRef;
     private CollectionReference mPostRef;
     private GeoFirestore geoFirestore;
+    private String mUid = "";
 
     // Location
     private Location mLocation;
+    private ImageButton btnSearch;
+    private String mName;
+    private String mAddress;
 
     // UI widgets
     private Button btnCancel;
@@ -78,10 +95,11 @@ public class PostCreateActivity extends AppCompatActivity {
     private SimpleDraweeView imgAttach;
     private ImageButton btnRemove;
     private EditText edtContent;
-
+    private TextView txtLocation;
     // Post variables
     private Uri localUri;
     private String remoteUrl = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +116,29 @@ public class PostCreateActivity extends AppCompatActivity {
         mImagesRef = FirebaseStorage.getInstance().getReference().child("images");
         mPostRef = db.collection("posts");
         geoFirestore = new GeoFirestore(mPostRef);
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            mUid = user.getUid();
+            if (!mUid.isEmpty()) {
+                DocumentReference userRef = db.collection("users").document(mUid);
+                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot doc = task.getResult();
+                            if (doc != null) {
+                                String avatar = (String) doc.get(User.FIELD_AVATAR);
+                                if (avatar != null) {
+                                    SimpleDraweeView icAvatar = findViewById(R.id.icAvatar);
+                                    icAvatar.setImageURI(Uri.parse(avatar));
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        }
 
         // Location
         Intent i = getIntent();
@@ -111,7 +152,9 @@ public class PostCreateActivity extends AppCompatActivity {
         btnSubmit = findViewById(R.id.btnSubmit);
         imgAttach = findViewById(R.id.imgAttach);
         btnRemove = findViewById(R.id.btnRemove);
+        btnSearch = findViewById(R.id.btnSearch);
         edtContent = findViewById(R.id.edtContent);
+        txtLocation =findViewById(R.id.txtLocation);
 
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,6 +174,7 @@ public class PostCreateActivity extends AppCompatActivity {
                             PERMISSION_ALL);
                 } else {
                     // Permission has already been granted
+                    Log.i(TAG, "onClick: 1");
                     takePhoto();
                 }
             }
@@ -158,6 +202,13 @@ public class PostCreateActivity extends AppCompatActivity {
                 setAddingImageEnabled(true);
             }
         });
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(PostCreateActivity.this, SearchNearbyActivity.class);
+                startActivityForResult(intent, ACTION_SEARCH_NEARBY);
+            }
+        });
     }
 
     @Override
@@ -173,14 +224,25 @@ public class PostCreateActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
-            if (resultCode == RESULT_OK) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable  Intent data) {
+        if (resultCode == RESULT_OK ) {
+            if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
-                if (data != null) {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
                     localUri = data.getData();
+                    Log.i(TAG, "onActivityResult: " + localUri.toString());
                 }
                 imgAttach.setImageURI(localUri);
+            } else if (requestCode == ACTION_SEARCH_NEARBY) {
+                if (data != null) {
+                    Log.i(TAG, "onActivityResult: 1");
+                    mName = data.getStringExtra("name");
+                    mAddress = data.getStringExtra("address");
+                    //keep the edtlocation, you can add other bundle below
+                    txtLocation.setText(mName + mAddress);
+                    txtLocation.setVisibility(View.VISIBLE);
+                    //TODO: for BOYANG ZHOU
+                }
             }
         }
     }
@@ -189,6 +251,7 @@ public class PostCreateActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_ALL) {
             if (hasGrantedAll(grantResults)) {
+                Log.i(TAG, "onRequestPermissionsResult: 1" );
                 takePhoto();
             }
         }
@@ -247,10 +310,39 @@ public class PostCreateActivity extends AppCompatActivity {
 
     /**
      * Start a camera session to take photo
+     * ref: https://stackoverflow.com/questions/1910608/android-action-image-capture-intent
+     * ref:https://stackoverflow.com/questions/6448856/android-camera-intent-how-to-get-full-sized-photo
      */
     private void takePhoto() {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File photo;
+        Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N) {
+            // Marshmallow+
+            try {
+                // place where to store camera taken picture
+                photo = this.createTemporaryFile("picture", ".jpg");
+                photo.delete();
+                localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
+                Log.d(TAG, "takePhoto: " + localUri.toString());
+            } catch (Exception e) {
+                Log.v(TAG, "Can't create file to take picture!");
+                Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
+            }
+            i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
+            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
         startActivityForResult(i, REQUEST_CODE_IMAGE_CAPTURE);
+    }
+    private File createTemporaryFile(String part, String ext) throws Exception
+    {
+        File tempDir= Environment.getExternalStorageDirectory();
+        tempDir=new File(tempDir.getAbsolutePath()+"/.temp/");
+        if(!tempDir.exists())
+        {
+            tempDir.mkdirs();
+        }
+        return File.createTempFile(part, ext, tempDir);
     }
 
     /**
@@ -318,7 +410,8 @@ public class PostCreateActivity extends AppCompatActivity {
                     }
                 } else {
                     // Handle failures
-                    Log.e(TAG, "Upload failed.");
+                    Log.e(TAG, "Upload failed." + task.getException());
+
                 }
             }
         });
@@ -334,17 +427,36 @@ public class PostCreateActivity extends AppCompatActivity {
         final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
         Timestamp time = new Timestamp(Calendar.getInstance().getTime());
         // Create a new post
-        Post newPost = new Post(type, text, remoteUrl, geo, time);
+        Post newPost = new Post(mUid, type, text, remoteUrl, geo, time);
         Map<String, Object> post = newPost.getHashMap();
         if (db != null) {
             db.collection("posts")
                     .add(post)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
-                        public void onSuccess(DocumentReference documentReference) {
+                        public void onSuccess(final DocumentReference documentReference) {
                             Toast.makeText(PostCreateActivity.this, "Successfully posted", Toast.LENGTH_SHORT).show();
                             // Log.i(TAG, documentReference.getId());
                             geoFirestore.setLocation(documentReference.getId(), geo);
+                            if (!mUid.isEmpty()) {
+                                final DocumentReference userRef = db.collection("users").document(mUid);
+                                userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot doc = task.getResult();
+                                            Map<String, Object> data = doc.getData();
+                                            if (data != null) {
+                                                Object userPosts = data.get(User.FIELD_POSTS);
+                                                if (userPosts != null) {
+                                                    ((ArrayList<String>) userPosts).add(documentReference.getId());
+                                                    userRef.set(data);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                            }
                             finish();
                         }
                     })

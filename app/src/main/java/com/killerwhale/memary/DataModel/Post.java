@@ -18,7 +18,9 @@ public class Post {
 
     public static final int TYPE_TEXT = 0;
     public static final int TYPE_IMAGE = 1;
+    public static final int TYPE_AR = 2;
 
+    private static final String FIELD_UID = "uid";
     private static final String FIELD_TYPE = "type";
     private static final String FIELD_TEXT = "text";
     private static final String FIELD_IMAGE = "image";
@@ -37,12 +39,15 @@ public class Post {
     private static final float METERS_TO_MILES = 1609.3f;
     private static final float MINIMUM_DISTANCE = 0.1f;
 
+    private String mUid;
+    private String mUsername;
+    private String mAvatar;
     private int mType;
-    private String mPostId;
     private String mPostText;
     private String mImageUrl;
     private GeoPoint mGeoPoint;
     private Timestamp mPostTime;
+    private String PostId;
 
     /**
      * Constructor of a Post
@@ -52,7 +57,8 @@ public class Post {
      * @param location post location
      * @param postTime post time
      */
-    public Post(int type, String postText, String imageUrl, GeoPoint location, Timestamp postTime) {
+    public Post(String uid, int type, String postText, String imageUrl, GeoPoint location, Timestamp postTime) {
+        mUid = uid;
         mType = type;
         mPostText = postText;
         mImageUrl = imageUrl;
@@ -66,6 +72,7 @@ public class Post {
      */
     public Post(Map<String, Object> map) {
         HashMap postData = (HashMap) map;
+        mUid = (String) postData.get(FIELD_UID);
         mType = ((Long) postData.get(FIELD_TYPE)).intValue();
         mPostText = (String) postData.get(FIELD_TEXT);
         mImageUrl = (String) postData.get(FIELD_IMAGE);
@@ -73,8 +80,8 @@ public class Post {
         mPostTime = (Timestamp) postData.get(FIELD_TIMESTAMP);
     }
 
-    public void setPostId(String postId) {
-        this.mPostId = postId;
+    public void setPostId(String postId){
+        this.PostId = PostId;
     }
 
     public void setType(int type) {
@@ -93,8 +100,22 @@ public class Post {
         this.mGeoPoint = location;
     }
 
-    public String getPostId() {
-        return mPostId;
+    public void setUsername(String username) {
+        if (username != null) {
+            this.mUsername = username;
+        }
+    }
+
+    public void setAvatar(String avatar) {
+        if (avatar != null) {
+            this.mAvatar = avatar;
+        } else {
+            this.mAvatar = "";
+        }
+    }
+
+    public String getUid() {
+        return mUid;
     }
 
     public int getType() {
@@ -117,12 +138,23 @@ public class Post {
         return mPostTime;
     }
 
+    public String getUsername() {
+        return mUsername;
+    }
+
+    public String getAvatar() {
+        return mAvatar;
+    }
+
+    public String getPostId(){return PostId;}
+
     /**
      * Transfer from Post to HashMap
      * @return A HashMap format of post that can be directly submit to database
      */
     public Map<String, Object> getHashMap() {
         Map<String, Object> map = new HashMap<>();
+        map.put(FIELD_UID, mUid);
         map.put(FIELD_TYPE, mType);
         map.put(FIELD_TEXT, mPostText);
         map.put(FIELD_IMAGE, mImageUrl);

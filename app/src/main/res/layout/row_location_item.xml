@@ -6,8 +6,8 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="155dp"
+        android:layout_width="162dp"
+        android:layout_height="137dp"
         android:layout_weight="1"
         app:srcCompat="@drawable/location_image" />
 
@@ -15,7 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginLeft="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -36,9 +37,11 @@
                 android:id="@+id/tvNumPosts"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="4"
+                android:layout_weight="6"
                 android:text="numPosts"
-                android:textSize="15dp" />
+                android:textAlignment="center"
+                android:textColor="@color/colorDelete"
+                android:textSize="25sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -49,10 +52,11 @@
 
             <TextView
                 android:id="@+id/tvAddress"
-                android:layout_width="match_parent"
+                android:layout_width="194dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="address"
+                android:gravity="bottom"
                 android:textSize="15dp" />
 
             <TextView
@@ -60,6 +64,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="4"
+                android:gravity="right|bottom"
                 android:text="distance" />
         </LinearLayout>
 

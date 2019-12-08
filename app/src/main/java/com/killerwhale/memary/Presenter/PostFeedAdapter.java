@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.R;
 
@@ -106,6 +107,13 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         // Set distance
         String distance = posts.get(position).getDistance(mLocation);
         postViewHolder.txtDistance.setText(distance);
+        // Set user info
+        String username = posts.get(position).getUsername();
+        String avatar = posts.get(position).getAvatar();
+        postViewHolder.txtUsername.setText(username);
+        if (avatar != null) {
+            postViewHolder.imgAvatar.setImageURI(Uri.parse(avatar));
+        }
     }
 
     @Override

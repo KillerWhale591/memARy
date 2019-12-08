@@ -139,14 +139,17 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
                 switch (menuItem.getItemId()) {
                     case R.id.action_map:
                         startActivity(new Intent(getBaseContext(), MapActivity.class));
+                        finish();
                         break;
                     case R.id.action_posts:
                         break;
                     case R.id.action_places:
                         startActivity(new Intent(getBaseContext(), LocationListActivity.class));
+                        finish();
                         break;
                     case R.id.action_profile:
                         startActivity(new Intent(getBaseContext(), ProfileActivity.class));
+                        finish();
                         break;
                     default:
                         Log.i(TAG, "Unhandled nav click");
