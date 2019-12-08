@@ -218,7 +218,7 @@ public class LocationListAdapter extends BaseAdapter {
      */
     public void queryByPosts(final LocationListAdapter adapter) {
         mLocationModelList.clear();
-        Query nameQuery = mLocRef.orderBy("posts", Query.Direction.DESCENDING);
+        Query nameQuery = mLocRef.orderBy("numPosts", Query.Direction.DESCENDING);
         nameQuery.get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override

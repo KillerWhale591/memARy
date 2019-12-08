@@ -200,7 +200,7 @@ public class PostCreateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 setEditingEnabled(false);
-                if (mLatLng == null && mName.equals("")) {
+                if (mLatLng == null || mName.equals("")) {
                     if (imgAttach.getVisibility() == View.VISIBLE) {
                         if (localUri != null) {
                             uploadImageAndPost(localUri);
@@ -605,10 +605,26 @@ public class PostCreateActivity extends AppCompatActivity {
                                                 if (doc != null) {
                                                     found = true;
                                                     ArrayList<String> posts = (ArrayList<String>) doc.get(LocationModel.FIELD_POST);
+                                                    int numPosts = ((Long) doc.get(LocationModel.FIELD_NUMPOSTS)).intValue();
                                                     posts.add(postId);
+                                                    numPosts++;
                                                     final String locationId = doc.getId();
                                                     db.collection("location").document(locationId)
                                                             .update(LocationModel.FIELD_POST, posts)
+                                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                @Override
+                                                                public void onSuccess(Void aVoid) {
+                                                                    Log.i(TAG, "DocumentSnapshot successfully updated!");
+                                                                }
+                                                            })
+                                                            .addOnFailureListener(new OnFailureListener() {
+                                                                @Override
+                                                                public void onFailure(@NonNull Exception e) {
+                                                                    Log.i(TAG, "Error updating document", e);
+                                                                }
+                                                            });
+                                                    db.collection("location").document(locationId)
+                                                            .update(LocationModel.FIELD_NUMPOSTS, numPosts)
                                                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                                 @Override
                                                                 public void onSuccess(Void aVoid) {
@@ -627,7 +643,7 @@ public class PostCreateActivity extends AppCompatActivity {
                                                 GeoPoint geoPoint = new GeoPoint(mLatLng[0], mLatLng[1]);
                                                 ArrayList<String> posts = new ArrayList<>();
                                                 posts.add(postId);
-                                                LocationModel locationModel = new LocationModel(mName, mAddress, geoPoint, posts);
+                                                LocationModel locationModel = new LocationModel(mName, mAddress, geoPoint, posts, 1);
                                                 HashMap<String, Object> uploadMap = locationModel.getLocationMap();
                                                 db.collection("location")
                                                         .add(uploadMap)
