@@ -2,7 +2,6 @@ package com.killerwhale.memary.Presenter;
 
 import android.content.Context;
 import android.location.Location;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,15 +10,12 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.R;
@@ -28,11 +24,7 @@ import org.imperiumlabs.geofirestore.GeoFirestore;
 import org.imperiumlabs.geofirestore.GeoQuery;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class LocationListAdapter extends BaseAdapter {
 
@@ -65,31 +57,6 @@ public class LocationListAdapter extends BaseAdapter {
 
     public void init(){
         mLocationModelList.clear();
-//        db.collection("location")
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//                                Log.d("firebase", document.getId() + " => " + document.getData());
-//                                Map tmp = document.getData();
-//                                for (Object key: tmp.keySet()) Log.i("fetch", key + tmp.get(key).toString());
-//                                mLocation.add((String) Objects.requireNonNull(tmp.get("name")));
-//                                mAddress.add((String) Objects.requireNonNull(tmp.get("address")));
-//                                mImages.add(R.drawable.location_image);
-//                                mNumPosts.add((int) (Math.random() * 10 + 1));
-//                                mDistance.add((float) (Math.random() * 100));
-//                            }
-////                            Log.d("address", address.toString());
-////                            Log.d("name", location.toString());
-//                            notifyDataSetChanged();
-//                            locationItems = new LocationModel[mLocation.size()];
-//                        } else {
-//                            Log.w("firebase", "Error getting documents.", task.getException());
-//                        }
-//                    }
-//                });
     }
 
     public void getLocation(Location location){
