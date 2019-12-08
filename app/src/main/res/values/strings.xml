@@ -39,6 +39,7 @@
     <string name="content_description_memary_splash">memARy</string>
     <string name="content_description_draw">Draw</string>
     <string name="content_description_close">Return</string>
+    <string name="content_description_refresh">Refresh</string>
 
 
     <!-- Permissions-->

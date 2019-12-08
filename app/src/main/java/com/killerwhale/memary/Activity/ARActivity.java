@@ -97,34 +97,9 @@ public class ARActivity extends ARBaseActivity
     private boolean mUserRequestedARCoreInstall = true;
 
     enum Mode {
-        DRAW, VIEW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
+        DRAW, VIEW
     };
 
-    private Mode mMode = Mode.VIEW;
-    private Handler mHandler = new Handler(Looper.getMainLooper());
-    private RecordableSurfaceView mSurfaceView;
-    private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
-    private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
-    private LineShaderRendererGroup mCloudShaderRenderer = new LineShaderRendererGroup();
-    private final PointCloudRenderer pointCloud = new PointCloudRenderer();
-    private AnchorRenderer zeroAnchorRenderer;
-    private AnchorRenderer cloudAnchorRenderer;
-    private TrackingIndicator mTrackingIndicator;
-    private LinearLayout mOverflowLayout;
-    private ImageButton btnReturn;
-    private ImageButton btnUndo;
-    private ImageButton btnSave;
-    private ImageButton btnClear;
-    private View mDrawUiContainer;
-    private View mOverflowButton;
-    private TextView mPairActiveView;
-    private DebugView mDebugView;
-
-    private Frame mFrame;
-    private Session mSession;
-    private Anchor mAnchor;
-    private List<Stroke> mStrokes;
-    private BrushSelector mBrushSelector;
 
     private float[] projmtx = new float[16];
     private float[] viewmtx = new float[16];
@@ -138,6 +113,30 @@ public class ARActivity extends ARBaseActivity
     private float[] mLastFramePosition;
     private Boolean isDrawing = false;
 
+    private Mode mMode;
+    private Handler mHandler = new Handler(Looper.getMainLooper());
+    private RecordableSurfaceView mSurfaceView;
+    private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
+    private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
+    private LineShaderRendererGroup mCloudShaderRenderer = new LineShaderRendererGroup(0.0f, mLineWidthMax);
+    private final PointCloudRenderer pointCloud = new PointCloudRenderer();
+    private AnchorRenderer zeroAnchorRenderer;
+    private AnchorRenderer cloudAnchorRenderer;
+    private TrackingIndicator mTrackingIndicator;
+    private ImageButton btnReturn;
+    private ImageButton btnUndo;
+    private ImageButton btnSave;
+    private ImageButton btnClear;
+    private ImageButton btnRefresh;
+    private View mDrawUiContainer;
+    private DebugView mDebugView;
+
+    private Frame mFrame;
+    private Session mSession;
+    private Anchor mAnchor;
+    private List<Stroke> mStrokes;
+    private BrushSelector mBrushSelector;
+
     private AtomicBoolean bHasTracked = new AtomicBoolean(false);
     private AtomicBoolean bTouchDown = new AtomicBoolean(false);
     private AtomicBoolean bClearDrawing = new AtomicBoolean(false);
@@ -145,6 +144,7 @@ public class ARActivity extends ARBaseActivity
     private AtomicBoolean bUndo = new AtomicBoolean(false);
     private AtomicBoolean bModeChange = new AtomicBoolean(false);
     private AtomicBoolean bNewStroke = new AtomicBoolean(false);
+    private AtomicBoolean bInitCloudRenderer = new AtomicBoolean(false);
     private static final int MAX_UNTRACKED_FRAMES = 5;
     private int mFramesNotTracked = 0;
     private Map<String, Stroke> mSharedStrokes = new HashMap<>();
@@ -182,6 +182,10 @@ public class ARActivity extends ARBaseActivity
         btnSave.setOnClickListener(this);
         btnReturn = findViewById(R.id.btnBack);
         btnReturn.setOnClickListener(this);
+        btnRefresh = findViewById(R.id.btnRefresh);
+        btnRefresh.setOnClickListener(this);
+
+
 
 
         // set up brush selector
@@ -205,6 +209,9 @@ public class ARActivity extends ARBaseActivity
                 mTrackingIndicator.setMode(mode);
             }
         });
+
+        setMode(Mode.VIEW);
+
         gestureDetector = new GestureDetector(this, new GestureDetector.OnGestureListener(){
             @Override
             public boolean onDown(MotionEvent e) {
@@ -269,6 +276,7 @@ public class ARActivity extends ARBaseActivity
 
         // Check if ARCore is installed/up-to-date
         int message = -1;
+        bInitCloudRenderer.set(true);
         Exception exception = null;
         try {
             if (mSession == null) {
@@ -340,12 +348,8 @@ public class ARActivity extends ARBaseActivity
         }
 
 
-        // TODO: Only used id hidden by "Hide UI menu"
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
 
-        if (!BuildConfig.SHOW_NAVIGATION) {
-            mOverflowButton.setVisibility(View.GONE);
-        }
 
     }
 
@@ -390,6 +394,16 @@ public class ARActivity extends ARBaseActivity
                         mFrame.getCamera().getPose()
                                 .compose(Pose.makeTranslation(0, 0, -1f))
                                 .extractTranslation());
+            }
+
+            if (bInitCloudRenderer.get()){
+                //----Local Test-----
+                List<List<Stroke>> strokeList = createDummyStrokes();
+                List<Anchor> anchorList = createDummyAnchors();
+                mCloudShaderRenderer.initialize(strokeList, anchorList);
+                mCloudShaderRenderer.setNeedsUpdate();
+                mCloudShaderRenderer.checkUpload();
+                bInitCloudRenderer.set(false);
             }
 
             // Notify the hostManager of all the anchor updates.
@@ -611,17 +625,6 @@ public class ARActivity extends ARBaseActivity
             }
         }
 
-        if (mMode == Mode.PAIR_PARTNER_DISCOVERY || mMode == Mode.PAIR_ANCHOR_RESOLVING) {
-            if (mFrame != null) {
-                PointCloud pointCloud = mFrame.acquirePointCloud();
-                this.pointCloud.update(pointCloud);
-                this.pointCloud.draw(viewmtx, projmtx);
-
-                // Application is responsible for releasing the point cloud resources after
-                // using it.
-                pointCloud.release();
-            }
-        }
 
     }
 
@@ -695,25 +698,8 @@ public class ARActivity extends ARBaseActivity
     }
 
 
-    private void toggleOverflowMenu() {
-        if (mOverflowLayout.getVisibility() == View.VISIBLE) {
-            hideOverflowMenu();
-        } else {
-            showOverflowMenu();
-        }
-    }
-
-    private void showOverflowMenu() {
-
-    }
-
-    private void hideOverflowMenu() {
-    }
-
-
-
     /**
-     * onClickClear handle showing an AlertDialog to clear the drawing
+     * onClickClear handles showing an AlertDialog to clear the drawing
      */
     private void onClickClear() {
         ClearDrawingDialog.newInstance(false).show(this);
@@ -721,7 +707,7 @@ public class ARActivity extends ARBaseActivity
 
 
     /**
-     * onClickClear handle showing an AlertDialog to clear the drawing
+     * onClickUpload handles showing an AlertDialog to upload the drawing
      */
     private void onClickUpload() {
         UploadDrawingDialog.newInstance(false).show(this);
@@ -834,11 +820,6 @@ public class ARActivity extends ARBaseActivity
     public void onContextCreated() {
         mBackgroundRenderer.createOnGlThread(this);
 
-
-        //----Local Test-----
-        List<List<Stroke>> strokeList = createDummyStrokes();
-        List<Anchor> anchorList = createDummyAnchors();
-        mCloudShaderRenderer.initialize(strokeList, anchorList, 0.0f, mLineWidthMax);
         mSession.setCameraTextureName(mBackgroundRenderer.getTextureId());
         try {
             mLineShaderRenderer.createOnGlThread(ARActivity.this);
@@ -877,6 +858,7 @@ public class ARActivity extends ARBaseActivity
                 btnSave.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
                 mBrushSelector.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
                 btnReturn.setVisibility(mMode == Mode.DRAW? View.VISIBLE : View.GONE);
+                btnRefresh.setVisibility(mMode == Mode.VIEW? View.VISIBLE : View.GONE);
                 mTrackingIndicator.setHasStrokes(mStrokes.size() > 0);
             }
         });
@@ -916,11 +898,14 @@ public class ARActivity extends ARBaseActivity
     }
 
 
+    public void onClickRefresh(){
+        mCloudShaderRenderer.clear();
+        mCloudShaderRenderer.setNeedsUpdate();
+    }
+
 
     @Override
     public void onClick(View v) {
-        boolean hideOverflow = true;
-        boolean hidePairToolTip = true;
         switch (v.getId()) {
             case R.id.btnClear:
                 onClickClear();
@@ -939,12 +924,13 @@ public class ARActivity extends ARBaseActivity
                 }
 
                 break;
+            case R.id.btnRefresh:
+                onClickRefresh();
+                break;
 
         }
         mBrushSelector.close();
-        if (hideOverflow) {
-            hideOverflowMenu();
-        }
+
     }
 
 
@@ -965,18 +951,6 @@ public class ARActivity extends ARBaseActivity
                     showView(mDrawUiContainer);
                     showView(mTrackingIndicator);
                     mTrackingIndicator.setDrawPromptEnabled(true);
-                    break;
-                case PAIR_ANCHOR_RESOLVING:
-                    hideView(mDrawUiContainer);
-                    mTrackingIndicator.setDrawPromptEnabled(false);
-                    showView(mTrackingIndicator);
-                    break;
-                case PAIR_PARTNER_DISCOVERY:
-                case PAIR_ERROR:
-                case PAIR_SUCCESS:
-                    hideView(mDrawUiContainer);
-                    hideView(mTrackingIndicator);
-                    mTrackingIndicator.setDrawPromptEnabled(false);
                     break;
             }
             showStrokeDependentUI();
@@ -1006,44 +980,6 @@ public class ARActivity extends ARBaseActivity
     public void disableView(View toDisable) {
         toDisable.setEnabled(false);
         toDisable.animate().alpha(.5f);
-    }
-
-    public void createAnchor() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                Pose pose = mFrame.getCamera().getPose();
-
-                try {
-                    mAnchor = mSession.createAnchor(pose);
-                } catch (NotTrackingException e) {
-                    Log.e(TAG, "Cannot create anchor when not tracking", e);
-                    mTrackingIndicator.addListener(new TrackingIndicator.DisplayListener() {
-                        @Override
-                        public void onErrorDisplaying() {
-                            // Do nothing, can't set anchor
-                        }
-
-                        @Override
-                        public void onErrorRemoved() {
-                            mTrackingIndicator.removeListener(this);
-                            createAnchor();
-                        }
-                    });
-                    return;
-                }
-
-                if (mStrokes.size() > 0) {
-                    for (int i = 0; i < mStrokes.size(); i++) {
-                        mStrokes.get(i).offsetToPose(pose);
-
-                    }
-                    mLineShaderRenderer.bNeedsUpdate.set(true);
-                }
-
-            }
-        });
     }
 
 
@@ -1133,7 +1069,7 @@ public class ARActivity extends ARBaseActivity
 
         try{
             List<Stroke> localStrokes = fetchStrokes();
-            Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
+            //Toast.makeText(getApplicationContext(),"Strokes loaded",Toast.LENGTH_SHORT);
             Log.i("Checkpointer", "Loaded!");
             dummyStrokes.add(localStrokes);
         }
@@ -1147,11 +1083,11 @@ public class ARActivity extends ARBaseActivity
 
     public List<Anchor> createDummyAnchors(){
         List<Anchor> dummyAnchors = new ArrayList<>();
-//        Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
-//                        .getPose()
-//                        .compose(Pose.makeTranslation(0, 0, -1f))
-//                        .extractTranslation());
-//        dummyAnchors.add(dummyAnchor);
+        Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
+                        .getPose()
+                        .compose(Pose.makeTranslation(0, 0, -1f))
+                        .extractTranslation());
+        dummyAnchors.add(dummyAnchor);
         return dummyAnchors;
 
     }

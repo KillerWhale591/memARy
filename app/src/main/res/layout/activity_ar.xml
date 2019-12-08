@@ -105,7 +105,18 @@
             app:layout_constraintStart_toEndOf="@id/btnClear"
             app:layout_constraintTop_toTopOf="parent" />
 
-
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:background="@drawable/ripple_bg_borderless_oval"
+            android:contentDescription="@string/content_description_refresh"
+            android:padding="16dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_refresh" />
 
 
         <ImageButton
@@ -122,6 +133,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/brush_selector" />
+
+
 
     </android.support.constraint.ConstraintLayout>
 
