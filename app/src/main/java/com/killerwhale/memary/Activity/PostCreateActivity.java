@@ -8,11 +8,9 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -42,9 +40,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -55,7 +51,6 @@ import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
 
-import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -63,7 +58,6 @@ import java.util.List;
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
-import java.util.PriorityQueue;
 import java.util.UUID;
 
 /**
@@ -210,8 +204,7 @@ public class PostCreateActivity extends AppCompatActivity {
                             submitPost(mPostLocation);
                         }
                     }
-                }
-                else {
+                } else {
                     // tagged
                     if (imgAttach.getVisibility() == View.VISIBLE) {
                         if (localUri != null) {
@@ -259,10 +252,6 @@ public class PostCreateActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK ) {
             if (requestCode == REQUEST_CODE_IMAGE_CAPTURE) {
                 setAddingImageEnabled(false);
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    localUri = data.getData();
-                    Log.i(TAG, "onActivityResult: " + localUri.toString());
-                }
                 imgAttach.setImageURI(localUri);
             } else if (requestCode == ACTION_SEARCH_NEARBY) {
                 if (data != null) {
@@ -348,39 +337,37 @@ public class PostCreateActivity extends AppCompatActivity {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo;
         Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            // Marshmallow+
-            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Log.v(TAG,"Permission is granted");
-                //File write logic here
-            }else{
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2991);
+        // Marshmallow+
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Log.v(TAG,"Permission is granted");
+            //File write logic here
+        }else{
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2991);
 
-            }
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Log.v(TAG,"Permission is granted");
-                //File write logic here
-            }else{
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2992);
-
-            }
-            try {
-                // place where to store camera taken picture
-
-                photo = this.createTemporaryFile("picture", ".jpg");
-                photo.delete();
-                localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
-                Log.v(TAG, "takePhoto: " + localUri.toString());
-            } catch (Exception e) {
-                Log.v(TAG, "Can't create file to take picture!");
-                e.printStackTrace();
-                Log.v(TAG, "takePhoto: "+ e.getCause());
-                Log.v(TAG, "takePhoto: "+ e.getMessage());
-                Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
-            }
-            i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
-            i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         }
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            Log.v(TAG,"Permission is granted");
+            //File write logic here
+        }else{
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2992);
+
+        }
+        try {
+            // place where to store camera taken picture
+
+            photo = this.createTemporaryFile("picture", ".jpg");
+            photo.delete();
+            localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
+            Log.v(TAG, "takePhoto: " + localUri.toString());
+        } catch (Exception e) {
+            Log.v(TAG, "Can't create file to take picture!");
+            e.printStackTrace();
+            Log.v(TAG, "takePhoto: "+ e.getCause());
+            Log.v(TAG, "takePhoto: "+ e.getMessage());
+            Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
+        }
+        i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
+        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivityForResult(i, REQUEST_CODE_IMAGE_CAPTURE);
     }
     private File createTemporaryFile(String part, String ext) throws Exception
@@ -681,7 +668,4 @@ public class PostCreateActivity extends AppCompatActivity {
                     });
         }
     }
-
-
-
 }
