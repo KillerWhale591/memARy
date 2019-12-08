@@ -141,6 +141,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Double cameralong;
     private BottomNavigationView navBar;
 
+    private LatLng passInPoint = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -210,12 +212,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 enableLocationComponent(style);
                 Intent intent = getIntent();
                 String id = intent.getStringExtra("uid");
+                String name = intent.getStringExtra("name");
                 cameralat = intent.getDoubleExtra("lat", 0);
                 cameralong = intent.getDoubleExtra("long", 0);
+
+                passInPoint = new LatLng(cameralat, cameralong);
+
                 if(cameralat != 0 || cameralong != 0) {
                     displayMarkerType  = 1;
-                    updateMarkerPosition(new LatLng(cameralat, cameralong));
-
+                    updateMarkerPosition(passInPoint);
 //                    Log.d("gg", "onStyleLoaded: Success");
                 }
                 addHeatmapLayer(style);
@@ -229,6 +234,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 setupSearchSource(style);
                 setupSearchLayer(style);
                 toggleLayer(displayMarkerType);
+
                 mapboxMap.addOnMapClickListener(MapActivity.this);
                 fabCenterCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -505,34 +511,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     /**
      * This method handles click events for SymbolLayer symbols.
      * <p>
-     * When a SymbolLayer icon is clicked, we moved that feature to the selected state.
+     * When a SymbolLayer icon is clicked, we move that feature to the selected state.
      * </p>
      *
      * @param screenPoint the point on screen clicked
      */
     private boolean handleClickIcon(PointF screenPoint) {
         List<Feature> features = mapboxMap.queryRenderedFeatures(screenPoint, MARKER_STYLE_LAYER_LOCATION);
-//        Log.i("gg", String.valueOf(features.isEmpty()));
         if (!features.isEmpty()) {
             String name = features.get(0).getStringProperty("name");
-//            Log.i("ggg", name);
             List<Feature> featureList = featureCollection.features();
             if (featureList != null) {
                 for (int i = 0; i < featureList.size(); i++) {
                     if (featureList.get(i).getStringProperty("name").equals(name)) {
-//                        Log.i("ggg", String.valueOf(featureSelectStatus(i)));
                         if (featureSelectStatus(i)) {
                             setFeatureSelectState(featureList.get(i), false);
 //                            formalSelectLocationIndex = -1;
                         } else {
-                            Log.i("gg", String.valueOf(formalSelectLocationIndex));
-                            Log.i("gg", String.valueOf(i));
+//                            Log.i("gg", String.valueOf(formalSelectLocationIndex));
+//                            Log.i("gg", String.valueOf(i));
 //                            if(formalSelectLocationIndex != -1 && formalSelectLocationIndex != i) {
 //                                setFeatureSelectState(featureList.get(formalSelectLocationIndex), false);
 //                                formalSelectLocationIndex = i;
 //                            }
                             setSelected(i);
-//                            Log.i("ggg", String.valueOf(featureSelectStatus(i)));
                         }
                     }
                 }
@@ -787,7 +789,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onStart() {
         super.onStart();
         mapView.onStart();
-
     }
 
 
@@ -796,6 +797,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         super.onResume();
         mapView.onResume();
         navBar.setSelectedItemId(R.id.action_map);
+
     }
 
 

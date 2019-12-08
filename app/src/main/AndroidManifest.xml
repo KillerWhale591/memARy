@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
     <uses-feature
         android:name="android.hardware.camera.ar"
         android:required="true" />
@@ -44,7 +43,7 @@
             android:name=".Activity.PostFeedActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".Activity.ARPrimitiveActivity"
+            android:name=".Activity.ARTestActivity"
             android:screenOrientation="portrait"></activity>
         <activity android:name=".Activity.LocationListActivity" />
         <activity android:name=".Activity.MainActivity">

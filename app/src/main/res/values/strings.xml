@@ -28,6 +28,8 @@
 
     <string name="mapbox_access_token">YOUR_KEY_HERE</string>
     <string name="google_places_access_token">YOUR_KEY_HERE</string>
+    <string name="google_login_token">YOUR_KEY_HERE</string>
+
 
     <!-- Image and ImageButton Content Descriptions for Accessibility-->
     <string name="content_description_undo">Undo</string>
