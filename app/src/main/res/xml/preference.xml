@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="Notifications">
-        <SwitchPreference
-            android:defaultValue="true"
-            android:key="notification"
-            android:title="Enable Notifications" />
-    </PreferenceCategory>
 
     <PreferenceCategory android:title="System">
         <CheckBoxPreference
@@ -15,16 +9,20 @@
             android:title="Lock Portrait Mode" />
     </PreferenceCategory>
 
-    <EditTextPreference
-        android:key="edittext_preference"
-        android:title="Distance for post search"
-        android:dialogTitle="Please enter a distance"
-        android:defaultValue="10"/>
+    <PreferenceCategory android:title="Posts">
+        <EditTextPreference
+            android:key="edittext_preference"
+            android:title="Distance for post search"
+            android:dialogTitle="Please enter a distance"
+            android:defaultValue="10"/>
+    </PreferenceCategory>
 
+    <PreferenceCategory android:title="AR">
     <ListPreference
         android:key="list_preference"
         android:title="Number of AR objects"
         android:entries="@array/entries_list_preference"
         android:entryValues="@array/entries_value_list_preference"
         android:dialogTitle="Please choose a number" />
+    </PreferenceCategory>
 </PreferenceScreen>
