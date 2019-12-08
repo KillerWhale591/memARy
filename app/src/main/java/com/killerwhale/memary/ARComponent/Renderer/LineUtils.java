@@ -16,7 +16,7 @@ package com.killerwhale.memary.ARComponent.Renderer;
 
 import android.opengl.Matrix;
 
-import com.killerwhale.memary.ARComponent.Utils.ARSettings;
+import com.killerwhale.memary.ARComponent.View.ARSettings;
 import com.killerwhale.memary.ARComponent.Model.Ray;
 import com.google.ar.core.Pose;
 

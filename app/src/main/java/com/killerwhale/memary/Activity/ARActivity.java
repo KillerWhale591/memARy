@@ -43,11 +43,27 @@ import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
-
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.ar.core.Anchor;
+import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.Config;
+import com.google.ar.core.Frame;
+import com.google.ar.core.PointCloud;
+import com.google.ar.core.Pose;
+import com.google.ar.core.Session;
+import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.core.exceptions.NotTrackingException;
+import com.killerwhale.memary.ARComponent.View.UploadDrawingDialog;
+import com.killerwhale.memary.ARComponent.View.ARSettings;
+import com.killerwhale.memary.BuildConfig;
+import com.killerwhale.memary.R;
+import com.killerwhale.memary.ARComponent.View.SessionHelper;
+import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,6 +76,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -547,6 +564,14 @@ public class ARActivity extends ARBaseActivity
 
             mCloudShaderRenderer.checkUpload();
 
+            float x = mAnchor.getPose().tx();
+            float y = mAnchor.getPose().ty();
+            float z = mAnchor.getPose().tz();
+
+            System.out.println("x = "+ String.valueOf(x)
+                    + " y = " + String.valueOf(y)
+                    + " z = " + String.valueOf(z));
+
             // Debug view
             if (mDebugEnabled) {
                 final long deltaTime = System.currentTimeMillis() - updateStartTime;
@@ -602,7 +627,8 @@ public class ARActivity extends ARBaseActivity
                 // If the anchor is set, set the modelMatrix of the line renderer to offset to the anchor
                 if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
                     mAnchor.getPose().toMatrix(mLineShaderRenderer.mModelMatrix, 0);
-                    mCloudShaderRenderer.anchorTransform(mAnchor);
+
+                    //mCloudShaderRenderer.anchorTransform(setAnchorOffset(mAnchor));
 
 
                     //Log.i("Anchor", "set modelMatrix");
@@ -918,7 +944,9 @@ public class ARActivity extends ARBaseActivity
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
         saveStrokes();
-        mCloudShaderRenderer.update(this, mStrokes, mAnchor);
+        Anchor offsetAnchor = setAnchorOffset(mAnchor);
+        mCloudShaderRenderer.setNeedsUpdate();
+        mCloudShaderRenderer.update(this, mStrokes, offsetAnchor);
         mCloudShaderRenderer.setNeedsUpdate();
         setMode(Mode.VIEW);
         clearDrawing();
@@ -1031,6 +1059,28 @@ public class ARActivity extends ARBaseActivity
     }
 
 
+    public Anchor setAnchorOffset(Anchor anchor){
+
+        float x = anchor.getPose().tx();
+        float y = anchor.getPose().ty();
+        float z = anchor.getPose().tz();
+
+        long l = System.currentTimeMillis();
+        Random random = new Random(l);
+        //float ox = random.nextFloat() / 100;
+        //float oy = random.nextFloat();
+        float oz = random.nextFloat() / 100;
+
+        Anchor offsetAnchor= mSession.createAnchor(mFrame.getCamera()
+                          .getPose()
+                          .compose(Pose.makeTranslation(0, 0.0001f, -1.5f))
+                          .extractTranslation());
+
+        return offsetAnchor;
+
+    }
+
+
     @Override
     public void exitApp(){
         finish();
@@ -1076,6 +1126,7 @@ public class ARActivity extends ARBaseActivity
             ObjectInputStream in = new ObjectInputStream(fileInputStream);
             List<Stroke> fetchStrokes = (ArrayList<Stroke>) in.readObject();
             in.close();
+            Log.i("Checkpointer", "Loaded!");
             return fetchStrokes;
         }
         catch (Exception e){

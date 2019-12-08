@@ -95,7 +95,7 @@ public class LineShaderRenderer {
     private int mVbo = 0;
     private int mVboSize = 0;
 
-    private int mProgramName = 0;
+    private int mProgramName;
     private float mLineWidth = 0;
 
     private Vector3f mColor;
@@ -470,7 +470,7 @@ public class LineShaderRenderer {
 
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, mVbo);
 
-        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, mVboSize, null, GLES20.GL_DYNAMIC_DRAW);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, mVboSize * 4, null, GLES20.GL_DYNAMIC_DRAW);
 
         GLES20.glBufferSubData(GLES20.GL_ARRAY_BUFFER, mPositionAddress, mNumBytes * 3 * BYTES_PER_FLOAT,
                 current);
@@ -507,9 +507,11 @@ public class LineShaderRenderer {
         Matrix.multiplyMM(mModelViewMatrix, 0, cameraView, 0, mModelMatrix, 0);
         Matrix.multiplyMM(mModelViewProjectionMatrix, 0, cameraPerspective, 0, mModelViewMatrix, 0);
 
-        ShaderUtil.checkGLError(TAG, "Before draw");
+        //ShaderUtil.checkGLError(TAG, "Before draw");
 
         GLES20.glUseProgram(mProgramName);
+
+        //ShaderUtil.checkGLError(TAG, "In draw");
 
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
@@ -589,6 +591,8 @@ public class LineShaderRenderer {
 
         GLES20.glDisable(GLES20.GL_BLEND);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+
+        //ShaderUtil.checkGLError(TAG, "After draw");
 
     }
 
