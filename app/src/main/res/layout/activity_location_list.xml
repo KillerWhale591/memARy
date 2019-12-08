@@ -7,8 +7,49 @@ android:layout_width="match_parent"
 android:layout_height="match_parent"
 tools:context=".Activity.MainActivity" >
 
-<ListView
-    android:id="@+id/locationList"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+    <ListView
+        android:id="@+id/locationList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </ListView>
+
+    <FrameLayout
+        android:id="@+id/navLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <android.support.design.widget.BottomNavigationView
+            android:id="@+id/navBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:itemBackground="@color/colorWhite"
+            app:itemHorizontalTranslationEnabled="false"
+            app:menu="@menu/bottom_nav_menu">
+
+        </android.support.design.widget.BottomNavigationView>
+    </FrameLayout>
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/bigIcon4"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignTop="@+id/navLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="-24dp"
+        android:background="@android:color/transparent"
+        app:placeholderImage="@color/colorPrimary"
+        app:roundAsCircle="true" />
+
+    <ImageView
+        android:id="@+id/imageView6"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignTop="@+id/bigIcon4"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/ic_ar"
+        android:backgroundTint="@color/colorWhite" />
+
 </RelativeLayout>
