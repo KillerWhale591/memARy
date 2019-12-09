@@ -60,6 +60,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
     private StorageReference storageRef;
 //    private String remoteUrl = "";
     private Button btnMyPosts;
+    private Button btnLogout;
 
     private static final int PICK_FROM_GALLERY = 9999;
     private String Uid;
@@ -143,6 +144,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         btnSetting = (Button) findViewById(R.id.btnSetting);
         btnWrite = (ImageButton) findViewById(R.id.btnWrite);
         btnMyPosts = (Button) findViewById(R.id.btnMyPosts);
+        btnLogout = (Button) findViewById(R.id.btnLogout);
 
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,6 +178,16 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(getBaseContext(), SettingActivity.class));
+            }
+        });
+
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
+                Toast.makeText(getBaseContext(), "signed out successfully", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(getBaseContext(), SignInActivity.class);
+                startActivity(intent);
             }
         });
     }
