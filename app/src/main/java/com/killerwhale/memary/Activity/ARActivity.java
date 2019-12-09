@@ -902,12 +902,6 @@ public class ARActivity extends ARBaseActivity
         bUploadDrawing.set(true);
         uploadStrokes();
         //Anchor offsetAnchor = setAnchorOffset(mAnchor);
-        mCloudShaderRenderer.setNeedsUpdate();
-        mCloudShaderRenderer.update(mStrokes, mAnchor);
-        mCloudShaderRenderer.setNeedsUpdate();
-        setMode(Mode.VIEW);
-        clearDrawing();
-        showStrokeDependentUI();
     }
 
     /**
@@ -1049,6 +1043,12 @@ public class ARActivity extends ARBaseActivity
                         File file = new File(ARActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
                         Uri uri = Uri.fromFile(file);
                         strokeHelper.uploadStrokeFile(uri);
+                        mCloudShaderRenderer.setNeedsUpdate();
+                        mCloudShaderRenderer.update(mStrokes, mAnchor);
+                        mCloudShaderRenderer.setNeedsUpdate();
+                        setMode(Mode.VIEW);
+                        clearDrawing();
+                        showStrokeDependentUI();
 
                     } catch (IOException e) {
                         e.printStackTrace();
