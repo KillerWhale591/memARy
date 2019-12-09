@@ -1,10 +1,12 @@
 package com.killerwhale.memary.ARComponent.Renderer;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.ar.core.Anchor;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
+import com.killerwhale.memary.Preference;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +39,8 @@ public class LineShaderRendererGroup {
     public LineShaderRendererGroup(float distanceScale, float LineWidthMax) {
         mPlaceholderStroke = new ArrayList<>();
         random = new Random(l);
-        QUEUE_MAX_NUM = ARSettings.getMaxCloudStrokesNum() + 1;
+        QUEUE_MAX_NUM = ((Long) Preference.arNumber).intValue() + 1;
+        //QUEUE_MAX_NUM = ARSettings.getMaxCloudStrokesNum() + 1;
         mRendererStatus = new ArrayList<>(QUEUE_MAX_NUM);
         mRenderers  = new ArrayList<>(QUEUE_MAX_NUM);
         mAnchors = new ArrayList<>(QUEUE_MAX_NUM);
@@ -57,6 +60,7 @@ public class LineShaderRendererGroup {
 
     public void initStrokes(List<List<Stroke>> cloudStrokes){
         for (int i=0; i<cloudStrokes.size(); i++){
+            Log.i("strokestring", i+"");
             mRenderers.get(i).updateStrokes(cloudStrokes.get(i));
             mRenderers.get(i).setColor(getRandomColor());
             mRendererStatus.set(i, true);
