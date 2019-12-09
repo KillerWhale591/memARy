@@ -72,6 +72,7 @@ import com.google.ar.core.exceptions.NotTrackingException;
 import com.killerwhale.memary.ARComponent.Utils.UploadDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 import com.killerwhale.memary.BuildConfig;
+import com.killerwhale.memary.Preference;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
@@ -1031,8 +1032,7 @@ public class ARActivity extends ARBaseActivity
                     // Modify policy: downloadable input stream
                     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                     StrictMode.setThreadPolicy(policy);
-                    // Search in 1KM
-                    strokeHelper.searchNearbyAr(location, 1, ARSettings.getMaxCloudStrokesNum());
+                    strokeHelper.searchNearbyAr(location, Preference.postDistance, Preference.arNumber);
                 }
             }
         });
