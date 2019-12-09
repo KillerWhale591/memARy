@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -57,6 +58,7 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
     PostFeedAdapter rvAdapter;
     RecyclerView.LayoutManager rvManager;
     FloatingActionButton btnCreate;
+    SimpleDraweeView arIcon;
     TabLayout topFeedTab;
     TabItem tabRecent;
     TabItem tabNearby;
@@ -83,6 +85,7 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
         tabNearby = findViewById(R.id.tabNearby);
         postList = findViewById(R.id.postList);
         navBar = findViewById(R.id.navBar);
+        arIcon = findViewById(R.id.bigIcon);
         rvManager = new LinearLayoutManager(this);
         postList.setLayoutManager(rvManager);
         rvAdapter = new PostFeedAdapter(getBaseContext(), db, postList, this);
@@ -94,6 +97,8 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
                 rvAdapter.refreshData();
             }
         });
+
+        // UI listeners
         btnCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -156,6 +161,13 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
 
                 }
                 return true;
+            }
+        });
+        arIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
             }
         });
     }
