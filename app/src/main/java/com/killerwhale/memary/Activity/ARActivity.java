@@ -917,10 +917,10 @@ public class ARActivity extends ARBaseActivity
      * Start further operations if user choose to refresh current Cloud AR Object.
      * */
     public void onClickRefresh(){
-        mAnimator.start();
         mCloudShaderRenderer.clear();
         downloadStrokes();
         bInitCloudRenderer.set(true);
+        setDownloadAnimation();
         mCloudShaderRenderer.setNeedsUpdate();
     }
 
