@@ -19,7 +19,7 @@
             android:text="Welcome to memARy"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textColor="@color/white"
             android:paddingRight="5dp"
             android:paddingLeft="5dp"
@@ -39,7 +39,7 @@
             mapbox:fab_icon="@drawable/search_location"
             fab:fab_colorNormal="@color/mapboxGreenLight"
             fab:fab_colorPressed="@color/mapboxWhite"
-            fab:fab_size = "mini"
+            fab:fab_size="mini"
             fab:fab_title="Search Location" />
 
         <com.getbase.floatingactionbutton.FloatingActionsMenu
