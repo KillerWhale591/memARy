@@ -34,6 +34,7 @@
         <activity android:name=".Activity.SignInActivity" />
         <activity
             android:name=".Activity.MapActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.PostCreateActivity"

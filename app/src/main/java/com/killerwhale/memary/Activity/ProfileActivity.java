@@ -118,6 +118,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
                         break;
                     case R.id.action_posts:
                         startActivity(new Intent(getBaseContext(), PostFeedActivity.class));
+                        finish();
                         break;
                     case R.id.action_places:
                         startActivity(new Intent(getBaseContext(), LocationListActivity.class));
