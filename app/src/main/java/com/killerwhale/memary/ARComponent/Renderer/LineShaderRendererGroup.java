@@ -5,12 +5,11 @@ import android.content.Context;
 import com.google.ar.core.Anchor;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
+import com.killerwhale.memary.Preference;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import javax.vecmath.Vector3f;
@@ -25,11 +24,9 @@ public class LineShaderRendererGroup {
     private int QUEUE_MAX_NUM = 2;
     private long l = System.currentTimeMillis();
     private Random random;
-    private boolean flushflag = false;
     private int mtoken = 1;
     private List<LineShaderRenderer> mRenderers;
     private List<Anchor> mAnchors;
-    private Map<String, Stroke> mSharedStrokes = new HashMap<>();
     private List<Boolean> mRendererStatus;
     private List<Stroke> mPlaceholderStroke;
 
@@ -37,7 +34,8 @@ public class LineShaderRendererGroup {
     public LineShaderRendererGroup(float distanceScale, float LineWidthMax) {
         mPlaceholderStroke = new ArrayList<>();
         random = new Random(l);
-        QUEUE_MAX_NUM = ARSettings.getMaxCloudStrokesNum() + 1;
+        QUEUE_MAX_NUM = ((Long) Preference.arNumber).intValue() + 1;
+        //QUEUE_MAX_NUM = ARSettings.getMaxCloudStrokesNum() + 1;
         mRendererStatus = new ArrayList<>(QUEUE_MAX_NUM);
         mRenderers  = new ArrayList<>(QUEUE_MAX_NUM);
         mAnchors = new ArrayList<>(QUEUE_MAX_NUM);
