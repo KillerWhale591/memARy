@@ -430,7 +430,8 @@ public class ARActivity extends ARBaseActivity
             if (bInitCloudRenderer.get()){
                 List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
                 Anchor randomAnchor;
-                Random random = new Random();
+                long l = System.currentTimeMillis();
+                Random random = new Random(l);
                 for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
                     float ox = random.nextFloat() * 0.2f - 0.1f;
                     float oy = random.nextFloat() * 2.5f - 1.25f;
