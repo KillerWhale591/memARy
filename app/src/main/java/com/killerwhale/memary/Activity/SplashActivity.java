@@ -75,6 +75,7 @@ public class SplashActivity extends AppCompatActivity implements PermissionsList
         if (granted) {
             Intent i = new Intent(getBaseContext(), MapActivity.class);
             startActivity(i);
+            finish();
         } else {
             Toast.makeText(getApplicationContext(),"Permission not Granted yet", Toast.LENGTH_SHORT).show();
             finish();
