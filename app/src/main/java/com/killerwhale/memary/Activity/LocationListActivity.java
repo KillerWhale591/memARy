@@ -41,6 +41,11 @@ public class LocationListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_list);
 
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.fulllogowhite);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
         locationList = (ListView) findViewById(R.id.locationList);
         llAdapter = new LocationListAdapter(this.getBaseContext());
         locationList.setAdapter(llAdapter);

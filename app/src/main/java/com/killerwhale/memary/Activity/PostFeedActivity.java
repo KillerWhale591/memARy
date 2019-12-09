@@ -66,6 +66,8 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post_feed);
 
+        getSupportActionBar().hide();
+
         // Database init.
         db = FirebaseFirestore.getInstance();
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()

@@ -108,6 +108,8 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        getSupportActionBar().hide();
+
         navBar = findViewById(R.id.navBar);
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
