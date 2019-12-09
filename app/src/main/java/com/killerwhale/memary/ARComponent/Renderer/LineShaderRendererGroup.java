@@ -119,19 +119,6 @@ public class LineShaderRendererGroup {
         }
     }
 
-    public void setRandomOffset(Anchor anchor){
-        float x = anchor.getPose().tx();
-        //float y = anchor.getPose().ty();
-        float z = anchor.getPose().tz();
-
-        long l = System.currentTimeMillis();
-        Random random = new Random(l);
-        float ox = random.nextFloat();
-        //float oy = random.nextFloat();
-        float oz = random.nextFloat();
-
-    }
-
     public Vector3f getRandomColor(){
 
         float r = random.nextFloat();

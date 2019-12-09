@@ -77,13 +77,10 @@ import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -433,24 +430,11 @@ public class ARActivity extends ARBaseActivity
             if (bInitCloudRenderer.get()){
                 List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
                 Anchor randomAnchor;
-                long l = System.currentTimeMillis();
-                Random random = new Random(l);
+                Random random = new Random();
                 for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
-                    float ox = random.nextFloat() / 10;
-                    float oy = random.nextFloat() * (float) 1.25;
-                    float oz = random.nextFloat() * (float) 2;
-                    float symbolx = random.nextFloat() / 2;
-                    float symboly = random.nextFloat() / 2;
-                    float symbolz = random.nextFloat() / 2;
-                    if (symbolx > 0.5){
-                        ox = -ox;
-                    }
-                    if (symboly > 0.5){
-                        oy = -oy;
-                    }
-                    if (symbolz > 0.5){
-                        oz = -oz;
-                    }
+                    float ox = random.nextFloat() * 0.2f - 0.1f;
+                    float oy = random.nextFloat() * 2.5f - 1.25f;
+                    float oz = random.nextFloat() * 4f - 2f;
                     randomAnchor =  mSession.createAnchor(
                             mFrame.getCamera().getPose()
                                     .compose(Pose.makeTranslation(ox, oy, -1.75f + oz))
@@ -1022,47 +1006,9 @@ public class ARActivity extends ARBaseActivity
         toShow.animate().alpha(1).start();
     }
 
-
-    public Anchor setAnchorOffset(Anchor anchor){
-
-        float x = anchor.getPose().tx();
-        float y = anchor.getPose().ty();
-        float z = anchor.getPose().tz();
-
-        long l = System.currentTimeMillis();
-        Random random = new Random(l);
-        //float ox = random.nextFloat() / 100;
-        //float oy = random.nextFloat();
-        float oz = random.nextFloat() / 100;
-
-        Anchor offsetAnchor= mSession.createAnchor(mFrame.getCamera()
-                          .getPose()
-                          .compose(Pose.makeTranslation(0, 0.0001f, -1.5f))
-                          .extractTranslation());
-
-        return offsetAnchor;
-
-    }
-
-
     @Override
     public void exitApp() {
         finish();
-    }
-
-
-    public List<Anchor> createDummyAnchors(int numAnchors){
-        List<Anchor> dummyAnchors = new ArrayList<>();
-        for (int i=0; i<numAnchors; i++){
-            dummyAnchors.add(mAnchor);
-        }
-//        Anchor dummyAnchor = mSession.createAnchor(mFrame.getCamera()
-//                        .getPose()
-//                        .compose(Pose.makeTranslation(0, 0, -1f))
-//                        .extractTranslation());
-//        dummyAnchors.add(dummyAnchor);
-        return dummyAnchors;
-
     }
 
     /**
@@ -1143,18 +1089,7 @@ public class ARActivity extends ARBaseActivity
      */
     @Override
     public void setStrokeList(List<List<Stroke>> ar) {
-        // Handle all ar object here
-        //
-        //
-        // For test: render first ar object
-        //mStrokes = ar.get(0);
-        List<List<Stroke>> ListmCloudStrokes = new ArrayList<>();
-        long l = System.currentTimeMillis();
-        Random random = new Random(l);
-        for (int i=0; i < ARSettings.getMaxCloudStrokesNum(); i++){
-            ListmCloudStrokes.add(ar.get(random.nextInt(ar.size())));
-        }
-        mCloudShaderRenderer.initStrokes(ListmCloudStrokes);
+        mCloudShaderRenderer.initStrokes(ar);
         mCloudShaderRenderer.setNeedsUpdate();
         mCloudShaderRenderer.checkUpload();
         bInitCloudRenderer.set(true);

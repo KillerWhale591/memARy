@@ -56,8 +56,6 @@ public class TrackingIndicator extends ConstraintLayout {
 
     private static final int STATE_DRAW_PROMPT = 4;
 
-    private static final int STATE_DRAW_PROMPT_PAIRED = 5;
-
     private static final float IMAGE_ANIMATION_DISTANCE_DP = 25;
 
     private static final int SURFACE_RENDER_TIMEOUT_INTERVAL = 3000;
@@ -101,7 +99,7 @@ public class TrackingIndicator extends ConstraintLayout {
     private boolean anchorTrackingMessageEnabled = false;
 
     public enum Mode {
-        DRAW, VIEW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING, PAIR_ERROR, PAIR_SUCCESS
+        DRAW, VIEW
     };
 
     Mode mMode = Mode.VIEW;
@@ -210,16 +208,6 @@ public class TrackingIndicator extends ConstraintLayout {
                             announceForAccessibility(getContext().getString(R.string.draw_prompt));
                         }
                         break;
-                    case STATE_DRAW_PROMPT_PAIRED:
-                        mDrawPrompt.setPromptText(true);
-                        showDrawPrompt();
-                        stopTrackingAnimation();
-                        fadeOutView(mImageView);
-                        fadeOutView(mAnchorNotTrackingTextView);
-                        fadeOutView(mNotTrackingTextView);
-                        fadeOutView(mNotTrackingEscalatedTextView);
-                        announceForAccessibility(getContext().getString(R.string.draw_prompt_paired));
-                        break;
                 }
             }
         });
@@ -241,10 +229,6 @@ public class TrackingIndicator extends ConstraintLayout {
         if (mDrawPrompt.isShowing()) {
             mDrawPrompt.hidePrompt();
         }
-    }
-
-    public int getState() {
-        return mState;
     }
 
     private void startTrackingAnimation() {
@@ -326,8 +310,6 @@ public class TrackingIndicator extends ConstraintLayout {
             state = STATE_NOT_TRACKING_ANCHOR;
         } else if (trackingState != TrackingState.TRACKING) {
             state = mNotTrackingEscalated ? STATE_NOT_TRACKING_ESCALATED : STATE_NOT_TRACKING;
-        } else if (mDrawPromptEnabled && mShowPairedSessionDrawPrompt) {
-            state = STATE_DRAW_PROMPT_PAIRED;
         } else if (!mHasStrokes && mDrawPromptEnabled) {
             state = STATE_DRAW_PROMPT;
         }
@@ -350,11 +332,6 @@ public class TrackingIndicator extends ConstraintLayout {
         setHasStrokes(true);
     }
 
-    public void setShowPairedSessionDrawPrompt(boolean showPairedSessionDrawPrompt) {
-        mShowPairedSessionDrawPrompt = showPairedSessionDrawPrompt;
-        updateUI();
-    }
-
     public void setHasStrokes(boolean hasStrokes) {
         if (hasStrokes != mHasStrokes) {
             Log.d(TAG, "setHasStrokes: " + hasStrokes);
@@ -362,10 +339,6 @@ public class TrackingIndicator extends ConstraintLayout {
 
             updateUI();
         }
-    }
-
-    public void setAnchorTrackingMessageEnabled(boolean anchorTrackingMessageEnabled) {
-        this.anchorTrackingMessageEnabled = anchorTrackingMessageEnabled;
     }
 
     public void setDrawPromptEnabled(boolean drawPromptEnabled) {
@@ -376,29 +349,12 @@ public class TrackingIndicator extends ConstraintLayout {
     private List<DisplayListener> listeners = new ArrayList<>();
     private List<ModeListener> modeListeners = new ArrayList<>();
 
-    public void addListener(DisplayListener displayListener) {
-        if (displayListener != null) {
-            listeners.add(displayListener);
-
-            if (mState == STATE_NONE) {
-                displayListener.onErrorRemoved();
-            } else {
-                displayListener.onErrorDisplaying();
-            }
-        }
-
-    }
-
     public void addListener(ModeListener modeListener){
         if (modeListener != null) {
             modeListeners.add(modeListener);
 
             modeListener.onModeChange();
         }
-    }
-
-    public void removeListener(DisplayListener displayListener) {
-        listeners.remove(displayListener);
     }
 
     private boolean isPowerSaveMode() {

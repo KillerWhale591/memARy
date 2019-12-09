@@ -80,6 +80,7 @@ public class StrokeStorageHelper {
      * Download stroke file from FireBase storage
      */
     public void downloadStrokeFiles() {
+        allARs.clear();
         if (!strokeUrls.isEmpty()) {
             final int[] downloaded = {0};
             for (String url : strokeUrls) {
