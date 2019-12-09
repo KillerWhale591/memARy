@@ -12,10 +12,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class LocationModel {
-
     public static final String FIELD_POST = "posts";
     public static final String FIELD_NUMPOSTS = "numPosts";
-
     public String location;
     public String address;
     public float distance;
@@ -26,12 +24,6 @@ public class LocationModel {
     private static final float MINIMUM_DISTANCE = 0.1f;
     private static final String SUFFIX_MILES = " miles away";
 
-    public LocationModel(String location, String address, float distance, int numPosts) {
-        this.location = location;
-        this.address = address;
-        this.distance = distance;
-        this.numPosts = numPosts;
-    }
 
     public LocationModel(String name, String address, GeoPoint geoPoint, ArrayList<String> posts, int numPosts) {
         this.location = name;
@@ -67,13 +59,16 @@ public class LocationModel {
         return location;
     }
 
+
     public String getAddress() {
         return address;
     }
 
+
     public String getPosts() {
         return String.valueOf(numPosts);
     }
+
 
     /**
      * Get the distance between a location and the post
@@ -91,6 +86,7 @@ public class LocationModel {
         }
         return Float.valueOf(f.format(dist)) + SUFFIX_MILES;
     }
+
 
     public GeoPoint getGeoPoint() {
         return geoPoint;
