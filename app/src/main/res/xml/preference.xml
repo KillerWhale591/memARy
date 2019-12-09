@@ -12,12 +12,19 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="AR">
-    <ListPreference
-        android:key="arNumberPreference"
-        android:title="Number of AR objects"
-        android:entries="@array/arNumber_list_preference"
-        android:entryValues="@array/arNumber_value_list_preference"
-        android:dialogTitle="Please choose a number"
-        android:defaultValue="5"/>
+        <ListPreference
+            android:key="arNumberPreference"
+            android:title="Number of AR objects"
+            android:entries="@array/arNumber_list_preference"
+            android:entryValues="@array/arNumber_value_list_preference"
+            android:dialogTitle="Please choose a number"
+            android:defaultValue="5"/>
+        <ListPreference
+            android:key="arDistancePreference"
+            android:title="Distance for AR post search"
+            android:entries="@array/arDistance_list_preference"
+            android:entryValues="@array/arDistance_value_list_preference"
+            android:dialogTitle="Please choose a distance"
+            android:defaultValue="0.5"/>
     </PreferenceCategory>
 </PreferenceScreen>
