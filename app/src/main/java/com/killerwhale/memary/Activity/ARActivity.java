@@ -681,7 +681,6 @@ public class ARActivity extends ARBaseActivity
      * Designed to be executed on the GL Thread
      */
     private void clearDrawing() {
-        mStrokes.clear();
         mLineShaderRenderer.clear();
         showStrokeDependentUI();
     }
