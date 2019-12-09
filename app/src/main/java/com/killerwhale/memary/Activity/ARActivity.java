@@ -17,8 +17,6 @@ package com.killerwhale.memary.Activity;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Rect;
-import android.location.Location;
-import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
@@ -27,32 +25,40 @@ import android.os.Looper;
 import android.os.StrictMode;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
-
+import android.location.Location;
+import android.net.Uri;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.killerwhale.memary.ARComponent.Listener.OnArDownloadedListener;
+
+
 import com.killerwhale.memary.ARComponent.Model.Stroke;
-import com.killerwhale.memary.ARComponent.Listener.OnStrokeUrlCompleteListener;
 import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
+import com.killerwhale.memary.ARComponent.Renderer.LineShaderRendererGroup;
 import com.killerwhale.memary.ARComponent.Renderer.LineUtils;
 import com.killerwhale.memary.ARComponent.Renderer.PointCloudRenderer;
 import com.killerwhale.memary.ARComponent.Utils.BrushSelector;
 import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
-import com.killerwhale.memary.ARComponent.Utils.StrokeStorageHelper;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
+import com.killerwhale.memary.ARComponent.Utils.StrokeStorageHelper;
+import com.killerwhale.memary.ARComponent.Listener.OnArDownloadedListener;
+import com.killerwhale.memary.ARComponent.Listener.OnStrokeUrlCompleteListener;
+
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
@@ -63,6 +69,7 @@ import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.NotTrackingException;
+import com.killerwhale.memary.ARComponent.Utils.UploadDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 import com.killerwhale.memary.BuildConfig;
 import com.killerwhale.memary.R;
@@ -77,6 +84,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -86,47 +94,25 @@ import javax.vecmath.Vector3f;
 
 
 /**
- * This is a basic implementation of Offline AR functions
+ * Author: Qili Zeng (qzeng@bu.edu)
+ * With reference to: justaline APP by Google
+ * This is a comprehensive implementation of memARy AR functions.
  */
 
-public class ARTestActivity extends ARBaseActivity
+public class ARActivity extends ARBaseActivity
         implements RecordableSurfaceView.RendererCallbacks, View.OnClickListener,
-        ErrorDialog.Listener, ClearDrawingDialog.Listener,
-        OnStrokeUrlCompleteListener, OnArDownloadedListener {
+        ErrorDialog.Listener,ClearDrawingDialog.Listener, UploadDrawingDialog.Listener,
+        OnStrokeUrlCompleteListener, OnArDownloadedListener{
 
+    private static final String TAG = "ARActivity";
     private static final long INTERVAL_LOC_REQUEST = 5000;
-    private static final String TAG = "ARTestActivity";
     private static final int TOUCH_QUEUE_SIZE = 10;
     private boolean mUserRequestedARCoreInstall = true;
 
     enum Mode {
-        DRAW, PAIR_PARTNER_DISCOVERY, PAIR_ANCHOR_RESOLVING
-    }
+        DRAW, VIEW
+    };
 
-    private Mode mMode = Mode.DRAW;
-    private Handler mHandler = new Handler(Looper.getMainLooper());
-    private RecordableSurfaceView mSurfaceView;
-    private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
-    private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
-    private final PointCloudRenderer pointCloud = new PointCloudRenderer();
-    private AnchorRenderer zeroAnchorRenderer;
-    private AnchorRenderer cloudAnchorRenderer;
-    private TrackingIndicator mTrackingIndicator;
-    private Button btnSave;
-    private Button btnLoad;
-    private Button btnClear;
-    private DebugView mDebugView;
-
-    private Frame mFrame;
-    private Session mSession;
-    private Anchor mAnchor;
-    private List<Stroke> mStrokes;
-    private BrushSelector mBrushSelector;
-    StrokeStorageHelper strokeHelper;
-
-    // Location
-    private FusedLocationProviderClient FLPC;
-    private LocationRequest locationRequest;
 
     private float[] projmtx = new float[16];
     private float[] viewmtx = new float[16];
@@ -139,16 +125,51 @@ public class ARTestActivity extends ARBaseActivity
     private float mLineWidthMax = 0.33f;
     private float[] mLastFramePosition;
     private Boolean isDrawing = false;
+
+    private Mode mMode;
+    private Handler mHandler = new Handler(Looper.getMainLooper());
+    private RecordableSurfaceView mSurfaceView;
+    private BackgroundRenderer mBackgroundRenderer = new BackgroundRenderer();
+    private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
+    private LineShaderRendererGroup mCloudShaderRenderer = new LineShaderRendererGroup(0.0f, mLineWidthMax);
+    private final PointCloudRenderer pointCloud = new PointCloudRenderer();
+    private AnchorRenderer zeroAnchorRenderer;
+    private AnchorRenderer cloudAnchorRenderer;
+    private TrackingIndicator mTrackingIndicator;
+    private ImageButton btnReturn;
+    private ImageButton btnUndo;
+    private ImageButton btnSave;
+    private ImageButton btnClear;
+    private ImageButton btnRefresh;
+    private View mDrawUiContainer;
+    private DebugView mDebugView;
+
+    private Frame mFrame;
+    private Session mSession;
+    private Anchor mAnchor;
+    private List<Stroke> mStrokes;
+    private BrushSelector mBrushSelector;
+
     private AtomicBoolean bHasTracked = new AtomicBoolean(false);
     private AtomicBoolean bTouchDown = new AtomicBoolean(false);
     private AtomicBoolean bClearDrawing = new AtomicBoolean(false);
+    private AtomicBoolean bUploadDrawing = new AtomicBoolean(false);
     private AtomicBoolean bUndo = new AtomicBoolean(false);
+    private AtomicBoolean bModeChange = new AtomicBoolean(false);
     private AtomicBoolean bNewStroke = new AtomicBoolean(false);
+    private AtomicBoolean bInitCloudRenderer = new AtomicBoolean(false);
+    private AtomicBoolean bRefreshCloudRenderer = new AtomicBoolean(false);
     private static final int MAX_UNTRACKED_FRAMES = 5;
     private int mFramesNotTracked = 0;
     private Map<String, Stroke> mSharedStrokes = new HashMap<>();
     private boolean mDebugEnabled = false;
     private long mRenderDuration;
+    private GestureDetector gestureDetector;
+    StrokeStorageHelper strokeHelper;
+
+    // Location
+    private FusedLocationProviderClient FLPC;
+    private LocationRequest locationRequest;
 
 
     /**
@@ -158,7 +179,7 @@ public class ARTestActivity extends ARBaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ar_primitive);
+        setContentView(R.layout.activity_ar);
 
         // Debug view
         if (BuildConfig.DEBUG) {
@@ -172,16 +193,19 @@ public class ARTestActivity extends ARBaseActivity
         mSurfaceView = findViewById(R.id.surfaceview);
         mSurfaceView.setRendererCallbacks(this);
 
-        btnSave = findViewById(R.id.btnSave);
-        btnLoad = findViewById(R.id.btnLoad);
+        btnUndo = findViewById(R.id.btnUndo);
         btnClear = findViewById(R.id.btnClear);
-
-        btnSave.setOnClickListener(this);
-        btnLoad.setOnClickListener(this);
         btnClear.setOnClickListener(this);
 
-        // Set up stroke helper
+        btnSave = findViewById(R.id.btnSave);
+        btnSave.setOnClickListener(this);
+        btnReturn = findViewById(R.id.btnBack);
+        btnReturn.setOnClickListener(this);
+        btnRefresh = findViewById(R.id.btnRefresh);
+        btnRefresh.setOnClickListener(this);
+
         strokeHelper = new StrokeStorageHelper(this);
+
 
         // set up brush selector
         mBrushSelector = findViewById(R.id.brush_selector);
@@ -193,7 +217,60 @@ public class ARTestActivity extends ARBaseActivity
         touchQueueSize = new AtomicInteger(0);
         touchQueue = new AtomicReferenceArray<>(TOUCH_QUEUE_SIZE);
 
-}
+        mDrawUiContainer = findViewById(R.id.draw_container);
+        mTrackingIndicator.addListener(new TrackingIndicator.ModeListener(){
+            @Override
+            public void onModeChange(){
+                TrackingIndicator.Mode mode = TrackingIndicator.Mode.VIEW;
+                if (mMode == Mode.DRAW){
+                    mode = TrackingIndicator.Mode.DRAW;
+                }
+                mTrackingIndicator.setMode(mode);
+            }
+        });
+
+        setMode(Mode.VIEW);
+
+        gestureDetector = new GestureDetector(this, new GestureDetector.OnGestureListener(){
+            @Override
+            public boolean onDown(MotionEvent e) {
+                Log.d(TAG, "onDown");
+                closeViewsOutsideTapTarget(e);
+                return false;
+            }
+            @Override
+            public void onShowPress(MotionEvent e) {
+                Log.d(TAG, "onShowPress");
+            }
+
+            @Override
+            public void onLongPress(MotionEvent e) {
+                Log.d(TAG, "onLongPress");
+                setMode(Mode.DRAW);
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                Log.d(TAG, "onSingleTapUp");
+                return false;
+            }
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                Log.d(TAG, "onScroll");
+                Log.d(TAG, "onScroll: "+distanceX);
+                Log.d(TAG, "onScroll: "+distanceX);
+                return false;
+            }
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                Log.d(TAG, "onFling");
+                return false;
+            }
+        });
+
+    }
 
     @Override
     protected void onStart() {
@@ -202,6 +279,7 @@ public class ARTestActivity extends ARBaseActivity
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(INTERVAL_LOC_REQUEST);
+
     }
 
     @Override
@@ -222,6 +300,7 @@ public class ARTestActivity extends ARBaseActivity
 
         // Check if ARCore is installed/up-to-date
         int message = -1;
+
         Exception exception = null;
         try {
             if (mSession == null) {
@@ -292,9 +371,11 @@ public class ARTestActivity extends ARBaseActivity
             showStrokeDependentUI();
         }
 
-
-        // TODO: Only used id hidden by "Hide UI menu"
         findViewById(R.id.draw_container).setVisibility(View.VISIBLE);
+
+        downloadStrokes();
+        bInitCloudRenderer.set(true);
+
     }
 
     /**
@@ -315,62 +396,6 @@ public class ARTestActivity extends ARBaseActivity
         super.onPause();
     }
 
-
-    /**
-     * addStroke adds a new stroke to the scene
-     */
-    private void addStroke() {
-        mLineWidthMax = mBrushSelector.getSelectedLineWidth().getWidth();
-
-        Stroke stroke = new Stroke();
-        stroke.localLine = true;
-        stroke.setLineWidth(mLineWidthMax);
-        mStrokes.add(stroke);
-
-        showStrokeDependentUI();
-
-        mTrackingIndicator.setDrawnInSession();
-    }
-
-    /**
-     * addPoint2f adds a point to the current stroke
-     *
-     * @param touchPoint a 2D point in screen space and is projected into 3D world space
-     */
-    private void addPoint2f(Vector2f... touchPoint) {
-        Vector3f[] newPoints = new Vector3f[touchPoint.length];
-        for (int i = 0; i < touchPoint.length; i++) {
-            newPoints[i] = LineUtils
-                    .GetWorldCoords(touchPoint[i], mScreenWidth, mScreenHeight, projmtx, viewmtx);
-        }
-
-        addPoint3f(newPoints);
-    }
-
-    /**
-     * addPoint3f adds a point to the current stroke
-     *
-     * @param newPoint a 3D point in world space
-     */
-    private void addPoint3f(Vector3f... newPoint) {
-        Vector3f point;
-        int index = mStrokes.size() - 1;
-
-        if (index < 0)
-            return;
-
-        for (int i = 0; i < newPoint.length; i++) {
-            if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
-                point = LineUtils.TransformPointToPose(newPoint[i], mAnchor.getPose());
-                mStrokes.get(index).add(point);
-                Log.i("ADD 3D Point", "With Anchor");
-            } else {
-                mStrokes.get(index).add(newPoint[i]);
-                Log.i("ADD 3D Point", "Without Anchor");
-            }
-        }
-        isDrawing = true;
-    }
 
     /**
      * update() is executed on the GL Thread.
@@ -396,11 +421,39 @@ public class ARTestActivity extends ARBaseActivity
                                 .extractTranslation());
             }
 
+            if (bRefreshCloudRenderer.get()){
+                mCloudShaderRenderer.setNeedsUpdate();
+                mCloudShaderRenderer.checkUpload();
+                bRefreshCloudRenderer.set(false);
+            }
+
+            if (bInitCloudRenderer.get()){
+                List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
+                Anchor randomAnchor;
+                Random random = new Random();
+                for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
+                    float ox = random.nextFloat() * 0.2f - 0.1f;
+                    float oy = random.nextFloat() * 2.5f - 1.25f;
+                    float oz = random.nextFloat() * 4f - 2f;
+                    randomAnchor =  mSession.createAnchor(
+                            mFrame.getCamera().getPose()
+                                    .compose(Pose.makeTranslation(ox, oy, -1.75f + oz))
+                                    .extractTranslation());
+                    mCloudAnchors.add(randomAnchor);
+                }
+
+                mCloudShaderRenderer.initAnchors(mCloudAnchors);
+                mCloudShaderRenderer.setNeedsUpdate();
+                mCloudShaderRenderer.checkUpload();
+                bInitCloudRenderer.set(false);
+                bRefreshCloudRenderer.set(true);
+            }
+
+
+
             // Update tracking states
             mTrackingIndicator.setTrackingStates(mFrame, mAnchor);
-            if (mAnchor == null) {
-                createAnchor();
-            }
+
 
             if (mTrackingIndicator.trackingState == TrackingState.TRACKING && !bHasTracked.get()) {
                 bHasTracked.set(true);
@@ -477,6 +530,9 @@ public class ARTestActivity extends ARBaseActivity
                 }
             }
 
+//            for (int i = 0; i < mStrokes.size(); i++) {
+//                mStrokes.get(i).update();
+//            }
             boolean renderNeedsUpdate = false;
             for (Stroke stroke : mSharedStrokes.values()) {
                 if (stroke.update()) {
@@ -491,6 +547,7 @@ public class ARTestActivity extends ARBaseActivity
                 bUndo.set(false);
                 if (mStrokes.size() > 0) {
                     int index = mStrokes.size() - 1;
+//                    mPairSessionManager.undoStroke(mStrokes.get(index));
                     mStrokes.remove(index);
                     if (mStrokes.isEmpty()) {
                         showStrokeDependentUI();
@@ -508,6 +565,16 @@ public class ARTestActivity extends ARBaseActivity
                 mLineShaderRenderer.updateStrokes(mStrokes);
                 mLineShaderRenderer.upload();
             }
+
+            mCloudShaderRenderer.checkUpload();
+
+            float x = mAnchor.getPose().tx();
+            float y = mAnchor.getPose().ty();
+            float z = mAnchor.getPose().tz();
+
+            System.out.println("x = "+ String.valueOf(x)
+                    + " y = " + String.valueOf(y)
+                    + " z = " + String.valueOf(z));
 
             // Debug view
             if (mDebugEnabled) {
@@ -564,7 +631,11 @@ public class ARTestActivity extends ARBaseActivity
                 // If the anchor is set, set the modelMatrix of the line renderer to offset to the anchor
                 if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
                     mAnchor.getPose().toMatrix(mLineShaderRenderer.mModelMatrix, 0);
-                    Log.i("Anchor", "set modelMatrix");
+
+                    //mCloudShaderRenderer.anchorTransform(setAnchorOffset(mAnchor));
+
+
+                    //Log.i("Anchor", "set modelMatrix");
 
                     if (BuildConfig.DEBUG) {
                         mAnchor.getPose().toMatrix(cloudAnchorRenderer.mModelMatrix, 0);
@@ -572,11 +643,17 @@ public class ARTestActivity extends ARBaseActivity
                     }
                 }
 
+
                 // Render the lines
                 mLineShaderRenderer
                         .draw(viewmtx, projmtx, mScreenWidth, mScreenHeight,
                                 ARSettings.getNearClip(),
                                 ARSettings.getFarClip());
+
+                mCloudShaderRenderer.draw(viewmtx, projmtx, mScreenWidth, mScreenHeight,
+                        ARSettings.getNearClip(),
+                        ARSettings.getFarClip());
+
             }
 
             if (mDebugEnabled) {
@@ -589,18 +666,66 @@ public class ARTestActivity extends ARBaseActivity
             }
         }
 
-        if (mMode == Mode.PAIR_PARTNER_DISCOVERY || mMode == Mode.PAIR_ANCHOR_RESOLVING) {
-            if (mFrame != null) {
-                PointCloud pointCloud = mFrame.acquirePointCloud();
-                this.pointCloud.update(pointCloud);
-                this.pointCloud.draw(viewmtx, projmtx);
 
-                // Application is responsible for releasing the point cloud resources after
-                // using it.
-                pointCloud.release();
+    }
+
+    /**
+     * addStroke adds a new stroke to the scene
+     */
+    private void addStroke() {
+        mLineWidthMax = mBrushSelector.getSelectedLineWidth().getWidth();
+
+        Stroke stroke = new Stroke();
+        stroke.localLine = true;
+        stroke.setLineWidth(mLineWidthMax);
+        mStrokes.add(stroke);
+
+        showStrokeDependentUI();
+
+        mTrackingIndicator.setDrawnInSession();
+    }
+
+    /**
+     * addPoint2f adds a point to the current stroke
+     *
+     * @param touchPoint a 2D point in screen space and is projected into 3D world space
+     */
+    private void addPoint2f(Vector2f... touchPoint) {
+        Vector3f[] newPoints = new Vector3f[touchPoint.length];
+        for (int i = 0; i < touchPoint.length; i++) {
+            newPoints[i] = LineUtils
+                    .GetWorldCoords(touchPoint[i], mScreenWidth, mScreenHeight, projmtx, viewmtx);
+        }
+
+        addPoint3f(newPoints);
+    }
+
+    /**
+     * addPoint3f adds a point to the current stroke
+     *
+     * @param newPoint a 3D point in world space
+     */
+    private void addPoint3f(Vector3f... newPoint) {
+        Vector3f point;
+        int index = mStrokes.size() - 1;
+
+        if (index < 0)
+            return;
+
+        for (int i = 0; i < newPoint.length; i++) {
+            if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
+                point = LineUtils.TransformPointToPose(newPoint[i], mAnchor.getPose());
+                mStrokes.get(index).add(point);
+                Log.i("ADD 3D Point", "With Anchor");
+            } else {
+                mStrokes.get(index).add(newPoint[i]);
+                Log.i("ADD 3D Point", "Without Anchor");
             }
         }
 
+        // update firebase database
+        //mPairSessionManager.updateStroke(mStrokes.get(index));
+        isDrawing = true;
     }
 
     /**
@@ -613,12 +738,20 @@ public class ARTestActivity extends ARBaseActivity
         showStrokeDependentUI();
     }
 
+
     /**
-     * onClickClear handle showing an AlertDialog to clear the drawing
+     * onClickClear handles showing an AlertDialog to clear the drawing
      */
     private void onClickClear() {
-        mStrokes.clear();
         ClearDrawingDialog.newInstance(false).show(this);
+    }
+
+
+    /**
+     * onClickUpload handles showing an AlertDialog to upload the drawing
+     */
+    private void onClickUpload() {
+        UploadDrawingDialog.newInstance(false).show(this);
     }
 
     // ------- Touch events
@@ -631,11 +764,25 @@ public class ARTestActivity extends ARBaseActivity
     @Override
     public boolean onTouchEvent(MotionEvent tap) {
         int action = tap.getAction();
+        if (action == MotionEvent.ACTION_DOWN) {
+            closeViewsOutsideTapTarget(tap);
+        }
+
+        // do not accept touch events through the playback view
+        // or when we are not tracking
+        //if (mPlaybackView.isOpen() || !mTrackingIndicator.isTracking()) {
         if (!mTrackingIndicator.isTracking()) {
             if (bTouchDown.get()) {
                 bTouchDown.set(false);
             }
             return false;
+        }
+
+        if (mMode == Mode.VIEW){
+
+            gestureDetector.onTouchEvent(tap);
+
+            return true;
         }
 
         if (mMode == Mode.DRAW) {
@@ -667,6 +814,13 @@ public class ARTestActivity extends ARBaseActivity
         return false;
     }
 
+    private void closeViewsOutsideTapTarget(MotionEvent tap) {
+        if (isOutsideViewBounds(mBrushSelector, (int) tap.getRawX(), (int) tap.getRawY())
+                && mBrushSelector.isOpen()) {
+            mBrushSelector.close();
+        }
+    }
+
     private boolean isOutsideViewBounds(View view, int x, int y) {
         Rect outRect = new Rect();
         int[] location = new int[2];
@@ -676,10 +830,12 @@ public class ARTestActivity extends ARBaseActivity
         return !outRect.contains(x, y);
     }
 
+
     @Override
     public void onSurfaceDestroyed() {
         mBackgroundRenderer.clearGL();
         mLineShaderRenderer.clearGL();
+        mCloudShaderRenderer.clearGL();
     }
 
     @Override
@@ -704,13 +860,18 @@ public class ARTestActivity extends ARBaseActivity
     @Override
     public void onContextCreated() {
         mBackgroundRenderer.createOnGlThread(this);
+
         mSession.setCameraTextureName(mBackgroundRenderer.getTextureId());
         try {
-            mLineShaderRenderer.createOnGlThread(ARTestActivity.this);
+            mLineShaderRenderer.createOnGlThread(ARActivity.this);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mCloudShaderRenderer.createOnGlThread(ARActivity.this);
+
         mLineShaderRenderer.bNeedsUpdate.set(true);
+        mCloudShaderRenderer.setNeedsUpdate();
     }
 
     @Override
@@ -731,6 +892,14 @@ public class ARTestActivity extends ARBaseActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                btnUndo.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                btnClear.setVisibility(
+                        (mStrokes.size() > 0 || mSharedStrokes.size() > 0) ? View.VISIBLE
+                                : View.GONE);
+                btnSave.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                mBrushSelector.setVisibility(mStrokes.size() > 0 ? View.VISIBLE : View.GONE);
+                btnReturn.setVisibility(mMode == Mode.DRAW? View.VISIBLE : View.GONE);
+                btnRefresh.setVisibility(mMode == Mode.VIEW? View.VISIBLE : View.GONE);
                 mTrackingIndicator.setHasStrokes(mStrokes.size() > 0);
             }
         });
@@ -739,9 +908,43 @@ public class ARTestActivity extends ARBaseActivity
     @Override
     public void onClearDrawingConfirmed() {
         bClearDrawing.set(true);
+        if (bModeChange.get()){
+            setMode(Mode.VIEW);
+        }
+        bModeChange.set(false);
         showStrokeDependentUI();
     }
 
+    @Override
+    public void onUploadDrawingConfirmed() {
+        bUploadDrawing.set(true);
+        uploadStrokes();
+        //Anchor offsetAnchor = setAnchorOffset(mAnchor);
+        mCloudShaderRenderer.setNeedsUpdate();
+        mCloudShaderRenderer.update(mStrokes, mAnchor);
+        mCloudShaderRenderer.setNeedsUpdate();
+        setMode(Mode.VIEW);
+        clearDrawing();
+        showStrokeDependentUI();
+    }
+
+    /**
+     * onClickUndo handles the touch input on the GUI and sets the AtomicBoolean bUndo to be true
+     * the actual undo functionality is executed in the GL Thread
+     */
+    public void onClickUndo(View button) {
+
+        bUndo.set(true);
+
+    }
+
+
+    public void onClickRefresh(){
+        mCloudShaderRenderer.clear();
+        downloadStrokes();
+        bInitCloudRenderer.set(true);
+        mCloudShaderRenderer.setNeedsUpdate();
+    }
 
 
     @Override
@@ -750,56 +953,58 @@ public class ARTestActivity extends ARBaseActivity
             case R.id.btnClear:
                 onClickClear();
                 break;
-            case R.id.btnLoad:
-                downloadStrokes();
-                break;
             case R.id.btnSave:
-                uploadStrokes();
+                onClickUpload();
+                //saveStrokes();
+                break;
+            case R.id.btnBack:
+                if (mStrokes.size() > 0){
+                    bModeChange.set(true);
+                    onClickClear();
+                }
+                else{
+                    setMode(Mode.VIEW);
+                }
+
+                break;
+            case R.id.btnRefresh:
+                onClickRefresh();
                 break;
 
         }
         mBrushSelector.close();
+
     }
 
-    public void createAnchor() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
 
-                Pose pose = mFrame.getCamera().getPose();
+    /**
+     * Update views for the given mode
+     */
+    private void setMode(Mode mode) {
+        if (mMode != mode) {
+            mMode = mode;
 
-                try {
-                    mAnchor = mSession.createAnchor(pose);
-                } catch (NotTrackingException e) {
-                    Log.e(TAG, "Cannot create anchor when not tracking", e);
-                    mTrackingIndicator.addListener(new TrackingIndicator.DisplayListener() {
-                        @Override
-                        public void onErrorDisplaying() {
-                            // Do nothing, can't set anchor
-                        }
-
-                        @Override
-                        public void onErrorRemoved() {
-                            mTrackingIndicator.removeListener(this);
-                            createAnchor();
-                        }
-                    });
-                    return;
-                }
-
-                //mPairSessionManager.onAnchorCreated();
-                if (mStrokes.size() > 0) {
-                    for (int i = 0; i < mStrokes.size(); i++) {
-                        mStrokes.get(i).offsetToPose(pose);
-
-                    }
-                    mLineShaderRenderer.bNeedsUpdate.set(true);
-                }
-
+            switch (mMode) {
+                case VIEW:
+                    showView(mDrawUiContainer);
+                    showView(mTrackingIndicator);
+                    mTrackingIndicator.setDrawPromptEnabled(false);
+                    break;
+                case DRAW:
+                    showView(mDrawUiContainer);
+                    showView(mTrackingIndicator);
+                    mTrackingIndicator.setDrawPromptEnabled(true);
+                    break;
             }
-        });
+            showStrokeDependentUI();
+        }
+
     }
 
+    private void showView(View toShow) {
+        toShow.setVisibility(View.VISIBLE);
+        toShow.animate().alpha(1).start();
+    }
 
     @Override
     public void exitApp() {
@@ -807,8 +1012,35 @@ public class ARTestActivity extends ARBaseActivity
     }
 
     /**
+     * Download strokes from FireBase storage
+     */
+
+    public void downloadStrokes() {
+        // Get current location
+        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+            }
+        }, null);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    // Modify policy: downloadable input stream
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+                    // Search in 1KM
+                    strokeHelper.searchNearbyAr(location, 1, ARSettings.getMaxCloudStrokesNum());
+                }
+            }
+        });
+    }
+
+    /**
      * Upload user created strokes to FireBase storage
      */
+
     public void uploadStrokes() {
         // Get current location
         FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
@@ -829,7 +1061,7 @@ public class ARTestActivity extends ARBaseActivity
                         ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
                         out.writeObject(mStrokes);
                         out.close();
-                        File file = new File(ARTestActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
+                        File file = new File(ARActivity.this.getFilesDir().getAbsolutePath() + "/strokeFile.ser");
                         Uri uri = Uri.fromFile(file);
                         strokeHelper.uploadStrokeFile(uri);
 
@@ -837,32 +1069,6 @@ public class ARTestActivity extends ARBaseActivity
                         e.printStackTrace();
                         Log.i(TAG, "Saved failed");
                     }
-                }
-            }
-        });
-    }
-
-
-    /**
-     * Download strokes from FireBase storage
-     */
-    public void downloadStrokes() {
-        // Get current location
-        FLPC.requestLocationUpdates(locationRequest, new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-            }
-        }, null);
-        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if (location != null) {
-                    // Modify policy: downloadable input stream
-                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                    StrictMode.setThreadPolicy(policy);
-                    // Search in 1KM
-                    strokeHelper.searchNearbyAr(location, 1, 10);
                 }
             }
         });
@@ -883,14 +1089,9 @@ public class ARTestActivity extends ARBaseActivity
      */
     @Override
     public void setStrokeList(List<List<Stroke>> ar) {
-        // Handle all ar object here
-        //
-        //
-        // For test: render first ar object
-        mStrokes = ar.get(0);
-        mLineShaderRenderer.clear();
-        mLineShaderRenderer.updateStrokes(mStrokes);
-        mLineShaderRenderer.bNeedsUpdate.set(true);
-        Log.i("strokestring", mLineShaderRenderer.mNumPoints + "");
+        mCloudShaderRenderer.initStrokes(ar);
+        mCloudShaderRenderer.setNeedsUpdate();
+        mCloudShaderRenderer.checkUpload();
+        bInitCloudRenderer.set(true);
     }
 }
