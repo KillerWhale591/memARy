@@ -14,6 +14,22 @@
         mapbox:mapbox_cameraZoom="11"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+        <TextView
+            android:layout_width="wrap_content"
+            android:text="Welcome to memARy"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:paddingRight="5dp"
+            android:paddingLeft="5dp"
+            android:alpha=".6"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:id="@+id/txtMode"
+            android:background="@drawable/roundcorner2"
+
+            android:layout_height="wrap_content"/>
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabSearchGlobal"
@@ -23,7 +39,7 @@
             mapbox:fab_icon="@drawable/search_location"
             fab:fab_colorNormal="@color/mapboxGreenLight"
             fab:fab_colorPressed="@color/mapboxWhite"
-            fab:fab_size = "mini"
+            fab:fab_size="mini"
             fab:fab_title="Search Location" />
 
         <com.getbase.floatingactionbutton.FloatingActionsMenu
