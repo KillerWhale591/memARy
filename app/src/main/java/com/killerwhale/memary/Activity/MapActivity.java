@@ -138,6 +138,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private ArrayList<Location> mPostLocations = new ArrayList<>();
     private Double cameralat;
     private Double cameralong;
+    private TextView txtMode;
     private BottomNavigationView navBar;
 
     private LatLng passInPoint = null;
@@ -190,6 +191,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mapView = findViewById(R.id.mapView);
         fabCenterCamera = (FloatingActionButton)findViewById(R.id.fabCenterCam);
         fabTogglePostLocation = (FloatingActionButton)findViewById(R.id.fabTogglePostLocation);
+        txtMode = findViewById(R.id.txtMode);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
     }
@@ -219,7 +221,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 //get a intent from location list, default is 0
                 cameralat = intent.getDoubleExtra("lat", 0);
                 cameralong = intent.getDoubleExtra("long", 0);
-
                 passInPoint = new LatLng(cameralat, cameralong);
 
                 //add* functions: based on the init functions data, paint the map with different colors
@@ -239,6 +240,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 //if lat and long = 0 start map activity to current location
                 if(cameralat != 0 || cameralong != 0) {
                     displayMarkerType  = 1;
+                    toggleLayer(displayMarkerType);
+                    txtMode.setText("Mode: Location");
                     updateMarkerPosition(passInPoint);
                 }
 
@@ -253,9 +256,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     public void onClick(View view) {
                         if(displayMarkerType == 0){
                             displayMarkerType = 1;
+                            txtMode.setText("Mode: Location");
                             toggleLayer(displayMarkerType);
                         }else if(displayMarkerType == 1){
                             displayMarkerType = 0;
+                            txtMode.setText("Mode: Post");
                             toggleLayer(displayMarkerType);
                         }
                     }
@@ -412,7 +417,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
                 new CameraPosition.Builder()
                         .target(new LatLng(position))
-                        .zoom(ZOOM_THRESHOLD)
+                        .zoom(15)
                         .build()), 4000);
 
     }
