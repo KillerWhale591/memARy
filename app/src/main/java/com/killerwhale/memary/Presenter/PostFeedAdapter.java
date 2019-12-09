@@ -13,8 +13,8 @@ import android.widget.TextView;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
 import com.killerwhale.memary.DataModel.Post;
+import com.killerwhale.memary.Preference;
 import com.killerwhale.memary.R;
 
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         if (mode == PostPresenter.MODE_RECENT) {
             this.presenter = new PostPresenter(mDatabase);
         } else if (mode == PostPresenter.MODE_NEARBY) {
-            this.presenter = new PostPresenter(mDatabase, location, 1);
+            this.presenter = new PostPresenter(mDatabase, location, Preference.postDistance);
         }
         this.presenter.init(this, false, mode);
     }
