@@ -33,7 +33,7 @@
 
         <EditText
             android:id="@+id/loginEmail"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="#000000"
             android:ems="10"
@@ -50,7 +50,7 @@
 
         <EditText
             android:id="@+id/loginPassword"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="#000000"
             android:ems="10"

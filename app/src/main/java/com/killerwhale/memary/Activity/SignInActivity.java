@@ -165,17 +165,18 @@ public class SignInActivity extends AppCompatActivity {
             try {
                 // Google Sign In was successful, authenticate with Firebase
                 final GoogleSignInAccount account = task.getResult(ApiException.class);
+                Log.i(TAG, "Google sign in suceessfully");
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
-                Log.w(TAG, "Google sign in failed", e);
+                Log.i(TAG, "Google sign in failed", e);
                 // ...
             }
         }
     }
 
     private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
+        Log.i(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -185,21 +186,22 @@ public class SignInActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             final String uid = mAuth.getCurrentUser().getUid();
-                            DocumentReference docRef = db.collection("cities").document(uid);
+                            Log.i(TAG, uid);
+                            DocumentReference docRef = db.collection("users").document(uid);
                             docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                                 @Override
                                 public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if(!task.getResult().exists()){
+                                    if(task.getResult() == null || !task.getResult().exists()){
                                         uploadAvatar(acct.getDisplayName(), uid, acct.getPhotoUrl());
                                     }
                                 }
                             });
-                            Log.d(TAG, "signInWithCredential:success");
-                            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                            Log.i(TAG, "signInWithCredential:success");
+                            Intent intent = new Intent(getBaseContext(), MainActivity.class);
                             startActivity(intent);
                         } else {
                             // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Log.i(TAG, "signInWithCredential:failure", task.getException());
                             Toast.makeText(SignInActivity.this, "google sign in failed", Toast.LENGTH_LONG).show();
                         }
 
@@ -209,6 +211,7 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void uploadAvatar(final String username, final String Uid, final Uri uri){
+        Log.i(TAG, uri.toString());
         final StorageReference avatarImgRef = storageRef.child(Uid + ".jpg");
         UploadTask uploadTask = avatarImgRef.putFile(uri);
 
@@ -234,7 +237,7 @@ public class SignInActivity extends AppCompatActivity {
                     }
                 } else {
                     // Handle failures
-                    Log.e(TAG, "Upload failed.");
+                    Log.i(TAG, "Upload failed.");
                 }
             }
         });
@@ -251,13 +254,13 @@ public class SignInActivity extends AppCompatActivity {
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Log.d(TAG, "DocumentSnapshot successfully written!");
+                            Log.i(TAG, "DocumentSnapshot successfully written!");
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error writing document", e);
+                            Log.i(TAG, "Error writing document", e);
                         }
                     });
         }
