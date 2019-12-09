@@ -47,6 +47,8 @@ public class ARSettings {
 
     private static final int smoothingCount = 1500;
 
+    private static final int numCloudStrokes = 15;
+
     public enum LineWidth {
         SMALL(0.006f),
         MEDIUM(0.011f),
@@ -90,4 +92,6 @@ public class ARSettings {
     public static int getSmoothingCount() {
         return smoothingCount;
     }
+
+    public static int getMaxCloudStrokesNum(){return numCloudStrokes;}
 }
