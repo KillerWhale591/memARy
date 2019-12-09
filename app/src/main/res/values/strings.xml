@@ -38,10 +38,5 @@
     <string name="ok">OK</string>
     <string name="action_unavailable">Action unavailable</string>
 
-    <!-- API_KEY -->
-    <string name="mapbox_access_token">pk.eyJ1IjoiY2d4eTE5OTUwOSIsImEiOiJjazN4dWFobHkwd3gxM2xwNnl2YTd5ZXI4In0.Rhjz_kEpy44-DunzRxl1_w</string>
-    <string name="google_places_access_token">AIzaSyDERtyqhryWbShe23n_PvEN7WyZ4KCMuUw</string>
-    <string name="google_login_token">5903042593-1vf40qpjar3po81k6ur2951b923pf275.apps.googleusercontent.com</string>
-
 </resources>
 
