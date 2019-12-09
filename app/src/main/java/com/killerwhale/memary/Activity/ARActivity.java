@@ -52,7 +52,6 @@ import com.killerwhale.memary.ARComponent.Renderer.LineUtils;
 import com.killerwhale.memary.ARComponent.Renderer.PointCloudRenderer;
 import com.killerwhale.memary.ARComponent.Utils.BrushSelector;
 import com.killerwhale.memary.ARComponent.Utils.ClearDrawingDialog;
-import com.killerwhale.memary.ARComponent.Utils.DebugView;
 import com.killerwhale.memary.ARComponent.Utils.ErrorDialog;
 import com.killerwhale.memary.ARComponent.Utils.TrackingIndicator;
 import com.killerwhale.memary.ARComponent.Utils.StrokeStorageHelper;
@@ -63,15 +62,14 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
-import com.google.ar.core.PointCloud;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
-import com.google.ar.core.exceptions.NotTrackingException;
 import com.killerwhale.memary.ARComponent.Utils.UploadDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
 import com.killerwhale.memary.BuildConfig;
+import com.killerwhale.memary.Preference;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
@@ -113,7 +111,6 @@ public class ARActivity extends ARBaseActivity
         DRAW, VIEW
     };
 
-
     private float[] projmtx = new float[16];
     private float[] viewmtx = new float[16];
     private float[] mZeroMatrix = new float[16];
@@ -142,7 +139,6 @@ public class ARActivity extends ARBaseActivity
     private ImageButton btnClear;
     private ImageButton btnRefresh;
     private View mDrawUiContainer;
-    private DebugView mDebugView;
 
     private Frame mFrame;
     private Session mSession;
@@ -162,7 +158,6 @@ public class ARActivity extends ARBaseActivity
     private static final int MAX_UNTRACKED_FRAMES = 5;
     private int mFramesNotTracked = 0;
     private Map<String, Stroke> mSharedStrokes = new HashMap<>();
-    private boolean mDebugEnabled = false;
     private long mRenderDuration;
     private GestureDetector gestureDetector;
     StrokeStorageHelper strokeHelper;
@@ -181,12 +176,6 @@ public class ARActivity extends ARBaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ar);
 
-        // Debug view
-        if (BuildConfig.DEBUG) {
-            mDebugView = findViewById(R.id.debug_view);
-            mDebugView.setVisibility(View.VISIBLE);
-            mDebugEnabled = true;
-        }
 
         mTrackingIndicator = findViewById(R.id.finding_surfaces_view);
 
@@ -428,11 +417,11 @@ public class ARActivity extends ARBaseActivity
             }
 
             if (bInitCloudRenderer.get()){
-                List<Anchor> mCloudAnchors = new ArrayList<>(ARSettings.getMaxCloudStrokesNum());
+                List<Anchor> mCloudAnchors = new ArrayList<>();
                 Anchor randomAnchor;
                 long l = System.currentTimeMillis();
                 Random random = new Random(l);
-                for (int idx = 0; idx < ARSettings.getMaxCloudStrokesNum(); idx++){
+                for (int idx = 0; idx < Preference.arNumber; idx++){
                     float ox = random.nextFloat() * 0.2f - 0.1f;
                     float oy = random.nextFloat() * 2.5f - 1.25f;
                     float oz = random.nextFloat() * 4f - 2f;
@@ -577,20 +566,6 @@ public class ARActivity extends ARBaseActivity
                     + " y = " + String.valueOf(y)
                     + " z = " + String.valueOf(z));
 
-            // Debug view
-            if (mDebugEnabled) {
-                final long deltaTime = System.currentTimeMillis() - updateStartTime;
-                this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mDebugView
-                                .setRenderInfo(mLineShaderRenderer.mNumPoints, deltaTime,
-                                        mRenderDuration);
-                    }
-                });
-
-            }
-
         } catch (Exception e) {
             Log.e(TAG, "update: ", e);
         }
@@ -657,14 +632,6 @@ public class ARActivity extends ARBaseActivity
 
             }
 
-            if (mDebugEnabled) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mDebugView.setAnchorTracking(mAnchor);
-                    }
-                });
-            }
         }
 
 
@@ -832,6 +799,10 @@ public class ARActivity extends ARBaseActivity
     }
 
 
+    /**
+     * The following six Override functions are required by RecordableSurfaceView.
+     * */
+
     @Override
     public void onSurfaceDestroyed() {
         mBackgroundRenderer.clearGL();
@@ -889,6 +860,12 @@ public class ARActivity extends ARBaseActivity
         mRenderDuration = System.currentTimeMillis() - renderStartTime;
     }
 
+    /**
+     * Update visibility of all the Buttons and BrushSelector
+     * Refresh can only be used when the program is in VIEW mode.
+     * Return and BrushSelector can only be used when the program is in DRAW mode.
+     * Undo, Clear, and Upload can only be used when user input strokes.
+     * */
     private void showStrokeDependentUI() {
         runOnUiThread(new Runnable() {
             @Override
@@ -906,6 +883,9 @@ public class ARActivity extends ARBaseActivity
         });
     }
 
+    /**
+     * Start further operations if user choose to clear all the drawings.
+     * */
     @Override
     public void onClearDrawingConfirmed() {
         bClearDrawing.set(true);
@@ -916,6 +896,9 @@ public class ARActivity extends ARBaseActivity
         showStrokeDependentUI();
     }
 
+    /**
+     * Start further operations if user choose to uoload their drawings.
+     * */
     @Override
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
@@ -939,7 +922,9 @@ public class ARActivity extends ARBaseActivity
 
     }
 
-
+    /**
+     * Start further operations if user choose to refresh current Cloud AR Object.
+     * */
     public void onClickRefresh(){
         mCloudShaderRenderer.clear();
         downloadStrokes();
@@ -948,6 +933,8 @@ public class ARActivity extends ARBaseActivity
     }
 
 
+    /**
+     * OnClick callback for Views*/
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -1031,8 +1018,7 @@ public class ARActivity extends ARBaseActivity
                     // Modify policy: downloadable input stream
                     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                     StrictMode.setThreadPolicy(policy);
-                    // Search in 1KM
-                    strokeHelper.searchNearbyAr(location, 1, ARSettings.getMaxCloudStrokesNum());
+                    strokeHelper.searchNearbyAr(location, Preference.postDistance, Preference.arNumber);
                 }
             }
         });
@@ -1057,7 +1043,6 @@ public class ARActivity extends ARBaseActivity
                     strokeHelper.setLocation(location);
                     // Upload to FireBase
                     try {
-
                         FileOutputStream fileOutputStream = getApplicationContext().openFileOutput("strokeFile.ser", getBaseContext().MODE_PRIVATE);
                         ObjectOutputStream out = new ObjectOutputStream(fileOutputStream);
                         out.writeObject(mStrokes);

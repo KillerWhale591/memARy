@@ -121,7 +121,7 @@ public class UserInfoActivity extends AppCompatActivity {
                 uploadAvatar(username);
                 Toast.makeText(getBaseContext(), "uploaded", Toast.LENGTH_SHORT).show();
                 progressUserInfo.setVisibility(View.INVISIBLE);
-                startActivity(new Intent(getBaseContext(), MainActivity.class));
+                startActivity(new Intent(getBaseContext(), MapActivity.class));
             }
         });
     }
