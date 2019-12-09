@@ -901,7 +901,6 @@ public class ARActivity extends ARBaseActivity
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
         uploadStrokes();
-        //Anchor offsetAnchor = setAnchorOffset(mAnchor);
     }
 
     /**
