@@ -106,12 +106,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String MARKER_IMAGE = "custom-marker";
     private static final String HEATMAP_LAYER_ID = "Location_heat";
     private static final String HEATMAP_LAYER_SOURCE = "Heatmap-source";
-    private static final int  ZOOM_THRESHOLD = 9;
+    private static final int  ZOOM_THRESHOLD = 11;
     private static final String MARKER_SOURCE_LOCATION = "markers-source-location";
     private static final String CIRCLE_LAYER_ID_LOCATION ="circle-location" ;
     private static final String MARKER_STYLE_LAYER_LOCATION = "markers-style-layer-location";
     private static final int REQUEST_CODE_AUTOCOMPLETE = 001;
-    private static final int LIMIT_POST = 20;
 
 
     private static final String SEARCH_MARKER_SOURCE = "search-marker-source";
@@ -146,10 +145,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //create instance of mapbox
         Mapbox.getInstance(this, getString(R.string.mapbox_access_token));
-
         setContentView(R.layout.activity_map_acitivity);
         db = FirebaseFirestore.getInstance();
+        //Bottom navigation bar
         navBar = findViewById(R.id.navBar);
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -180,7 +180,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
  *         Step 1: Read Mapbox android apis
  */
         /* Map: This represents the map in the application. */
-
+        /**
+         * initiate firebase connections, get geo location informations
+         */
         mLocRef = db.collection("location");
         mPostRef = db.collection("posts");
 //        Log.d("Tag1",mLocRef.getPath());
@@ -197,7 +199,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         this.mapboxMap = mapboxMap;
         //Setting max/min zoom level for camera
         mapboxMap.setMaxZoomPreference(18);
-        mapboxMap.setMinZoomPreference(7);
+        mapboxMap.setMinZoomPreference(6);
         //Step3: set up sytles, there are bunch of styles for us to choose
         mapboxMap.setStyle(new Style.Builder().fromUri(Style.MAPBOX_STREETS), new Style.OnStyleLoaded() {
             @Override
@@ -205,24 +207,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 style.addImage(MARKER_IMAGE, BitmapFactory.decodeResource(
                         MapActivity.this.getResources(), R.drawable.map_marker));
 
+                //init* functions: retrieve data from firebase or other class, put them in features
+                enableLocationComponent(style);
                 initPost(style);
                 initLocation(style);
                 initCameraPosition(style);
                 initSearchFab();
-                enableLocationComponent(style);
                 Intent intent = getIntent();
                 String id = intent.getStringExtra("uid");
                 String name = intent.getStringExtra("name");
+                //get a intent from location list, default is 0
                 cameralat = intent.getDoubleExtra("lat", 0);
                 cameralong = intent.getDoubleExtra("long", 0);
 
                 passInPoint = new LatLng(cameralat, cameralong);
 
-                if(cameralat != 0 || cameralong != 0) {
-                    displayMarkerType  = 1;
-                    updateMarkerPosition(passInPoint);
-//                    Log.d("gg", "onStyleLoaded: Success");
-                }
+                //add* functions: based on the init functions data, paint the map with different colors
                 addHeatmapLayer(style);
                 addCircleLayer(style);
                 addCircleLayerLocation(style);
@@ -233,9 +233,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         MapActivity.this.getResources(), R.drawable.blue_marker_view));
                 setupSearchSource(style);
                 setupSearchLayer(style);
+                //toggle between location map and post map
                 toggleLayer(displayMarkerType);
-
                 mapboxMap.addOnMapClickListener(MapActivity.this);
+                //if lat and long = 0 start map activity to current location
+                if(cameralat != 0 || cameralong != 0) {
+                    displayMarkerType  = 1;
+                    updateMarkerPosition(passInPoint);
+                }
+
                 fabCenterCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -274,25 +280,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         double long1 = mapboxMap.getLocationComponent().getLastKnownLocation().getLongitude();
         if(mapboxMap.getLocationComponent()!= null){
             mapboxMap.setCameraPosition(new CameraPosition.Builder()
-                    .zoom(13)
+                    .zoom(ZOOM_THRESHOLD)
                     .target(new LatLng(lat1, long1))
                     .bearing(0)
                     .build());
         }
     }
-//    private void setCameratoDesinatedLocation(double latititude, double longtitude){
-//        double lat1= latititude;
-//        double long1 = longtitude;
-//        if(mapboxMap.getLocationComponent()!= null){
-//            mapboxMap.setCameraPosition(new CameraPosition.Builder()
-//                    .zoom(13)
-//                    .target(new LatLng(lat1, long1))
-//                    .bearing(0)
-//                    .build());
-//        }
-//    }
     /**
-     * Get documents from database
+     * Get documents from database, set these location(lat and longs) to featurecollections(think it as dots, but transparent, its there but you cant see it)
      */
         private void initLocation(@NonNull final Style loadedMapStyle) {
         mLocRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
@@ -300,7 +295,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
                 List<Feature> featureLocation = new ArrayList<>();
-
                 HashMap<String, Bitmap> imagesMap = new HashMap<>();
                 LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
 
@@ -317,6 +311,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             currFeature.addStringProperty("name", name);
                             currFeature.addBooleanProperty(PROPERTY_SELECTED, false);
                             featureLocation.add(currFeature);
+                            //set on click to a location, if you click, a bubble layout with name and address will show
                             BubbleLayout bubbleLayout = (BubbleLayout) inflater.inflate(R.layout.symbol_layer_info_window_layout_callout, null);
                             String address = document.getString("address");
                             TextView titleTextView = bubbleLayout.findViewById(R.id.info_window_title);
@@ -325,6 +320,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                             descriptionTextView.setText(address);
                             int measureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
                             bubbleLayout.measure(measureSpec, measureSpec);
+                            bubbleLayout.setScaleY(0.5f);
                             float measuredWidth = bubbleLayout.getMeasuredWidth();
                             bubbleLayout.setArrowPosition(measuredWidth / 2 - 5);
                             Bitmap bitmap = SymbolGenerator.generate(bubbleLayout);
@@ -341,6 +337,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
     }
+
+    /**
+     * Similar to initLocation, but this is position of posts, instead of tagged locations
+     * @param loadedMapStyle: the style passed in, if you want to know what is Style, recommand read mapbox documentation, think like its a container that contain layers
+     */
     private void initPost(@NonNull final Style loadedMapStyle) {
         mPostRef.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
@@ -403,13 +404,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 cameraSource.setGeoJson(FeatureCollection.fromFeature(
                         Feature.fromGeometry(Point.fromLngLat(position.getLongitude(), position.getLatitude()))
                 ));
-
             }
         }
 
 // Lastly, animate the camera to the new position so the user
 // wont have to search for the marker and then return.
-        mapboxMap.animateCamera(CameraUpdateFactory.newLatLng(position));
+        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                new CameraPosition.Builder()
+                        .target(new LatLng(position))
+                        .zoom(ZOOM_THRESHOLD)
+                        .build()), 4000);
+
     }
 
 
@@ -616,32 +621,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     }
 
-    private void initMarkerPosition(@NonNull Style loadedMapStyle){
-        Log.d("Hello", "Hello");
-        List<Feature> features = new ArrayList<>();
-        /**
-         *         Step 6:get geo information, add to features
-         */
-        for (int i = 0; i < mPostLocations.size(); i++) {
-            features.add(Feature.fromGeometry(Point.fromLngLat(mPostLocations.get(i).getLongitude(),
-                    mPostLocations.get(i).getLatitude())));
-        }
-        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE, FeatureCollection.fromFeatures(features)));
-//        List<Feature> featureLocation = new ArrayList<>();
-//        for (int i = 0; i < mLocations.size(); i++) {
-//            featureLocation.add(Feature.fromGeometry(Point.fromLngLat(mLocations.get(i).getLongitude(),
-//                    mLocations.get(i).getLatitude())));
-//
-//        }
-//        loadedMapStyle.addSource(new GeoJsonSource(MARKER_SOURCE_LOCATION, FeatureCollection.fromFeatures(featureLocation)));
-    }
 
     private void addPostMarkers(@NonNull Style loadedMapStyle){
 
         /**
          * add the features and assigned an ID to him. Example: MARKER_SOURCE
          */
-        //should use if statemtn to check if already exist or not
 
         loadedMapStyle.addLayer(new SymbolLayer(MARKER_STYLE_LAYER, MARKER_SOURCE)
                 .withProperties(
@@ -658,7 +643,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //Step 7: add heatmap layer
     private  void addHeatmapLayer(@NonNull Style loadedMapStyle){
         HeatmapLayer heatmapLayer = new HeatmapLayer(HEATMAP_LAYER_ID, MARKER_SOURCE);
-        heatmapLayer.setMaxZoom(12);
+        heatmapLayer.setMaxZoom(ZOOM_THRESHOLD);
         heatmapLayer.setSourceLayer(HEATMAP_LAYER_SOURCE);
         heatmapLayer.setProperties(
                 heatmapColor(interpolate(
@@ -699,39 +684,34 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         CircleLayer circleLayer = new CircleLayer(CIRCLE_LAYER_ID, MARKER_SOURCE);
         circleLayer.setProperties(
-                circleColor(rgba(123, 239, 178, 1)),
+                circleColor(rgba(245, 130, 140, 1)),
 // Transition from heatmap to circle layer by zoom level
                 circleStrokeColor("white"),
-                circleStrokeWidth(0.2f),
+                circleStrokeWidth(0.4f),
                 circleOpacity(
                         interpolate(
-                                linear(), zoom(),
-                                stop( 12, 0),
-                                stop(16, 1)
+                                linear(),zoom(),
+                                stop(10, 0),
+                                stop(13, 1)
                         )
                 ),
-                circleRadius(
-                        interpolate(
-                                linear(), zoom(),
+                circleRadius(5.5f)
 
-                                stop(16, 1)
-                                ,stop(12, 4)
-                ))
         );
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);
     }
     private void addCircleLayerLocation(@NonNull Style loadedMapStyle) {
         CircleLayer circleLayer = new CircleLayer(CIRCLE_LAYER_ID_LOCATION, MARKER_SOURCE_LOCATION);
         circleLayer.setProperties(
-                circleColor(rgba(123, 239, 178, 1)),
+                circleColor(rgba(248, 200, 218, 1)),
 // Transition from heatmap to circle layer by zoom level
                 circleStrokeColor("white"),
                 circleStrokeWidth(0.2f),
                 circleRadius(
                         interpolate(
                                 linear(), zoom(),
-                                stop(12, 4),
-                                stop(16, 1)
+                                stop(7, 1),
+                                stop(14, 0)
                         ))
         );
         loadedMapStyle.addLayerBelow(circleLayer, HEATMAP_LAYER_ID);
@@ -785,6 +765,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         }
     }
+    // mapbox method from life cycles
     @Override
     protected void onStart() {
         super.onStart();
