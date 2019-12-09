@@ -37,6 +37,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -128,7 +129,7 @@ public class SignInActivity extends AppCompatActivity {
                                     Toast.makeText(SignInActivity.this, "sign in failed", Toast.LENGTH_LONG).show();
                                 } else {
                                     Toast.makeText(SignInActivity.this, "signed in successfully", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                    Intent intent = new Intent(SignInActivity.this, MapActivity.class);
                                     startActivity(intent);
                                 }
                             }
@@ -165,17 +166,18 @@ public class SignInActivity extends AppCompatActivity {
             try {
                 // Google Sign In was successful, authenticate with Firebase
                 final GoogleSignInAccount account = task.getResult(ApiException.class);
+                Log.i(TAG, "Google sign in suceessfully");
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
-                Log.w(TAG, "Google sign in failed", e);
+                Log.i(TAG, "Google sign in failed", e);
                 // ...
             }
         }
     }
 
     private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
+        Log.i(TAG, "firebaseAuthWithGoogle:" + acct.getId());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
@@ -185,81 +187,26 @@ public class SignInActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             final String uid = mAuth.getCurrentUser().getUid();
-                            DocumentReference docRef = db.collection("cities").document(uid);
+                            Log.i(TAG, uid);
+                            DocumentReference docRef = db.collection("users").document(uid);
                             docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                                 @Override
                                 public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if(!task.getResult().exists()){
-                                        uploadAvatar(acct.getDisplayName(), uid, acct.getPhotoUrl());
+                                    if(task.getResult() == null || !task.getResult().exists()){
+                                        startActivity(new Intent(getBaseContext(), UserInfoActivity.class));
+                                    } else{
+                                        startActivity(new Intent(getBaseContext(), MapActivity.class));
                                     }
                                 }
                             });
-                            Log.d(TAG, "signInWithCredential:success");
-                            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                            startActivity(intent);
                         } else {
                             // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Log.i(TAG, "signInWithCredential:failure", task.getException());
                             Toast.makeText(SignInActivity.this, "google sign in failed", Toast.LENGTH_LONG).show();
                         }
 
                         // ...
                     }
                 });
-    }
-
-    private void uploadAvatar(final String username, final String Uid, final Uri uri){
-        final StorageReference avatarImgRef = storageRef.child(Uid + ".jpg");
-        UploadTask uploadTask = avatarImgRef.putFile(uri);
-
-        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-            @Override
-            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                if (!task.isSuccessful()) {
-                    throw Objects.requireNonNull(task.getException());
-                }
-                // Continue with the task to get the download URL
-                return avatarImgRef.getDownloadUrl();
-            }
-        });
-        urlTask.addOnCompleteListener(new OnCompleteListener<Uri>() {
-            @Override
-            public void onComplete(@NonNull Task<Uri> task) {
-                if (task.isSuccessful()) {
-                    Uri downloadUri = task.getResult();
-                    if (downloadUri != null) {
-                        Log.i(TAG, downloadUri.toString());
-//                        remoteUrl = downloadUri.toString();
-                        createUserDocument(username, downloadUri.toString(), Uid);
-                    }
-                } else {
-                    // Handle failures
-                    Log.e(TAG, "Upload failed.");
-                }
-            }
-        });
-    }
-
-    private void createUserDocument(String username, String remoteUrl, String Uid){
-        Map<String, Object> user = new HashMap<>();
-        user.put("username", username);
-        user.put("avatar", remoteUrl);
-        user.put("posts", new ArrayList<DocumentReference>());
-        if(db != null) {
-            db.collection("users").document(Uid)
-                    .set(user)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Log.d(TAG, "DocumentSnapshot successfully written!");
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error writing document", e);
-                        }
-                    });
-        }
     }
 }
