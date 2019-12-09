@@ -41,7 +41,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.SplashActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -57,14 +57,15 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.MapActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.PostCreateActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
+            android:theme="@style/NoActionbarTheme" />
         <activity
             android:name=".Activity.PostFeedActivity"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.ARActivity"

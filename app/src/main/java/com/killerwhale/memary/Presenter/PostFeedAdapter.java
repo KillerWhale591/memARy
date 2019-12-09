@@ -89,7 +89,10 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
         // Set text
         String text = posts.get(position).getPostText();
         if (text != null && !text.isEmpty()) {
-            postViewHolder.txtPost.setText(posts.get(position).getPostText());
+            ViewGroup.LayoutParams params = postViewHolder.txtPost.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            postViewHolder.txtPost.setLayoutParams(params);
+            postViewHolder.txtPost.setText(text);
         } else {
             // Hide text box if text is empty
             ViewGroup.LayoutParams params = postViewHolder.txtPost.getLayoutParams();
