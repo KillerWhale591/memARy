@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -29,12 +28,6 @@ import java.util.List;
 public class LocationListAdapter extends BaseAdapter {
 
     private Context context;
-    private ArrayList<String> mLocation;
-    private ArrayList<String> mAddress;
-    private ArrayList<Integer> mNumPosts;
-    private ArrayList<Integer> mImages;
-    private ArrayList<Float> mDistance;
-    private LocationModel[] locationItems;
     private ArrayList<LocationModel> mLocationModelList = new ArrayList<>();
     private Location currLocation;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -45,11 +38,6 @@ public class LocationListAdapter extends BaseAdapter {
 
     public LocationListAdapter (Context aContext) {
         context = aContext;
-        mAddress = new ArrayList<>();
-        mLocation = new ArrayList<>();
-        mImages = new ArrayList<Integer>();
-        mNumPosts = new ArrayList<Integer>();
-        mDistance = new ArrayList<Float>();
         mLocRef = db.collection("location");
         geoFirestore = new GeoFirestore(mLocRef);
 
@@ -87,39 +75,31 @@ public class LocationListAdapter extends BaseAdapter {
         }
         else row = convertView;
 
-        ImageView ivImage = (ImageView) row.findViewById(R.id.imageView);
         TextView tvLocation = (TextView) row.findViewById(R.id.tvLocation);
         TextView tvAddress = (TextView) row.findViewById(R.id.tvAddress);
         TextView tvNumPosts = (TextView) row.findViewById(R.id.tvNumPosts);
         TextView tvDistance = (TextView) row.findViewById(R.id.tvDistance);
-//        tvLocation.setText(mLocation.get(position));
-//        tvAddress.setText(mAddress.get(position));
-//        String string = (mDistance.get(position)) + " miles";
-//        tvDistance.setText(string);
-        ivImage.setImageResource(R.drawable.location_image);
-//        tvNumPosts.setText(String.valueOf(mNumPosts.get(position)));
 
         try{
             tvLocation.setText(mLocationModelList.get(position).getLocation());
-            tvAddress.setText(mLocationModelList.get(position).getAddress());
+            String[] addressStrings = mLocationModelList.get(position).getAddress().split(",");
+            if (addressStrings.length > 0) {
+                String address = "";
+                if (addressStrings.length > 1) {
+                    address += addressStrings[0];
+                    address += ", ";
+                    address += addressStrings[1];
+                } else {
+                    address += addressStrings[0];
+                }
+                tvAddress.setText(address);
+            }
             tvDistance.setText(mLocationModelList.get(position).getDistance(currLocation));
             tvNumPosts.setText(mLocationModelList.get(position).getPosts());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return row;
-    }
-
-
-
-    private void setSortedItems() {
-        for (int i = 0; i < locationItems.length; i++) {
-            mDistance.set(i, locationItems[i].distance);
-            mNumPosts.set(i, locationItems[i].numPosts);
-            mLocation.set(i, locationItems[i].location);
-            mAddress.set(i, locationItems[i].address);
-
-        }
     }
 
     /**
