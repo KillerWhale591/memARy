@@ -96,12 +96,13 @@ public class LocationListAdapter extends BaseAdapter {
 //        tvAddress.setText(mAddress.get(position));
 //        String string = (mDistance.get(position)) + " miles";
 //        tvDistance.setText(string);
-        ivImage.setImageResource(R.drawable.location_image);
+//        ivImage.setImageResource(R.drawable.location_image);
 //        tvNumPosts.setText(String.valueOf(mNumPosts.get(position)));
 
         try{
             tvLocation.setText(mLocationModelList.get(position).getLocation());
-            tvAddress.setText(mLocationModelList.get(position).getAddress());
+            String []add = mLocationModelList.get(position).getAddress().split(",");
+            tvAddress.setText(add[0] + ", " + add[1]);
             tvDistance.setText(mLocationModelList.get(position).getDistance(currLocation));
             tvNumPosts.setText(mLocationModelList.get(position).getPosts());
         } catch (Exception e) {
