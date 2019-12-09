@@ -14,6 +14,7 @@ import java.util.Objects;
 public class LocationModel {
 
     public static final String FIELD_POST = "posts";
+    public static final String FIELD_NUMPOSTS = "numPosts";
 
     public String location;
     public String address;
@@ -32,11 +33,12 @@ public class LocationModel {
         this.numPosts = numPosts;
     }
 
-    public LocationModel(String name, String address, GeoPoint geoPoint, ArrayList<String> posts) {
+    public LocationModel(String name, String address, GeoPoint geoPoint, ArrayList<String> posts, int numPosts) {
         this.location = name;
         this.address = address;
         this.posts = posts;
         this.geoPoint = geoPoint;
+        this.numPosts = numPosts;
     }
 
 
@@ -56,6 +58,7 @@ public class LocationModel {
         hashMap.put("name", location);
         hashMap.put("posts", posts);
         hashMap.put("geopoint", geoPoint);
+        hashMap.put("numPosts", numPosts);
         return hashMap;
     }
 

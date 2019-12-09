@@ -34,6 +34,7 @@
         <activity android:name=".Activity.SignInActivity" />
         <activity
             android:name=".Activity.MapActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.PostCreateActivity"
@@ -43,8 +44,9 @@
             android:name=".Activity.PostFeedActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".Activity.ARTestActivity"
-            android:screenOrientation="portrait"></activity>
+            android:name=".Activity.ARActivity"
+            android:screenOrientation="portrait">
+        </activity>
         <activity android:name=".Activity.LocationListActivity" />
         <activity android:name=".Activity.MainActivity">
             <intent-filter>

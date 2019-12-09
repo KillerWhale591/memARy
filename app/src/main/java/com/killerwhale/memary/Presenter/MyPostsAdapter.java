@@ -109,8 +109,27 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
                                     for (DocumentSnapshot document : documents) {
                                         ArrayList<String> locationPosts = (ArrayList<String>) document.get("posts");
                                         locationPosts.remove(deletePost.getPostId());
-                                        db.collection("location").document(document.getId()).update("posts", locationPosts);
-                                        Log.d(TAG, "successfully updated location!");
+                                        int listSize = locationPosts.size();
+                                        if(listSize == 0){
+                                            db.collection("location").document(document.getId())
+                                                .delete()
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        Log.i(TAG, "Location DocumentSnapshot successfully deleted!");
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Log.w(TAG, "Error deleting location", e);
+                                                    }
+                                                });
+                                        } else{
+                                            db.collection("location").document(document.getId()).update("numPosts", listSize);
+                                            db.collection("location").document(document.getId()).update("posts", locationPosts);
+                                            Log.i(TAG, "successfully updated location!");
+                                        }
                                     }
                                 }
                             }

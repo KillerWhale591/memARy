@@ -11,12 +11,20 @@
 
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/mapView"
+        mapbox:mapbox_cameraZoom="11"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        mapbox:mapbox_cameraTargetLat="42.3601"
-        mapbox:mapbox_cameraTargetLng="-71.0589"
+        android:layout_height="match_parent">
 
-        mapbox:mapbox_cameraZoom="11" >
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabSearchGlobal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            mapbox:fab_icon="@drawable/search_location"
+            fab:fab_colorNormal="@color/mapboxGreenLight"
+            fab:fab_colorPressed="@color/mapboxWhite"
+            fab:fab_size = "mini"
+            fab:fab_title="Search Location" />
 
         <com.getbase.floatingactionbutton.FloatingActionsMenu
             android:id="@+id/multiple_text_field_actions_parent_fab"
@@ -33,8 +41,10 @@
                 android:id="@+id/fabCenterCam"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                mapbox:fab_icon="@drawable/ic_location_searching_black_24dp"
                 fab:fab_colorNormal="@color/mapboxBlue"
                 fab:fab_colorPressed="@color/mapboxWhite"
+                android:foregroundGravity="center"
                 fab:fab_size="mini"
                 fab:fab_title="Center Cam" />
 
@@ -42,20 +52,11 @@
                 android:id="@+id/fabTogglePostLocation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                mapbox:fab_icon="@drawable/ic_location_24dp"
                 fab:fab_colorNormal="@color/mapboxGreen"
                 fab:fab_colorPressed="@color/mapboxWhite"
                 fab:fab_size="mini"
                 fab:fab_title="toggle post/location" />
-
-            <com.getbase.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fabSearchGlobal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                fab:fab_colorNormal="@color/mapboxOrangeLight"
-                fab:fab_colorPressed="@color/mapboxWhite"
-                fab:fab_size="mini"
-                fab:fab_title="Search Location" />
-
         </com.getbase.floatingactionbutton.FloatingActionsMenu>
     </com.mapbox.mapboxsdk.maps.MapView>
 

@@ -71,7 +71,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@id/btnPostFeed"
+        android:layout_below="@id/btnARActivity"
         android:text="ARPrimitive" />
 
     <Button
@@ -88,5 +88,13 @@
         android:layout_below="@id/btnUserInfoActivity"
         android:layout_alignParentRight="true"
         android:text="ProfileActivity" />
+
+    <Button
+        android:id="@+id/btnARActivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/btnPostFeed"
+        android:text="ARActivity" />
 
 </RelativeLayout>

@@ -80,6 +80,7 @@ public class StrokeStorageHelper {
      * Download stroke file from FireBase storage
      */
     public void downloadStrokeFiles() {
+        allARs.clear();
         if (!strokeUrls.isEmpty()) {
             final int[] downloaded = {0};
             for (String url : strokeUrls) {
@@ -176,6 +177,7 @@ public class StrokeStorageHelper {
         GeoPoint currentGeo = new GeoPoint(location.getLatitude(), location.getLongitude());
         GeoQuery geoQuery = geoFirestore.queryAtLocation(currentGeo, radius);
         ArrayList<Query> arQueries = geoQuery.getQueries();
+        strokeUrls.clear();
         for (final Query query : arQueries) {
             if (query != null) {
                 query.limit(limit).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
