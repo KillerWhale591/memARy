@@ -25,4 +25,16 @@
         <item>"10"</item>
         <item>"100"</item>
     </array>
+
+    <array name="arDistance_list_preference">
+        <item>"0.5km"</item>
+        <item>"1km"</item>
+        <item>"2km"</item>
+    </array>
+
+    <array name="arDistance_value_list_preference">
+        <item>"0.5"</item>
+        <item>"1"</item>
+        <item>"2"</item>
+    </array>
 </resources>
