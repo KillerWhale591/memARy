@@ -177,6 +177,7 @@ public class StrokeStorageHelper {
         GeoPoint currentGeo = new GeoPoint(location.getLatitude(), location.getLongitude());
         GeoQuery geoQuery = geoFirestore.queryAtLocation(currentGeo, radius);
         ArrayList<Query> arQueries = geoQuery.getQueries();
+        strokeUrls.clear();
         for (final Query query : arQueries) {
             if (query != null) {
                 query.limit(limit).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {

@@ -417,8 +417,7 @@ public class ARActivity extends ARBaseActivity
             }
 
             if (bInitCloudRenderer.get()){
-                int maxARNum = Long.valueOf(Preference.arNumber).intValue();
-                List<Anchor> mCloudAnchors = new ArrayList<>(maxARNum);
+                List<Anchor> mCloudAnchors = new ArrayList<>();
                 Anchor randomAnchor;
                 long l = System.currentTimeMillis();
                 Random random = new Random(l);
