@@ -14,6 +14,7 @@
 
 package com.killerwhale.memary.Activity;
 
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Rect;
@@ -133,6 +134,7 @@ public class ARActivity extends ARBaseActivity
     private ImageButton btnClear;
     private ImageButton btnRefresh;
     private View mDrawUiContainer;
+    ObjectAnimator mAnimator;
 
     private Frame mFrame;
     private Session mSession;
@@ -186,6 +188,10 @@ public class ARActivity extends ARBaseActivity
         btnReturn.setOnClickListener(this);
         btnRefresh = findViewById(R.id.btnRefresh);
         btnRefresh.setOnClickListener(this);
+
+        mAnimator = ObjectAnimator.ofFloat(btnRefresh, "rotation", 360f, 0f);
+        mAnimator.setDuration(1750);
+        mAnimator.setRepeatCount(ObjectAnimator.INFINITE);
 
         strokeHelper = new StrokeStorageHelper(this);
 
@@ -358,6 +364,7 @@ public class ARActivity extends ARBaseActivity
 
         downloadStrokes();
         bInitCloudRenderer.set(true);
+        setDownloadAnimation();
 
     }
 
@@ -392,7 +399,6 @@ public class ARActivity extends ARBaseActivity
     private void update() {
 
         try {
-            final long updateStartTime = System.currentTimeMillis();
 
             // Update ARCore frame
             mFrame = mSession.update();
@@ -408,6 +414,7 @@ public class ARActivity extends ARBaseActivity
                 mCloudShaderRenderer.setNeedsUpdate();
                 mCloudShaderRenderer.checkUpload();
                 bRefreshCloudRenderer.set(false);
+                setDownloadAnimation();
             }
 
             if (bInitCloudRenderer.get()){
@@ -599,7 +606,6 @@ public class ARActivity extends ARBaseActivity
 
                 }
 
-
                 // Render the lines
                 mLineShaderRenderer
                         .draw(viewmtx, projmtx, mScreenWidth, mScreenHeight,
@@ -613,8 +619,6 @@ public class ARActivity extends ARBaseActivity
             }
 
         }
-
-
     }
 
     /**
@@ -861,6 +865,23 @@ public class ARActivity extends ARBaseActivity
     }
 
     /**
+     * Rotate refresh button when downloading AR Cloud Object
+     * */
+    private void setDownloadAnimation(){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (bInitCloudRenderer.get()){
+                    mAnimator.start();
+                }
+                else{
+                    mAnimator.end();
+                }
+            }
+        });
+    }
+
+    /**
      * Start further operations if user choose to clear all the drawings.
      * */
     @Override
@@ -874,13 +895,12 @@ public class ARActivity extends ARBaseActivity
     }
 
     /**
-     * Start further operations if user choose to uoload their drawings.
+     * Start further operations if user choose to upload their drawings.
      * */
     @Override
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
         uploadStrokes();
-        //Anchor offsetAnchor = setAnchorOffset(mAnchor);
     }
 
     /**
@@ -900,6 +920,7 @@ public class ARActivity extends ARBaseActivity
         mCloudShaderRenderer.clear();
         downloadStrokes();
         bInitCloudRenderer.set(true);
+        setDownloadAnimation();
         mCloudShaderRenderer.setNeedsUpdate();
     }
 
