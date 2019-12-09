@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by kaitlynanderson on 2/7/18.
- * Custom Utils for showing curly line while not tracking
+ * Custom View for showing curly line while not tracking
  */
 
 public class TrackingIndicator extends ConstraintLayout {
@@ -55,8 +55,6 @@ public class TrackingIndicator extends ConstraintLayout {
     private static final int STATE_NOT_TRACKING_ANCHOR = 3;
 
     private static final int STATE_DRAW_PROMPT = 4;
-
-    private static final int STATE_DRAW_PROMPT_PAIRED = 5;
 
     private static final float IMAGE_ANIMATION_DISTANCE_DP = 25;
 
@@ -99,6 +97,12 @@ public class TrackingIndicator extends ConstraintLayout {
     private boolean mShowPairedSessionDrawPrompt = false;
 
     private boolean anchorTrackingMessageEnabled = false;
+
+    public enum Mode {
+        DRAW, VIEW
+    };
+
+    Mode mMode = Mode.VIEW;
 
 
     public TrackingIndicator(Context context) {
@@ -193,24 +197,16 @@ public class TrackingIndicator extends ConstraintLayout {
                         announceForAccessibility(getContext().getString(R.string.tracking_indicator_text_anchor_not_tracking));
                         break;
                     case STATE_DRAW_PROMPT:
-                        mDrawPrompt.setPromptText(false);
-                        showDrawPrompt();
-                        stopTrackingAnimation();
-                        fadeOutView(mImageView);
-                        fadeOutView(mAnchorNotTrackingTextView);
-                        fadeOutView(mNotTrackingTextView);
-                        fadeOutView(mNotTrackingEscalatedTextView);
-                        announceForAccessibility(getContext().getString(R.string.draw_prompt));
-                        break;
-                    case STATE_DRAW_PROMPT_PAIRED:
-                        mDrawPrompt.setPromptText(true);
-                        showDrawPrompt();
-                        stopTrackingAnimation();
-                        fadeOutView(mImageView);
-                        fadeOutView(mAnchorNotTrackingTextView);
-                        fadeOutView(mNotTrackingTextView);
-                        fadeOutView(mNotTrackingEscalatedTextView);
-                        announceForAccessibility(getContext().getString(R.string.draw_prompt_paired));
+                        if (mMode == Mode.DRAW){
+                            mDrawPrompt.setPromptText(false);
+                            showDrawPrompt();
+                            stopTrackingAnimation();
+                            fadeOutView(mImageView);
+                            fadeOutView(mAnchorNotTrackingTextView);
+                            fadeOutView(mNotTrackingTextView);
+                            fadeOutView(mNotTrackingEscalatedTextView);
+                            announceForAccessibility(getContext().getString(R.string.draw_prompt));
+                        }
                         break;
                 }
             }
@@ -233,10 +229,6 @@ public class TrackingIndicator extends ConstraintLayout {
         if (mDrawPrompt.isShowing()) {
             mDrawPrompt.hidePrompt();
         }
-    }
-
-    public int getState() {
-        return mState;
     }
 
     private void startTrackingAnimation() {
@@ -318,8 +310,6 @@ public class TrackingIndicator extends ConstraintLayout {
             state = STATE_NOT_TRACKING_ANCHOR;
         } else if (trackingState != TrackingState.TRACKING) {
             state = mNotTrackingEscalated ? STATE_NOT_TRACKING_ESCALATED : STATE_NOT_TRACKING;
-        } else if (mDrawPromptEnabled && mShowPairedSessionDrawPrompt) {
-            state = STATE_DRAW_PROMPT_PAIRED;
         } else if (!mHasStrokes && mDrawPromptEnabled) {
             state = STATE_DRAW_PROMPT;
         }
@@ -342,11 +332,6 @@ public class TrackingIndicator extends ConstraintLayout {
         setHasStrokes(true);
     }
 
-    public void setShowPairedSessionDrawPrompt(boolean showPairedSessionDrawPrompt) {
-        mShowPairedSessionDrawPrompt = showPairedSessionDrawPrompt;
-        updateUI();
-    }
-
     public void setHasStrokes(boolean hasStrokes) {
         if (hasStrokes != mHasStrokes) {
             Log.d(TAG, "setHasStrokes: " + hasStrokes);
@@ -356,32 +341,20 @@ public class TrackingIndicator extends ConstraintLayout {
         }
     }
 
-    public void setAnchorTrackingMessageEnabled(boolean anchorTrackingMessageEnabled) {
-        this.anchorTrackingMessageEnabled = anchorTrackingMessageEnabled;
-    }
-
     public void setDrawPromptEnabled(boolean drawPromptEnabled) {
         mDrawPromptEnabled = drawPromptEnabled;
         updateUI();
     }
 
     private List<DisplayListener> listeners = new ArrayList<>();
+    private List<ModeListener> modeListeners = new ArrayList<>();
 
-    public void addListener(DisplayListener displayListener) {
-        if (displayListener != null) {
-            listeners.add(displayListener);
+    public void addListener(ModeListener modeListener){
+        if (modeListener != null) {
+            modeListeners.add(modeListener);
 
-            if (mState == STATE_NONE) {
-                displayListener.onErrorRemoved();
-            } else {
-                displayListener.onErrorDisplaying();
-            }
+            modeListener.onModeChange();
         }
-
-    }
-
-    public void removeListener(DisplayListener displayListener) {
-        listeners.remove(displayListener);
     }
 
     private boolean isPowerSaveMode() {
@@ -394,10 +367,18 @@ public class TrackingIndicator extends ConstraintLayout {
                 || state == STATE_NOT_TRACKING_ANCHOR;
     }
 
+    public void setMode(Mode mode){
+        mMode = mode;
+    }
+
     public interface DisplayListener {
 
         void onErrorDisplaying();
 
         void onErrorRemoved();
+    }
+
+    public interface ModeListener{
+        void onModeChange();
     }
 }
