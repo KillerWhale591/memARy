@@ -187,21 +187,21 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
                 super.onLocationResult(locationResult);
             }
         }, null);
-        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                if (location != null) {
-                    rvAdapter.init(location, PostPresenter.MODE_RECENT);
-                    mLocation = location;
-                }
-            }
-        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         navBar.setSelectedItemId(R.id.action_posts);
+        FLPC.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if (location != null) {
+                    mLocation = location;
+                    rvAdapter.init(location, PostPresenter.MODE_RECENT);
+                }
+            }
+        });
     }
 
     @Override
