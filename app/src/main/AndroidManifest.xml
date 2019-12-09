@@ -21,17 +21,40 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Activity.MyPostsActivity"></activity>
-        <activity android:name=".Activity.SettingActivity" />
-        <activity android:name=".Activity.SearchNearbyActivity"></activity>
-        <activity android:name=".Activity.ProfileActivity" />
-        <activity android:name=".Activity.UserInfoActivity" />
-        <activity android:name=".Activity.ResetPasswordActivity" />
+        <activity
+            android:name=".Activity.MyPostsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.SettingActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.SearchNearbyActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.ProfileActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.UserInfoActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.ResetPasswordActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.SplashActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
-        <activity android:name=".Activity.SignUpActivity" />
-        <activity android:name=".Activity.SignInActivity" />
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".Activity.SignUpActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.SignInActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.MapActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
@@ -42,19 +65,17 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
         <activity
             android:name=".Activity.PostFeedActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.ARActivity"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity android:name=".Activity.LocationListActivity" />
-        <activity android:name=".Activity.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.LocationListActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activity.MainActivity"
+            android:screenOrientation="portrait" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="${applicationId}.provider"
