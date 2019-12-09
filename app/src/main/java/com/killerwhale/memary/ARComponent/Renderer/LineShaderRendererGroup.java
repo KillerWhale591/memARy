@@ -65,6 +65,7 @@ public class LineShaderRendererGroup {
     }
 
     public void initAnchors(List<Anchor> cloudAnchors){
+        System.out.println(cloudAnchors.size());
         mAnchors = cloudAnchors;
         for (int i=0; i<mAnchors.size(); i++){
             mAnchors.get(i).getPose().toMatrix(mRenderers.get(i).mModelMatrix, 0);

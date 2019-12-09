@@ -30,8 +30,6 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.location.Location;
 import android.net.Uri;
@@ -44,7 +42,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 
 import com.killerwhale.memary.ARComponent.Model.Stroke;
-import com.killerwhale.memary.ARComponent.Renderer.AnchorRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRendererGroup;
@@ -68,7 +65,6 @@ import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.killerwhale.memary.ARComponent.Utils.UploadDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
-import com.killerwhale.memary.BuildConfig;
 import com.killerwhale.memary.Preference;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
@@ -130,8 +126,6 @@ public class ARActivity extends ARBaseActivity
     private LineShaderRenderer mLineShaderRenderer = new LineShaderRenderer();
     private LineShaderRendererGroup mCloudShaderRenderer = new LineShaderRendererGroup(0.0f, mLineWidthMax);
     private final PointCloudRenderer pointCloud = new PointCloudRenderer();
-    private AnchorRenderer zeroAnchorRenderer;
-    private AnchorRenderer cloudAnchorRenderer;
     private TrackingIndicator mTrackingIndicator;
     private ImageButton btnReturn;
     private ImageButton btnUndo;
@@ -583,12 +577,6 @@ public class ARActivity extends ARBaseActivity
             mBackgroundRenderer.draw(mFrame);
         }
 
-        // Draw debug anchors
-        if (BuildConfig.DEBUG) {
-            if (mFrame.getCamera().getTrackingState() == TrackingState.TRACKING) {
-                zeroAnchorRenderer.draw(viewmtx, projmtx, false);
-            }
-        }
 
         // Draw background.
         if (mFrame != null) {
@@ -608,15 +596,7 @@ public class ARActivity extends ARBaseActivity
                 if (mAnchor != null && mAnchor.getTrackingState() == TrackingState.TRACKING) {
                     mAnchor.getPose().toMatrix(mLineShaderRenderer.mModelMatrix, 0);
 
-                    //mCloudShaderRenderer.anchorTransform(setAnchorOffset(mAnchor));
 
-
-                    //Log.i("Anchor", "set modelMatrix");
-
-                    if (BuildConfig.DEBUG) {
-                        mAnchor.getPose().toMatrix(cloudAnchorRenderer.mModelMatrix, 0);
-                        cloudAnchorRenderer.draw(viewmtx, projmtx, true);
-                    }
                 }
 
 
@@ -812,9 +792,6 @@ public class ARActivity extends ARBaseActivity
 
     @Override
     public void onSurfaceCreated() {
-
-        zeroAnchorRenderer = new AnchorRenderer();
-        cloudAnchorRenderer = new AnchorRenderer();
         pointCloud.createOnGlThread(/*context=*/ this);
     }
 

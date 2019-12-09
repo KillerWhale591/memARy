@@ -49,14 +49,10 @@ public class SearchNearbyActivity extends AppCompatActivity {
         if (!Places.isInitialized()) {
             Places.initialize(getApplicationContext(), getString(R.string.google_places_access_token));
         }
-// Create a new Places client instance.
+        // Create a new Places client instance.
         placesClient = Places.createClient(this);
 
-
-
         startSearch(nameLatLng, nameAddress);
-
-
 
         Handler handler = new Handler();
         Log.d("TAG", "onCreate: " + nearbyAddressArray.size());
