@@ -247,6 +247,7 @@ public class PostPresenter {
      * @param adapter adapter
      */
     private void addUserInfo(final PostFeedAdapter adapter) {
+        final int[] postcount = {0};
         for (final Post post : mPosts) {
             String uid = post.getUid();
             if (uid != null && !uid.isEmpty()) {
@@ -257,11 +258,14 @@ public class PostPresenter {
                         if (task.isSuccessful()) {
                             DocumentSnapshot doc = task.getResult();
                             if (doc != null) {
+                                postcount[0]++;
                                 String username = (String) doc.get(User.FIELD_USERNAME);
                                 String avatar = (String) doc.get(User.FIELD_AVATAR);
                                 post.setUsername(username);
                                 post.setAvatar(avatar);
-                                adapter.updateView();
+                                if (postcount[0] >= mPosts.size()) {
+                                    adapter.updateView();
+                                }
                             }
                         }
                     }
