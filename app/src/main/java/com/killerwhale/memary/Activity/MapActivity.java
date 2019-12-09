@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -140,6 +141,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private Double cameralong;
     private TextView txtMode;
     private BottomNavigationView navBar;
+    private SimpleDraweeView arIcon;
 
     private LatLng passInPoint = null;
 
@@ -151,7 +153,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_map_acitivity);
         db = FirebaseFirestore.getInstance();
         //Bottom navigation bar
+        arIcon = findViewById(R.id.bigIcon);
         navBar = findViewById(R.id.navBar);
+        arIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
+        });
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {

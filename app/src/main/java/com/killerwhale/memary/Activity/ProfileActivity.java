@@ -11,23 +11,17 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.preference.Preference;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -40,29 +34,28 @@ import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.View.EditUsernameDialog;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class ProfileActivity extends AppCompatActivity implements EditUsernameDialog.EditUsernameDialogListener {
 
+    private static final String TAG = "PROFILE";
+    private static final int PICK_FROM_GALLERY = 9999;
+
+    // UI widgets
     private BottomNavigationView navBar;
-    private static String TAG = "PROFILE";
-    private FirebaseFirestore db;
     private SimpleDraweeView icUserInfoAvatar;
     private ImageButton btnCamera;
     private ImageButton btnWrite;
     private TextView txtName;
     private Button btnSetting;
-    private FirebaseAuth mAuth;
-//    private Uri uri = null;
-    private StorageReference storageRef;
-//    private String remoteUrl = "";
     private Button btnMyPosts;
     private Button btnLogout;
+    private SimpleDraweeView arIcon;
 
-    private static final int PICK_FROM_GALLERY = 9999;
+    // Database
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private StorageReference storageRef;
     private String Uid;
 
     @Override
@@ -108,7 +101,24 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        // Database
+        db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        storageRef = FirebaseStorage.getInstance().getReference().child("avatars");
+
+        // UI init
         navBar = findViewById(R.id.navBar);
+        arIcon = findViewById(R.id.bigIcon);
+        icUserInfoAvatar = (SimpleDraweeView) findViewById(R.id.icUserInfoAvatar);
+        btnCamera = (ImageButton) findViewById(R.id.btnCamera);
+
+        txtName = (TextView) findViewById(R.id.txtName);
+        btnSetting = (Button) findViewById(R.id.btnSetting);
+        btnWrite = (ImageButton) findViewById(R.id.btnWrite);
+        btnMyPosts = (Button) findViewById(R.id.btnMyPosts);
+        btnLogout = (Button) findViewById(R.id.btnLogout);
+
+        // UI listeners
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -135,17 +145,13 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             }
         });
 
-        db = FirebaseFirestore.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        storageRef = FirebaseStorage.getInstance().getReference().child("avatars");
-
-        icUserInfoAvatar = (SimpleDraweeView) findViewById(R.id.icUserInfoAvatar);
-        btnCamera = (ImageButton) findViewById(R.id.btnCamera);
-        txtName = (TextView) findViewById(R.id.txtName);
-        btnSetting = (Button) findViewById(R.id.btnSetting);
-        btnWrite = (ImageButton) findViewById(R.id.btnWrite);
-        btnMyPosts = (Button) findViewById(R.id.btnMyPosts);
-        btnLogout = (Button) findViewById(R.id.btnLogout);
+        arIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
+        });
 
         btnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
