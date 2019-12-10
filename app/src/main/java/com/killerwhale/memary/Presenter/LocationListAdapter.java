@@ -1,5 +1,6 @@
 package com.killerwhale.memary.Presenter;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
@@ -16,6 +17,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.killerwhale.memary.Activity.MapActivity;
 import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.R;
 
@@ -23,6 +25,8 @@ import org.imperiumlabs.geofirestore.GeoFirestore;
 import org.imperiumlabs.geofirestore.GeoQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class LocationListAdapter extends BaseAdapter {
@@ -120,13 +124,22 @@ public class LocationListAdapter extends BaseAdapter {
                             @Override
                             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                                 List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-                                Log.i("documentsize", String.valueOf(documents.size()));
+//                                Log.i("documentsize", String.valueOf(documents.size()));
                                 if (documents.size() > 0) {
                                     for (DocumentSnapshot document : documents) {
                                         if (document != null) {
                                             mLocationModelList.add(new LocationModel(document.getData()));
                                         }
                                     }
+                                    LocationModel[] temp = new LocationModel[mLocationModelList.size()];
+                                    for (int i = 0; i < mLocationModelList.size(); i++){
+                                        LocationModel model = mLocationModelList.get(i);
+                                        model.setDistance(currLocation);
+                                        temp[i] = model;
+                                    }
+                                    Arrays.sort(temp);
+                                    ArrayList<LocationModel> res = new ArrayList<>(Arrays.asList(temp));
+                                    mLocationModelList = res;
                                     notifyDataSetChanged();
                                 }
                             }
