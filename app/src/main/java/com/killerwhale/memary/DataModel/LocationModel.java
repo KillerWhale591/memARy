@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class LocationModel {
+public class LocationModel implements Comparable<LocationModel> {
 
     public static final String FIELD_POST = "posts";
     public static final String FIELD_NUMPOSTS = "numPosts";
@@ -26,12 +26,6 @@ public class LocationModel {
     private static final float MINIMUM_DISTANCE = 0.1f;
     private static final String SUFFIX_MILES = " miles away";
 
-    public LocationModel(String location, String address, float distance, int numPosts) {
-        this.location = location;
-        this.address = address;
-        this.distance = distance;
-        this.numPosts = numPosts;
-    }
 
     public LocationModel(String name, String address, GeoPoint geoPoint, ArrayList<String> posts, int numPosts) {
         this.location = name;
@@ -92,7 +86,22 @@ public class LocationModel {
         return Float.valueOf(f.format(dist)) + SUFFIX_MILES;
     }
 
+    public void setDistance(Location location) {
+        Location mLocation = new Location("");
+        mLocation.setLatitude(geoPoint.getLatitude());
+        mLocation.setLongitude(geoPoint.getLongitude());
+        distance = mLocation.distanceTo(location) / METERS_TO_MILES;
+    }
+
     public GeoPoint getGeoPoint() {
         return geoPoint;
+    }
+
+    @Override
+    public int compareTo(LocationModel o) {
+        float res = distance - o.distance;
+        if (res > 0) return 1;
+        else if (res < 0) return -1;
+        else return 0;
     }
 }
