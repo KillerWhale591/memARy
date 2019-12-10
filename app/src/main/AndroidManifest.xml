@@ -32,12 +32,15 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.ProfileActivity"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.UserInfoActivity"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.ResetPasswordActivity"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.SplashActivity"
@@ -51,9 +54,11 @@
         </activity>
         <activity
             android:name=".Activity.SignUpActivity"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.SignInActivity"
+            android:theme="@style/NoActionbarTheme"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activity.MapActivity"
