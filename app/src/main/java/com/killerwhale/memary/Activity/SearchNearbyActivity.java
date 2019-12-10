@@ -35,7 +35,6 @@ public class SearchNearbyActivity extends AppCompatActivity {
     private PlacesClient placesClient;
     private ListView nearbyList;
     private ArrayAdapter<String> nearbyAdapter;
-    private ArrayList<LocationModel> nearbyArray = new ArrayList<>();
     private ArrayList<String> nearbyAddressArray = new ArrayList<>();
     private HashMap<String, double[]> nameLatLng = new HashMap<>();
     private HashMap<String, String> nameAddress = new HashMap<>();
@@ -51,10 +50,9 @@ public class SearchNearbyActivity extends AppCompatActivity {
         }
         // Create a new Places client instance.
         placesClient = Places.createClient(this);
-
+        nearbyAddressArray = new ArrayList<>();
         startSearch(nameLatLng, nameAddress);
 
-        Handler handler = new Handler();
         Log.d("TAG", "onCreate: " + nearbyAddressArray.size());
         nearbyList = (ListView) findViewById(R.id.NearbyList);
         nearbyAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1, nearbyAddressArray);
@@ -84,29 +82,30 @@ public class SearchNearbyActivity extends AppCompatActivity {
                 FindCurrentPlaceRequest.builder(fields).build();
 //        Log.d("TAG", "startSearch: ");
         Task<FindCurrentPlaceResponse> task = placesClient.findCurrentPlace(request);
+        Log.i("TAG", "startSearch: 1");
         task.addOnSuccessListener( new OnSuccessListener<FindCurrentPlaceResponse>() {
             @Override
             public void onSuccess(FindCurrentPlaceResponse response) {
-                for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
-                    String name = placeLikelihood.getPlace().getName();
-                    com.google.android.gms.maps.model.LatLng loc = placeLikelihood.getPlace().getLatLng();
-                    String address = placeLikelihood.getPlace().getAddress();
-                    double lat = loc.latitude;
-                    double lng = loc.longitude;
-                    double[] latlng = {lat, lng};
-//                    Log.i("TAG", String.format("Place '%s' has likelihood: %f",
-//                            name,
-//                            placeLikelihood.getLikelihood()));
-//                    Log.i("TAG", String.valueOf(latlng[0]) + String.valueOf(latlng[1]));
-//                    LocationModel LM = new LocationModel(placeLikelihood.getPlace().getName(),
-//                            placeLikelihood.getPlace().getAddress(),0,0,0);
-//                    nearbyArray.add(LM);
-                    latlngMap.put(name, latlng);
-                    addressMap.put(name, address);
-                    nearbyAddressArray.add(placeLikelihood.getPlace().getName());
-                    nearbyAdapter.notifyDataSetChanged();
+                Log.i("TAG", "startSearch: 2");
+                    for (PlaceLikelihood placeLikelihood : response.getPlaceLikelihoods()) {
+                        if (placeLikelihood != null) {
+                            Log.i("TAG", "startSearch: 3");
+                            String name = placeLikelihood.getPlace().getName();
+                            if (name != null) {
+                                com.google.android.gms.maps.model.LatLng loc = placeLikelihood.getPlace().getLatLng();
+                                String address = placeLikelihood.getPlace().getAddress();
+                                double lat = loc.latitude;
+                                double lng = loc.longitude;
+                                Log.i("TAG", "onSuccess: " + name + address + lat + lng);
+                                double[] latlng = {lat, lng};
+                                latlngMap.put(name, latlng);
+                                addressMap.put(name, address);
+                                nearbyAddressArray.add(name);
+                                nearbyAdapter.notifyDataSetChanged();
+                            }
+                        }
+                    }
                 }
-            }
         });
         task.addOnFailureListener(new OnFailureListener() {
             @Override
