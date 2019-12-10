@@ -10,7 +10,9 @@ tools:context=".Activity.MainActivity" >
     <ListView
         android:id="@+id/locationList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@+id/navLayout"
+        >
 
     </ListView>
 

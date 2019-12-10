@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="5"
-        android:background="@color/cardview_dark_background"
+        android:background="@color/colorPostAttr"
         android:padding="20dp">
 
         <com.facebook.drawee.view.SimpleDraweeView
@@ -20,7 +20,7 @@
             android:layout_height="160dp"
             android:layout_centerInParent="true"
             app:placeholderImage="@drawable/user_icon"
-            app:roundWithOverlayColor="@color/cardview_dark_background"
+            app:roundWithOverlayColor="@color/colorPostAttr"
             app:roundedCornerRadius="80dp"
             app:roundingBorderColor="@color/colorWhite"
             app:roundingBorderWidth="2dp" />
@@ -67,7 +67,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="50dp"
             android:background="@android:drawable/btn_default"
-            android:backgroundTint="@color/colorBlack"
+            android:backgroundTint="@color/colorPrimaryDark"
             android:text="Submit"
             android:textColor="@android:color/white"
             android:textStyle="bold" />

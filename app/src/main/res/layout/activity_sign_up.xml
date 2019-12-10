@@ -19,9 +19,10 @@
         <ImageView
             android:id="@+id/imgLogo"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="100dp"
+            android:tint="@color/colorPrimaryDark"
             android:layout_marginBottom="50dp"
-            app:srcCompat="@drawable/placeholder_logo" />
+            app:srcCompat="@drawable/fulllogowhite" />
 
         <TextView
             android:id="@+id/txtEmail"
@@ -63,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="15dp"
             android:background="@android:drawable/btn_default"
-            android:backgroundTint="@color/colorBlack"
+            android:backgroundTint="@color/colorPrimaryDark"
             android:text="Register"
             android:textColor="@color/colorWhite"
             android:textStyle="bold" />

@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="3"
-            android:background="@color/cardview_dark_background"
+            android:background="@color/colorPostAttr"
             android:padding="20dp">
 
             <com.facebook.drawee.view.SimpleDraweeView
@@ -24,7 +24,7 @@
                 android:layout_height="160dp"
                 android:layout_centerInParent="true"
                 app:placeholderImage="@drawable/user_icon"
-                app:roundWithOverlayColor="@color/cardview_dark_background"
+                app:roundWithOverlayColor="@color/colorPostAttr"
                 app:roundedCornerRadius="80dp"
                 app:roundingBorderColor="@color/colorWhite"
                 app:roundingBorderWidth="2dp" />
