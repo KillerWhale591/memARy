@@ -11,6 +11,7 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,7 @@ import com.google.firebase.firestore.CollectionReference;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.R;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.eq;
@@ -125,7 +127,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String TAG = "MAP";
     private FeatureCollection featureCollection;
     private GeoJsonSource source;
-    private int formalSelectLocationIndex = -1;
 
     private FloatingActionButton fabCenterCamera;
     private FloatingActionButton fabTogglePostLocation;
@@ -158,8 +159,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         arIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(getBaseContext(), ARActivity.class);
-                startActivity(i);
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSIONS_AR)) {
+                    ActivityCompat.requestPermissions(MapActivity.this,
+                            PermissionHelper.PERMISSIONS_AR,
+                            PermissionHelper.PERMISSION_CODE_AR);
+                } else {
+                    Intent i = new Intent(getBaseContext(), ARActivity.class);
+                    startActivity(i);
+                }
             }
         });
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -832,6 +839,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onLowMemory() {
         super.onLowMemory();
         mapView.onLowMemory();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PermissionHelper.PERMISSION_CODE_AR) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
+        }
     }
 }
 

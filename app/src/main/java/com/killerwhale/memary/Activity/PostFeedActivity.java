@@ -7,6 +7,7 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabItem;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.Presenter.OnRefreshCompleteListener;
 import com.killerwhale.memary.Presenter.PostFeedAdapter;
 import com.killerwhale.memary.Presenter.PostPresenter;
@@ -166,8 +168,14 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
         arIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(getBaseContext(), ARActivity.class);
-                startActivity(i);
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSIONS_AR)) {
+                    ActivityCompat.requestPermissions(PostFeedActivity.this,
+                            PermissionHelper.PERMISSIONS_AR,
+                            PermissionHelper.PERMISSION_CODE_AR);
+                } else {
+                    Intent i = new Intent(getBaseContext(), ARActivity.class);
+                    startActivity(i);
+                }
             }
         });
     }
@@ -207,5 +215,15 @@ public class PostFeedActivity extends AppCompatActivity implements OnRefreshComp
     @Override
     public void stopRefresh() {
         swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PermissionHelper.PERMISSION_CODE_AR) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
+        }
     }
 }

@@ -3,83 +3,67 @@ package com.killerwhale.memary.Activity;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.R;
-import com.mapbox.android.core.permissions.PermissionsListener;
-import com.mapbox.android.core.permissions.PermissionsManager;
 
-import java.util.List;
-
-public class SplashActivity extends AppCompatActivity implements PermissionsListener {
+public class SplashActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
-    private PermissionsManager permissionsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mAuth = FirebaseAuth.getInstance();
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
         setContentView(R.layout.activity_splash);
-        checkPermission();
-
-
-    }
-    public void checkPermission(){
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            Handler handler = new Handler();
-            Runnable jumpTo = new Runnable() {
-                @Override
-                public void run() {
-                    mAuth = FirebaseAuth.getInstance();
-                    FirebaseUser user = mAuth.getCurrentUser();
-                    if (user != null) {
-                        Intent i = new Intent(getBaseContext(), MapActivity.class);
-                        startActivity(i);
-                        finish();
-                    } else {
-                        Intent i = new Intent(getBaseContext(), SignInActivity.class);
-                        startActivity(i);
-                        finish();
-                    }
-                }
-            };
-            handler.postDelayed(jumpTo, 2000);
-        }
-        else {
-            permissionsManager = new PermissionsManager(this);
-            permissionsManager.requestLocationPermissions(this);
+        if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSIONS_SPLASH)) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    PermissionHelper.PERMISSIONS_SPLASH,
+                    PermissionHelper.PERMISSION_CODE_SPLASH);
+        } else {
+            enterApp();
         }
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PermissionHelper.PERMISSION_CODE_SPLASH) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                checkUser();
+            }
+        }
     }
 
-    @Override
-    public void onExplanationNeeded(List<String> permissionsToExplain) {
-        Toast.makeText(getApplicationContext(),"Explaination invalid for now ", Toast.LENGTH_SHORT).show();
+    private void enterApp() {
+        Handler handler = new Handler();
+        Runnable jumpTo = new Runnable() {
+            @Override
+            public void run() {
+                checkUser();
+            }
+        };
+        handler.postDelayed(jumpTo, 2000);
     }
 
-    @Override
-    public void onPermissionResult(boolean granted) {
-        if (granted) {
+    private void checkUser() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
             Intent i = new Intent(getBaseContext(), MapActivity.class);
             startActivity(i);
             finish();
         } else {
-            Toast.makeText(getApplicationContext(),"Permission not Granted yet", Toast.LENGTH_SHORT).show();
+            Intent i = new Intent(getBaseContext(), SignInActivity.class);
+            startActivity(i);
             finish();
         }
-
     }
 }

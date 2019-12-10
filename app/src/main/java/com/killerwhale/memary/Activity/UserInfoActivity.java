@@ -1,15 +1,11 @@
 package com.killerwhale.memary.Activity;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -18,7 +14,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -35,6 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.R;
 
 import java.util.ArrayList;
@@ -92,9 +88,10 @@ public class UserInfoActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // if gallery permission not granted, request permission, else go to gallery
-                if (ActivityCompat.checkSelfPermission(getBaseContext(),
-                        Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(UserInfoActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PICK_FROM_GALLERY);
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSION_PROFILE)) {
+                    ActivityCompat.requestPermissions(UserInfoActivity.this,
+                            PermissionHelper.PERMISSION_PROFILE,
+                            PermissionHelper.PERMISSION_CODE_PROFILE);
                 } else {
                     Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     startActivityForResult(galleryIntent, PICK_FROM_GALLERY);
@@ -190,6 +187,16 @@ public class UserInfoActivity extends AppCompatActivity {
             icUserInfoAvatar.setImageURI(uri);
         } else{
             Toast.makeText(getBaseContext(), "There was an error when fetching image", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PermissionHelper.PERMISSION_CODE_PROFILE) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(galleryIntent, PICK_FROM_GALLERY);
+            }
         }
     }
 }
