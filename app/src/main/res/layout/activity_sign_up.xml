@@ -22,7 +22,7 @@
             android:layout_height="100dp"
             android:tint="@color/colorPrimaryDark"
             android:layout_marginBottom="50dp"
-            app:srcCompat="@drawable/fulllogo" />
+            app:srcCompat="@drawable/fulllogowhite" />
 
         <TextView
             android:id="@+id/txtEmail"

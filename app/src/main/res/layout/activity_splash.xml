@@ -14,7 +14,7 @@
         android:layout_height="100dp"
         android:layout_centerVertical="true"
         android:tint="@color/colorPrimaryDark"
-        app:srcCompat="@drawable/fulllogo" />
+        app:srcCompat="@drawable/fulllogowhite" />
 
     <TextView
         android:layout_below="@+id/mlogo"
