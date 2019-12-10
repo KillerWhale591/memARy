@@ -62,6 +62,10 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
         String text = posts.get(position).getPostText();
         if (text != null && !text.isEmpty()) {
             viewHolder.txtPost.setText(posts.get(position).getPostText());
+            ViewGroup.LayoutParams params = viewHolder.txtPost.getLayoutParams();
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            viewHolder.txtPost.setLayoutParams(params);
+            viewHolder.txtPost.setText(text);
         } else {
             // Hide text box if text is empty
             ViewGroup.LayoutParams params = viewHolder.txtPost.getLayoutParams();
