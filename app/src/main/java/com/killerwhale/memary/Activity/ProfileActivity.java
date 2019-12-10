@@ -164,9 +164,10 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             @Override
             public void onClick(View v) {
                 // if gallery permission not granted, request permission, else go to gallery
-                if (ActivityCompat.checkSelfPermission(getBaseContext(),
-                        Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(ProfileActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PICK_FROM_GALLERY);
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSION_PROFILE)) {
+                    ActivityCompat.requestPermissions(ProfileActivity.this,
+                            PermissionHelper.PERMISSION_PROFILE,
+                            PermissionHelper.PERMISSION_CODE_PROFILE);
                 } else {
                     Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     startActivityForResult(galleryIntent, PICK_FROM_GALLERY);
@@ -276,6 +277,11 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             if (PermissionHelper.hasGrantedAll(grantResults)) {
                 Intent i = new Intent(getBaseContext(), ARActivity.class);
                 startActivity(i);
+            }
+        } else if (requestCode == PermissionHelper.PERMISSION_CODE_PROFILE) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(galleryIntent, PICK_FROM_GALLERY);
             }
         }
     }
