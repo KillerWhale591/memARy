@@ -96,9 +96,4 @@
     <color name="white_50">#80FFFFFF</color>
     <color name="white">#FFFFFF</color>
 
-    <color name="cardview_dark_background">#FF424242</color>
-    <color name="cardview_light_background">#FFFFFFFF</color>
-    <color name="cardview_shadow_end_color">#03000000</color>
-    <color name="cardview_shadow_start_color">#37000000</color>
-
 </resources>
