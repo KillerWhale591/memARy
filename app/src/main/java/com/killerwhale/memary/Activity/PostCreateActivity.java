@@ -46,6 +46,7 @@ import com.google.firebase.storage.UploadTask;
 import com.killerwhale.memary.DataModel.LocationModel;
 import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.DataModel.User;
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.R;
 
 import org.imperiumlabs.geofirestore.GeoFirestore;
@@ -71,12 +72,6 @@ public class PostCreateActivity extends AppCompatActivity {
     private static final float ALPHA_HALF = 0.5f;
     private static final float ALPHA_ORIGINAL = 1f;
     private static final int REQUEST_CODE_IMAGE_CAPTURE = 202;
-    private static final int PERMISSION_ALL = 1001;
-    private static final String[] PERMISSIONS = {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            android.Manifest.permission.CAMERA
-    };
     private static final int ACTION_SEARCH_NEARBY = 1995;
     private double[] mLatLng = null;
 
@@ -177,11 +172,10 @@ public class PostCreateActivity extends AppCompatActivity {
         btnAddImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!hasPermissions(getBaseContext(), PERMISSIONS)) {
-                    // Permission not granted
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSIONS_POST)) {
                     ActivityCompat.requestPermissions(PostCreateActivity.this,
-                            PERMISSIONS,
-                            PERMISSION_ALL);
+                            PermissionHelper.PERMISSIONS_POST,
+                            PermissionHelper.PERMISSION_CODE_POST);
                 } else {
                     // Permission has already been granted
                     Log.i(TAG, "onClick: 1");
@@ -269,47 +263,12 @@ public class PostCreateActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_ALL) {
-            if (hasGrantedAll(grantResults)) {
+        if (requestCode == PermissionHelper.PERMISSION_CODE_POST) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
                 Log.i(TAG, "onRequestPermissionsResult: 1" );
                 takePhoto();
             }
         }
-    }
-
-    /**
-     * Helper function for checking permissions
-     * @param context activity context
-     * @param permissions required permissions
-     * @return true if all permissions granted
-     */
-    public static boolean hasPermissions(Context context, String[] permissions) {
-        if (context != null && permissions != null) {
-            for (String permission : permissions) {
-                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Helper function for checking all permission results
-     * @param grantResults all results
-     * @return true if all results is granted
-     */
-    public static boolean hasGrantedAll(int[] grantResults) {
-        if (grantResults.length > 0) {
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-            }
-        } else {
-            return false;
-        }
-        return true;
     }
 
     /**
