@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -75,6 +74,7 @@ public class PostCreateActivity extends AppCompatActivity {
     private static final int PERMISSION_ALL = 1001;
     private static final String[] PERMISSIONS = {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
             android.Manifest.permission.CAMERA
     };
     private static final int ACTION_SEARCH_NEARBY = 1995;
@@ -336,25 +336,8 @@ public class PostCreateActivity extends AppCompatActivity {
     private void takePhoto() {
         Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo;
-        Log.i(TAG, "takePhoto: " +Build.VERSION.SDK_INT);
-        // Marshmallow+
-        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            Log.v(TAG,"Permission is granted");
-            //File write logic here
-        }else{
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2991);
-
-        }
-        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            Log.v(TAG,"Permission is granted");
-            //File write logic here
-        }else{
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2992);
-
-        }
         try {
             // place where to store camera taken picture
-
             photo = this.createTemporaryFile("picture", ".jpg");
             photo.delete();
             localUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", photo);
@@ -362,9 +345,6 @@ public class PostCreateActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.v(TAG, "Can't create file to take picture!");
             e.printStackTrace();
-            Log.v(TAG, "takePhoto: "+ e.getCause());
-            Log.v(TAG, "takePhoto: "+ e.getMessage());
-            Toast.makeText(this, "Please check SD card! Image shot is impossible!", Toast.LENGTH_SHORT);
         }
         i.putExtra(MediaStore.EXTRA_OUTPUT, localUri);
         i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);

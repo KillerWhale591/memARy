@@ -12,6 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+
+import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -33,7 +35,8 @@ public class LocationListActivity extends AppCompatActivity {
     private ListView locationList;
     private FirebaseFirestore db;
     private LocationListAdapter llAdapter;
-    BottomNavigationView navBar;
+    private BottomNavigationView navBar;
+    private SimpleDraweeView arIcon;
 
 
     @Override
@@ -50,6 +53,7 @@ public class LocationListActivity extends AppCompatActivity {
         llAdapter = new LocationListAdapter(this.getBaseContext());
         locationList.setAdapter(llAdapter);
         navBar = findViewById(R.id.navBar);
+        arIcon = findViewById(R.id.bigIcon);
 
         // Database init.
         db = FirebaseFirestore.getInstance();
@@ -59,6 +63,14 @@ public class LocationListActivity extends AppCompatActivity {
                 .build();
         db.setFirestoreSettings(settings);
 
+        // UI listeners
+        arIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
+        });
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -81,6 +93,19 @@ public class LocationListActivity extends AppCompatActivity {
 
                 }
                 return true;
+            }
+        });
+        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                GeoPoint geoPoint = ((LocationModel) parent.getItemAtPosition(position)).getGeoPoint();
+                double lati = geoPoint.getLatitude();
+                double longti = geoPoint.getLongitude();
+                Intent i = new Intent(getBaseContext(), MapActivity.class);
+                i.putExtra("lat", lati);
+                i.putExtra("long", longti);
+                i.putExtra("name", ((LocationModel) parent.getItemAtPosition(position)).getLocation());
+                startActivity(i);
             }
         });
     }
@@ -110,19 +135,6 @@ public class LocationListActivity extends AppCompatActivity {
         });
         llAdapter.init();
         llAdapter.queryByName(llAdapter);
-        locationList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                GeoPoint geoPoint = ((LocationModel) parent.getItemAtPosition(position)).getGeoPoint();
-                double lati = geoPoint.getLatitude();
-                double longti = geoPoint.getLongitude();
-                Intent i = new Intent(getBaseContext(), MapActivity.class);
-                i.putExtra("lat", lati);
-                i.putExtra("long", longti);
-                i.putExtra("name", ((LocationModel) parent.getItemAtPosition(position)).getLocation());
-                startActivity(i);
-            }
-        });
     }
 
     @Override

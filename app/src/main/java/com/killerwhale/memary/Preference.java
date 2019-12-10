@@ -8,12 +8,14 @@ public class Preference {
 
     public static double postDistance;
     public static long arNumber;
+    public static double arDistance;
 
     public static void setPreferences(Context aContext) {
         // Set all app preference
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(aContext);
         postDistance = Double.parseDouble(sharedPreferences.getString("postDistancePreference", "1"));
         arNumber = Long.parseLong(sharedPreferences.getString("arNumberPreference", "5"));
+        arDistance = Double.parseDouble(sharedPreferences.getString("arDistancePreference", "0.5"));
         //
     }
 }

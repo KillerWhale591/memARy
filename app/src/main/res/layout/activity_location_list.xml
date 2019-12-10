@@ -34,7 +34,7 @@ tools:context=".Activity.MainActivity" >
     </FrameLayout>
 
     <com.facebook.drawee.view.SimpleDraweeView
-        android:id="@+id/bigIcon4"
+        android:id="@+id/bigIcon"
         android:layout_width="72dp"
         android:layout_height="72dp"
         android:layout_alignTop="@+id/navLayout"
@@ -48,7 +48,7 @@ tools:context=".Activity.MainActivity" >
         android:id="@+id/imageView6"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:layout_alignTop="@+id/bigIcon4"
+        android:layout_alignTop="@+id/bigIcon"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="18dp"
         android:background="@drawable/ic_ar"
