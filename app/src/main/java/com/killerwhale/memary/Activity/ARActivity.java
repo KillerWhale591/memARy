@@ -1024,7 +1024,7 @@ public class ARActivity extends ARBaseActivity
                     // Modify policy: downloadable input stream
                     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                     StrictMode.setThreadPolicy(policy);
-                    strokeHelper.searchNearbyAr(location, Preference.postDistance, Preference.arNumber);
+                    strokeHelper.searchNearbyAr(location, Preference.arDistance, Preference.arNumber);
                 }
             }
         });
