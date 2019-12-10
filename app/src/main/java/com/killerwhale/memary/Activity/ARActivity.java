@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.StrictMode;
+import android.support.annotation.NonNull;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -39,9 +40,17 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.killerwhale.memary.ARComponent.Model.Stroke;
 import com.killerwhale.memary.ARComponent.Renderer.BackgroundRenderer;
 import com.killerwhale.memary.ARComponent.Renderer.LineShaderRenderer;
@@ -66,16 +75,20 @@ import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.killerwhale.memary.ARComponent.Utils.UploadDrawingDialog;
 import com.killerwhale.memary.ARComponent.Utils.ARSettings;
+import com.killerwhale.memary.DataModel.Post;
 import com.killerwhale.memary.Preference;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.ARComponent.Utils.SessionHelper;
 import com.uncorkedstudios.android.view.recordablesurfaceview.RecordableSurfaceView;
+
+import org.imperiumlabs.geofirestore.GeoFirestore;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -901,6 +914,7 @@ public class ARActivity extends ARBaseActivity
     public void onUploadDrawingConfirmed() {
         bUploadDrawing.set(true);
         uploadStrokes();
+        // Post text form in PostFeedActivity
     }
 
     /**
@@ -1032,6 +1046,7 @@ public class ARActivity extends ARBaseActivity
             @Override
             public void onSuccess(Location location) {
                 if (location != null) {
+                    buildArTextPost(location);
                     strokeHelper.setLocation(location);
                     // Upload to FireBase
                     try {
@@ -1077,5 +1092,30 @@ public class ARActivity extends ARBaseActivity
         mCloudShaderRenderer.setNeedsUpdate();
         mCloudShaderRenderer.checkUpload();
         bInitCloudRenderer.set(true);
+    }
+
+    private void buildArTextPost(Location location) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = user.getUid();
+        String text = getResources().getString(R.string.text_ar_post);
+        int type = Post.TYPE_AR;
+        final GeoPoint geo = new GeoPoint(location.getLatitude(), location.getLongitude());
+        Timestamp time = new Timestamp(Calendar.getInstance().getTime());
+        Post newPost = new Post(uid, type, text, "", geo, time);
+        Map<String, Object> post = newPost.getHashMap();
+        CollectionReference postRef = FirebaseFirestore.getInstance().collection("posts");
+        final GeoFirestore geoFirestore = new GeoFirestore(postRef);
+        postRef.add(post).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+            @Override
+            public void onSuccess(DocumentReference documentReference) {
+                geoFirestore.setLocation(documentReference.getId(), geo);
+                Log.i(TAG, "Write text post success");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.i(TAG, "Write text post failed");
+            }
+        });
     }
 }

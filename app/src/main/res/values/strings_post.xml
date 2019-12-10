@@ -11,4 +11,6 @@
     <!-- Post top tab -->
     <string name="tab_recent">Recent</string>
     <string name="tab_nearby">Nearby</string>
+    <!-- AR Post text version -->
+    <string name="text_ar_post">😀 I post a memARy just now 😀\n \n \t \t [Use AR to explore]</string>
 </resources>

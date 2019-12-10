@@ -80,6 +80,11 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
             ViewGroup.LayoutParams params = view.findViewById(R.id.imgPost).getLayoutParams();
             params.height = 0;
             view.findViewById(R.id.imgPost).setLayoutParams(params);
+        } else if (type == Post.TYPE_AR) {
+            ViewGroup.LayoutParams params = view.findViewById(R.id.imgPost).getLayoutParams();
+            params.height = 0;
+            view.findViewById(R.id.imgPost).setLayoutParams(params);
+            view.setBackgroundColor(context.getResources().getColor(R.color.colorArText));
         }
         return new PostViewHolder(view);
     }
@@ -126,7 +131,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
 
     @Override
     public int getItemViewType(int position) {
-        return posts.get(position).getImageUrl().isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
+        return posts.get(position).getType();
     }
 
     /**
