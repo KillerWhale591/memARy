@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +25,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.GeoPoint;
 import com.killerwhale.memary.DataModel.LocationModel;
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.Presenter.LocationListAdapter;
 import com.killerwhale.memary.R;
 
@@ -67,8 +69,14 @@ public class LocationListActivity extends AppCompatActivity {
         arIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(getBaseContext(), ARActivity.class);
-                startActivity(i);
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSIONS_AR)) {
+                    ActivityCompat.requestPermissions(LocationListActivity.this,
+                            PermissionHelper.PERMISSIONS_AR,
+                            PermissionHelper.PERMISSION_CODE_AR);
+                } else {
+                    Intent i = new Intent(getBaseContext(), ARActivity.class);
+                    startActivity(i);
+                }
             }
         });
         navBar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -168,5 +176,15 @@ public class LocationListActivity extends AppCompatActivity {
         }
         locationList.setAdapter(llAdapter);
         return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PermissionHelper.PERMISSION_CODE_AR) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
+        }
     }
 }

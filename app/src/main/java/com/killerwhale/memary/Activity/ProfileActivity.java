@@ -31,6 +31,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.R;
 import com.killerwhale.memary.View.EditUsernameDialog;
 
@@ -148,8 +149,14 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         arIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(getBaseContext(), ARActivity.class);
-                startActivity(i);
+                if (!PermissionHelper.hasPermissions(getBaseContext(), PermissionHelper.PERMISSIONS_AR)) {
+                    ActivityCompat.requestPermissions(ProfileActivity.this,
+                            PermissionHelper.PERMISSIONS_AR,
+                            PermissionHelper.PERMISSION_CODE_AR);
+                } else {
+                    Intent i = new Intent(getBaseContext(), ARActivity.class);
+                    startActivity(i);
+                }
             }
         });
 
@@ -260,6 +267,16 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             uploadAvatar(uri);
         } else{
             Toast.makeText(getBaseContext(), "There was an error when fetching image", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PermissionHelper.PERMISSION_CODE_AR) {
+            if (PermissionHelper.hasGrantedAll(grantResults)) {
+                Intent i = new Intent(getBaseContext(), ARActivity.class);
+                startActivity(i);
+            }
         }
     }
 
