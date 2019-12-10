@@ -44,22 +44,32 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="5"
-            android:gravity="center"
+            android:gravity="clip_horizontal"
             android:orientation="vertical"
             android:padding="20dp">
+
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="383dp"
+                android:layout_height="76dp"
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/fulllogowhite" />
 
             <TextView
                 android:id="@+id/txtUsername"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
+                android:layout_marginBottom="8dp"
+                android:layout_gravity="center"
                 android:text="Username"
+                android:textColor="@android:color/holo_blue_dark"
                 android:textAppearance="@style/TextAppearance.AppCompat.Large"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:orientation="horizontal">
 
                 <TextView
@@ -77,6 +87,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginLeft="5dp"
+                    android:layout_gravity="center"
                     android:layout_weight="1"
                     android:background="@null"
                     android:tint="@color/colorBlack"
@@ -91,6 +102,7 @@
                 android:layout_marginTop="5dp"
                 android:background="@null"
                 android:text="my posts"
+                android:layout_gravity="center"
                 android:textColor="@android:color/holo_blue_dark"
                 android:textStyle="bold" />
 
@@ -99,6 +111,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@null"
+                android:layout_gravity="center"
                 android:text="Settings"
                 android:textColor="@android:color/holo_blue_dark"
                 android:textStyle="bold" />
@@ -108,6 +121,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@null"
+                android:layout_gravity="center"
                 android:text="Sign out"
                 android:textColor="@android:color/holo_blue_dark"
                 android:textStyle="bold" />
