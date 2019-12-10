@@ -11,10 +11,16 @@ import android.support.v4.app.ActivityCompat;
 public class PermissionHelper {
 
     public static final int PERMISSION_CODE_AR = 1002;
+    public static final int PERMISSION_CODE_POST = 1003;
     public static final String[] PERMISSIONS_AR = {
-            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            android.Manifest.permission.CAMERA
+            Manifest.permission.CAMERA
+    };
+    public static final String[] PERMISSIONS_POST = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA
     };
 
     /**
