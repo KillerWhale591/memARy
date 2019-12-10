@@ -7,6 +7,7 @@
     tools:context=".Activity.ProfileActivity">
 
     <LinearLayout
+        android:layout_above="@+id/navLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -44,7 +45,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="5"
-            android:gravity="clip_horizontal"
+            android:gravity="center"
             android:orientation="vertical"
             android:padding="20dp">
 
