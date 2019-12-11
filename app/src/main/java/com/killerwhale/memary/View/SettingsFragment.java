@@ -7,6 +7,7 @@ import com.killerwhale.memary.R;
 
 public class SettingsFragment extends PreferenceFragmentCompat {
 
+    //bind to xml/preference
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preference, rootKey);
