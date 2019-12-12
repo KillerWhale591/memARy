@@ -44,6 +44,7 @@ public class MyPostsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_posts);
 
+        //init
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
         myPosts = findViewById(R.id.myPosts);
@@ -59,7 +60,6 @@ public class MyPostsActivity extends AppCompatActivity {
         // if signed in, get Firebase Auth Uid, else do something
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser == null){
-//            startActivity(new Intent(getBaseContext(), SignInActivity.class));
         } else {
             Uid = currentUser.getUid();
         }
@@ -67,6 +67,7 @@ public class MyPostsActivity extends AppCompatActivity {
         myPosts.setLayoutManager(rvManager);
         myPosts.addItemDecoration(new DividerItemDecoration(myPosts.getContext(), DividerItemDecoration.VERTICAL));
 
+        //get the posts for current user and order by timestamp
         db.collection("posts")
                 .whereEqualTo("uid", Uid).orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
@@ -81,7 +82,7 @@ public class MyPostsActivity extends AppCompatActivity {
                                 tempPost.setPostId(document.getId());
                                 posts.add(tempPost);
                             }
-                            System.out.println(posts.size());
+                            //set adapter
                             myPostsAdapter = new MyPostsAdapter(posts, db);
                             myPosts.setAdapter(myPostsAdapter);
                         }
