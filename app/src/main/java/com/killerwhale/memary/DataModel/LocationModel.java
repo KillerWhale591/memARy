@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * The data structure for place
+ * @author Boyang Zhou
+ */
 public class LocationModel implements Comparable<LocationModel> {
 
     public static final String FIELD_POST = "posts";
@@ -97,6 +101,8 @@ public class LocationModel implements Comparable<LocationModel> {
         return geoPoint;
     }
 
+
+//    Since we need to sort by distance, we overwirte the compareTo method to enable sort by distance.
     @Override
     public int compareTo(LocationModel o) {
         float res = distance - o.distance;

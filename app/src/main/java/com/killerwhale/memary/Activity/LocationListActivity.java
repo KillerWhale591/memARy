@@ -29,6 +29,11 @@ import com.killerwhale.memary.Helper.PermissionHelper;
 import com.killerwhale.memary.Presenter.LocationListAdapter;
 import com.killerwhale.memary.R;
 
+
+/**
+ * Activity for displaying list of place
+ * @author Boyang Zhou
+ */
 public class LocationListActivity extends AppCompatActivity {
 
     private static final long INTERVAL_LOC_REQUEST = 5000;
@@ -157,6 +162,8 @@ public class LocationListActivity extends AppCompatActivity {
         return true;
     }
 
+
+//    The menu bar for extra credit
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
