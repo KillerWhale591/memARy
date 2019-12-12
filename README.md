@@ -1,6 +1,6 @@
 # memARy
 
-## Bulid and Compile
+## Build and Compile
 
 This repo is created and tested in Android Studio 3.5, and should be reproducible if required API_KEYs are obtained and set successfully.
 
