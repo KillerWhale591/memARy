@@ -19,4 +19,4 @@ The width of AR lines can be set by clicking the Overflow Button on the left sid
 After uploading current AR drawing, the activity would be automatically set back to VIEW mode. Users could do long press again if they would like to create another drawing of their own.
 
 **Note:** Due to the nature of AR and ARCore, the AR system may lose tracking due to sudden light change, large displacement or abrupt movement of the phone. The system would try to get back to tracking but there is no guarantee of success. We recommend our users to re-enter the activity if
- they found no AR objects are rendered or suddenly disappears. We would apologize for any harm to our user experience due to technological limitation and we would always work on improving the system for better experience.
+ they found no AR object is rendered or suddenly disappears. We would apologize for any harm to our user experience due to technological limitation and we would always work on improving the system for better experience.
