@@ -103,8 +103,9 @@ import javax.vecmath.Vector3f;
 
 /**
  * Author: Qili Zeng (qzeng@bu.edu)
- * With reference to: justaline APP by Google
- * This is a comprehensive implementation of memARy AR functions.
+ * With reference to: Justaline [https://github.com/googlecreativelab/justaline-android]
+ * Prominent modification to original codes done under Apache License 2.0
+ * This is a comprehensive implementation of memARy AR services.
  */
 
 public class ARActivity extends ARBaseActivity
@@ -995,6 +996,9 @@ public class ARActivity extends ARBaseActivity
 
     }
 
+    /**
+     * Set visibility of certain view and start animation
+     * */
     private void showView(View toShow) {
         toShow.setVisibility(View.VISIBLE);
         toShow.animate().alpha(1).start();
@@ -1093,6 +1097,10 @@ public class ARActivity extends ARBaseActivity
         mCloudShaderRenderer.checkUpload();
         bInitCloudRenderer.set(true);
     }
+
+    /**
+     * Generate text notification for AR posts being created.
+     */
 
     private void buildArTextPost(Location location) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
