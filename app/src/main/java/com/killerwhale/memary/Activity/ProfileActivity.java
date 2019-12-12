@@ -175,6 +175,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             }
         });
 
+        // change username
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -182,6 +183,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             }
         });
 
+        // show all user's posts
         btnMyPosts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -196,6 +198,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
             }
         });
 
+        //logout and return to SignInActivity
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -211,6 +214,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         final StorageReference avatarImgRef = storageRef.child(Uid + ".jpg");
         UploadTask uploadTask = avatarImgRef.putFile(uri);
 
+        //upload the image to firebase storage, uid as name, if exists a image with same name, replace it
         Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
@@ -237,6 +241,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         });
     }
 
+    //update user table's avatar field
     private void updateUsersAvatar(String remoteUrl){
         if(db != null) {
             DocumentReference user = db.collection("users").document(Uid);
@@ -245,6 +250,7 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         icUserInfoAvatar.setImageURI(remoteUrl);
     }
 
+    //update user table's username field
     private void updateUsersUsername(String username){
         if(db != null) {
             DocumentReference user = db.collection("users").document(Uid);
@@ -286,11 +292,13 @@ public class ProfileActivity extends AppCompatActivity implements EditUsernameDi
         }
     }
 
+    //override method from dialog fragment
     @Override
     public void sendUsername(String username) {
         updateUsersUsername(username);
     }
 
+    //set the navBar view
     @Override
     protected void onResume() {
         super.onResume();

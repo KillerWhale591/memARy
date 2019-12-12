@@ -100,7 +100,10 @@ import java.util.HashMap;
 import java.util.List;
 
 
-
+/**
+ * Activity for display the map
+ * @author Xiaoyan Ge
+ */
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, MapboxMap.OnMapClickListener{
 
     private static final String CIRCLE_LAYER_ID = "circle";
@@ -446,6 +449,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * <p>
      * name of the feature is used as key for the iconImage
      * </p>
+     * @author Boyang Zhou
      */
     private void setUpInfoWindowLayer(@NonNull Style loadedStyle) {
         loadedStyle.addLayer(new SymbolLayer(INFO_WINDOW_LAYER, MARKER_SOURCE_LOCATION)
@@ -542,6 +546,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      * </p>
      *
      * @param screenPoint the point on screen clicked
+     * @author Boyang Zhou
      */
     private boolean handleClickIcon(PointF screenPoint) {
         List<Feature> features = mapboxMap.queryRenderedFeatures(screenPoint, MARKER_STYLE_LAYER_LOCATION);
@@ -615,6 +620,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
      *
      * @param index the specific Feature's index position in the FeatureCollection's list of Features.
      * @return true if "selected" is true. False if the boolean property is false.
+     * @author Boyang Zhou
      */
     private boolean featureSelectStatus(int index) {
         if (featureCollection == null) {

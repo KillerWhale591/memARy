@@ -453,6 +453,7 @@ public class PostCreateActivity extends AppCompatActivity {
     /**
      * Upload image to FireBase storage and get url
      * @param uri image file uri
+     * @author Boyang Zhou
      */
     private void uploadImageAndPostAndLocation(Uri uri, final double[] mLatLng) {
 
@@ -500,6 +501,7 @@ public class PostCreateActivity extends AppCompatActivity {
     /**
      * Submit the post with all the data fields
      * @param location current location
+     * @author Boyang Zhou
      */
     private void submitPostAndLocation(final Location location, final double[] latlng) {
         final String text = edtContent.getText().toString();

@@ -24,6 +24,7 @@ public class EditUsernameDialog extends AppCompatDialogFragment {
 
         edtEditUsername = view.findViewById(R.id.edtEditUsername);
 
+        //set the layout of the dialog
         builder.setView(view)
                 .setTitle("Please enter a new username")
                 .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
@@ -43,6 +44,7 @@ public class EditUsernameDialog extends AppCompatDialogFragment {
         return builder.create();
     }
 
+    // method called in ProfileActivity
     public interface EditUsernameDialogListener{
         public void sendUsername(String username);
     }

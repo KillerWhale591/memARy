@@ -61,6 +61,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
     public void onBindViewHolder(@NonNull MyPostsViewHolder viewHolder, final int position) {
         String text = posts.get(position).getPostText();
         if (text != null && !text.isEmpty()) {
+            //if not empty set the height to wrap content
             viewHolder.txtPost.setText(posts.get(position).getPostText());
             ViewGroup.LayoutParams params = viewHolder.txtPost.getLayoutParams();
             params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -73,6 +74,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
             viewHolder.txtPost.setLayoutParams(params);
         }
 
+        //set avatar for each row
         String imgUrl = posts.get(position).getImageUrl();
         if (posts.get(position).getType() == Post.TYPE_IMAGE) {
             viewHolder.imgPost.setImageURI(Uri.parse(imgUrl));
@@ -87,6 +89,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
                 final Post deletePost = posts.get(position);
                 posts.remove(position);
                 System.out.println(deletePost.getPostId());
+                //delete the corresponding post in posts table
                 db.collection("posts").document(deletePost.getPostId())
                         .delete()
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -102,6 +105,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
                             }
                         });
 
+                //delete the post in corresponding location's post list
                 db.collection("location")
                         .whereArrayContains("posts", deletePost.getPostId())
                         .get()
@@ -138,7 +142,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
                                 }
                             }
                         });
-
+                //notify the delete
                 notifyItemRemoved(position);
                 notifyItemRangeChanged(position, posts.size());
             }
@@ -155,6 +159,7 @@ public class MyPostsAdapter extends RecyclerView.Adapter<MyPostsAdapter.MyPostsV
         return posts.get(position).getImageUrl().isEmpty() ? Post.TYPE_TEXT : Post.TYPE_IMAGE;
     }
 
+    //create a view holder class having views of a row
     static class MyPostsViewHolder extends RecyclerView.ViewHolder {
 
         SimpleDraweeView imgPost;
