@@ -1,5 +1,5 @@
 # memARy
-An Augmented Reality(AR) based real-time sharing app on Android platform. Sharing you memory at any spot by 
+An `Augmented Reality(AR)` based real-time sharing app on Android platform. Sharing you memory at any spot by 
 AR doodling.
 
 ## Features
@@ -18,10 +18,10 @@ Filter searching range of posts or AR rendering limit, for better user experienc
 If you want to contribute to this project, see [CONTRIBUTING.md](https://github.com/KillerWhale591/memARy/blob/master/CONTRIBUTING.md).
 
 ## Development environment
-This repo is created and tested in Android Studio 3.5, and should be reproducible if required API_KEYs are obtained and set successfully. To build and compile, please provide all the tokens in [key.xml](https://github.com/KillerWhale591/memARy/blob/master/app/src/main/res/values/key.xml), including an API key from mapbox and two from Google API.
+This repo is created and tested in Android Studio 3.5, and should be reproducible if required API keys are obtained and set successfully. To build and compile, please provide all the tokens in [key.xml](https://github.com/KillerWhale591/memARy/blob/master/app/src/main/res/values/key.xml), including an API key from mapbox and two from Google API.
 
 ## Support
-If you have any bug reports, feature suggestions, questions, or just want to talk about this project, open an issue or contact [zeyufu@bu.edu](zeyufu@bu.edu).
+If you have any `bug reports`, `feature suggestions`, `questions`, or just want to talk about this project, open an issue or contact [zeyufu@bu.edu](zeyufu@bu.edu).
 
 ## Guidance of using AR
 By long press on the screen, the running state would be changed to DRAW, where the creation of new AR drawings is feasible. Users could have the activity back to VIEW mode using Cross Button on the top-left corner. There are two ways to draw AR lines:
