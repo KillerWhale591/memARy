@@ -1,15 +1,30 @@
 # memARy
+An Augmented Reality(AR) based real-time sharing app on Android platform. Sharing you memory at any spot by 
+AR doodling.
 
-## Build and Compile
+## Features
+* **AR doodling**   
+Doodle anywhere you like in an AR world, just by pressing on screen, and moving your phone or your finger.
+* **Location-based sharing**   
+Share your memory at a spot by forms of texts, images or AR doodles. See what other people shared nearby.
+* **Data visualization on map**   
+Find hot spots near you. See where do people post most often.
+* **Lower Android version compatible**   
+On Android phones where ARCore is not supported, sharing your memory by traditional posts.
+* **Customize your preference**   
+Filter searching range of posts or AR rendering limit, for better user experience.
 
-This repo is created and tested in Android Studio 3.5, and should be reproducible if required API_KEYs are obtained and set successfully.
+## Contributing
+If you want to contribute to this project, see [CONTRIBUTING.md](https://github.com/KillerWhale591/memARy/blob/master/CONTRIBUTING.md).
 
+## Development environment
+This repo is created and tested in Android Studio 3.5, and should be reproducible if required API_KEYs are obtained and set successfully. To build and compile, please provide all the tokens in [key.xml](https://github.com/KillerWhale591/memARy/blob/master/app/src/main/res/values/key.xml), including an API key from mapbox and two from Google API.
 
-## Use AR functions
+## Support
+If you have any bug reports, feature suggestions, questions, or just want to talk about this project, open an issue or contact [zeyufu@bu.edu](zeyufu@bu.edu).
 
-AR activity would run under VIEW mode after intialization. Users should be able to see drawings posted within certain geographical range, created by other users. These drawings are displayed in different colors. The number of drawings and search range can be configured in App Preference. Refresh Button is provided for downloading and rendering another group of previous AR Drawings.
-
-By long press on the screen, the running state would be changed to DRAW, where the creation of new AR drawings is feasible. Users could have the activity back to VIEW mode using Cross Button on the top-left corner. There are two ways to draw AR lines,
+## Guidance of using AR
+By long press on the screen, the running state would be changed to DRAW, where the creation of new AR drawings is feasible. Users could have the activity back to VIEW mode using Cross Button on the top-left corner. There are two ways to draw AR lines:
 
    * By pressing and moving finger on the screen
    * By pressing on the screen and moving the phone
@@ -20,3 +35,6 @@ After uploading current AR drawing, the activity would be automatically set back
 
 **Note:** Due to the nature of AR and ARCore, the AR system may lose tracking due to sudden light change, large displacement or abrupt movement of the phone. The system would try to get back to tracking but there is no guarantee of success. We recommend our users to re-enter the activity if
  they found no AR object is rendered or suddenly disappears. We would apologize for any harm to our user experience due to technological limitation and we would always work on improving the system for better experience.
+
+## License
+This software is licensed under [Apache License 2.0](https://github.com/KillerWhale591/memARy/blob/master/LICENSE).
