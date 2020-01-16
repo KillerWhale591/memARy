@@ -18,7 +18,8 @@ Filter searching range of posts or AR rendering limit, for better user experienc
 If you want to contribute to this project, see [CONTRIBUTING.md](https://github.com/KillerWhale591/memARy/blob/master/CONTRIBUTING.md).
 
 ## Development environment
-This repo is created and tested in Android Studio 3.5, and should be reproducible if required API keys are obtained and set successfully. To build and compile, please provide all the tokens in [key.xml](https://github.com/KillerWhale591/memARy/blob/master/app/src/main/res/values/key.xml), including an API key from mapbox and two from Google API.
+This repo is created and tested in Android Studio 3.5, and should be reproducible if required API keys are obtained and set successfully.   
+To build and compile, please provide all the tokens in [key.xml](https://github.com/KillerWhale591/memARy/blob/master/app/src/main/res/values/key.xml), including an API key from mapbox and two from Google API.
 
 ## Support
 If you have any `bug reports`, `feature suggestions`, `questions`, or just want to talk about this project, open an issue or contact [zeyufu@bu.edu](zeyufu@bu.edu).
