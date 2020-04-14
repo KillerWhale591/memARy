@@ -1,7 +1,9 @@
 # memARy
 An `Augmented Reality(AR)` based real-time sharing app on Android platform. Sharing you memory at any spot by 
 AR doodling.
-![](https://github.com/KillerWhale591/memARy/blob/master/memARy.gif)
+
+
+<img src="https://github.com/KillerWhale591/memARy/blob/master/memARy.gif" height="500"/>
 
 ## Features
 * **AR doodling**   
